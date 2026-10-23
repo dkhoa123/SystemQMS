@@ -1,8 +1,10 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Net.NetworkInformation;
 using System.Text;
 using System.Threading.Tasks;
+using System.ComponentModel.DataAnnotations;
 
 namespace SystemQMS.Dtos
 {
@@ -25,16 +27,21 @@ namespace SystemQMS.Dtos
     }
     public class CreateCounterRequest
     {
+        [StringLength(100)]
         public string counterId { get; set; } = "";
         public int unitId { get; set; }
+        [StringLength(100)]
         public string? counterName { get; set; }
+        [StringLength(255)]
         public string? description { get; set; }
         public bool isActive { get; set; } = true;
         public List<int> serviceIds { get; set; } = new();
     }
     public class UpdateCounterRequest
     {
+        [StringLength(100)]
         public string? counterName { get; set; }
+        [StringLength(255)]
         public string? description { get; set; }
         public bool isActive { get; set; } = true;
         public List<int> serviceIds { get; set; } = new();
@@ -43,6 +50,19 @@ namespace SystemQMS.Dtos
     public class CounterDetailResponse : CounterResponse
     {
         public List<string> handlerNames { get; set; } = new();
+
+        public CounterDetailResponse() { }
+        public CounterDetailResponse(CounterResponse source)
+        {
+            id = source.id;
+            counterId = source.counterId;
+            unitId = source.unitId;
+            counterName = source.counterName;
+            description = source.description;
+            isActive = source.isActive;
+            Status = source.Status;
+            services = source.services;
+        }
     }
 
     public class CounterStickerResponse

@@ -1,9 +1,11 @@
 ﻿using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using static Microsoft.EntityFrameworkCore.DbLoggerCategory;
 using System.Text.RegularExpressions;
 using SystemQMS.Dtos;
 using SystemQMS.Models;
+using Microsoft.AspNetCore.Http.HttpResults;
 
 namespace SystemQMS.Controllers
 {
@@ -16,6 +18,28 @@ namespace SystemQMS.Controllers
         {
             _context = context;
         }
+        private CounterResponse ToResponse(Counter counter)
+        {
+            return new CounterResponse
+            {
+                id = counter.id,
+                counterId = counter.counterId,
+                unitId = counter.unitId,
+                counterName = counter.counterName,
+                description = counter.description,
+                isActive = counter.isActive,
+                Status = counter.status,
+                services = counter.Services.Select(s => new ServiceInCounterDto
+                {
+                    id = s.id,
+                    serviceId = s.serviceId,
+                    serviceName = s.serviceName
+                }).ToList()
+            };
+        }
+        
+
+
 
         // CNT-01: danh sách quầy, lọc theo trạng thái + tìm kiếm
         [HttpGet]
@@ -66,14 +90,15 @@ namespace SystemQMS.Controllers
             if (exists)
                 return BadRequest("Mã quầy đã tồn tại trong đơn vị");
 
+            var serviceIds = request.serviceIds ?? new List<int>();
             var services = await _context.services
-                .Where(s => request.serviceIds.Contains(s.id) && s.unitId == request.unitId)
+                .Where(s => serviceIds.Contains(s.id) && s.unitId == request.unitId)
                 .ToListAsync();
 
             if (!await _context.units.AnyAsync(u => u.unitId == request.unitId))
                 return BadRequest(new { message = "Đơn vị không tồn tại" });
 
-            if (services.Count != request.serviceIds.Distinct().Count())
+            if (services.Count != serviceIds.Distinct().Count())
                 return BadRequest("Có dịch vụ không tồn tại hoặc không thuộc đơn vị");
 
             var counter = new Counter
@@ -105,6 +130,94 @@ namespace SystemQMS.Controllers
                     serviceName = s.serviceName
                 }).ToList()
             });
+        }
+        // CNT-03: cập nhập quầy - sửa tất cả trừ mã quầy, chặn khi đang Serving
+        [HttpPut("{id}")]
+        public async Task<ActionResult<CounterResponse>> UpdateCounter(UpdateCounterRequest request, int id)
+        {
+            var counter = await _context.counters
+                .Include(c => c.Services)
+                .FirstOrDefaultAsync(c => c.id == id);
+
+            if (counter == null)
+                return NotFound(new { message = "Quầy không tồn tại" });
+
+            if (counter.status == CounterStatus.Serving)
+                return BadRequest("Quầy đang có người xử lý, không thể cập nhật");
+
+            if (request.counterName != null && !Regex.IsMatch(request.counterName, @"^[\p{L}0-9 _-]+$"))
+                return BadRequest("Tên quầy chứa kí tự không hợp lệ");
+
+            var serviceIds = request.serviceIds ?? new List<int>();
+            var services = await _context.services
+                .Where(s => serviceIds.Contains(s.id) && s.unitId == counter.unitId)
+                .ToListAsync();
+
+            if (services.Count != serviceIds.Distinct().Count())
+                return BadRequest("Có dịch vụ không tồn tại hoặc không thuộc đơn vị");
+            counter.counterName = request.counterName;
+            counter.description = request.description;
+            counter.isActive = request.isActive;
+            counter.Services.Clear();
+            foreach (var s in services) counter.Services.Add(s);
+            await _context.SaveChangesAsync();
+            return Ok(ToResponse(counter));
+        }
+
+
+        //CNT-04
+
+        //CNT-04a: chi tiết quầy + người xử lý
+        [HttpGet("{id}")]
+        public async Task<ActionResult<CounterDetailResponse>> GetCounter(int id)
+        {
+            var counter = await _context.counters
+                .Include(c => c.Services)
+                .FirstOrDefaultAsync(c => c.id == id);
+            if (counter == null) return NotFound();
+
+            var handlers = await _context.users
+                .Where(u => u.counterId == id && u.username != null)
+                .Select(u => u.username!)
+                .ToListAsync();
+            var result = new CounterDetailResponse
+            {
+                handlerNames = handlers
+            };
+
+            var baseDto = ToResponse(counter);
+            result.id = baseDto.id; result.counterId = baseDto.counterId;
+            result.unitId = baseDto.unitId; result.counterName = baseDto.counterName;
+            result.description = baseDto.description; result.isActive = baseDto.isActive;
+            result.Status = baseDto.Status; result.services = baseDto.services;
+            return Ok(result);
+        }
+
+        //CNT-04b: danh sách STT của quầy
+        [HttpGet("{id}/stickers")]
+        public async Task<ActionResult<List<CounterStickerResponse>>> GetCounterStickers(
+    int id, string? status = null, DateTimeOffset? from = null, DateTimeOffset? to = null)
+        {
+
+            var query = _context.stickers.Where(s => s.counterId == id);
+            if (!await _context.counters.AnyAsync(c => c.id == id))
+                return NotFound();
+            if (!string.IsNullOrWhiteSpace(status))
+                query = query.Where(s => s.status == status);
+            if (from.HasValue) query = query.Where(s => s.issuanceTime >= from.Value);
+            if(to.HasValue) query = query.Where(s => s.issuanceTime <= to.Value);
+            return await query
+                .OrderByDescending(s => s.issuanceTime)
+                .Select(s => new CounterStickerResponse
+            {
+                sttId = s.sttId,
+                status = s.status,
+                stage = s.stage,
+                issuanceTime = s.issuanceTime,
+                useTime = s.useTime,
+                serviceName = s.Service != null ? s.Service.serviceName : null,
+                handlerName = s.Users != null ? s.Users.username : null
+            }).ToListAsync();
         }
 
     }
