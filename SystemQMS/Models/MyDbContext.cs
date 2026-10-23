@@ -273,6 +273,16 @@ namespace SystemQMS.Models
                 .HasOne(d => d.Unit)
                 .WithMany(u => u.diaries)
                 .HasForeignKey(d => d.unitId);
+            
+            //
+            modelBuilder.Entity<Counter>()
+                .HasMany(c => c.Services)
+                .WithMany(s => s.counters)
+                .UsingEntity(j => j.ToTable("counterServices"));
+            //Index Unique để tránh trùng lặp counterId trong cùng một unitId
+            modelBuilder.Entity<Counter>()
+                .HasIndex(c => new { c.unitId, c.counterId })
+                .IsUnique();
 
             
         }
