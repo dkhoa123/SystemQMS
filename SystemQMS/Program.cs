@@ -1,5 +1,8 @@
 using Microsoft.EntityFrameworkCore;
 using SystemQMS.Models;
+using SystemQMS.Services;
+using SystemQMS.Services.Interface;
+
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -9,6 +12,7 @@ IConfiguration configuration = new ConfigurationBuilder().SetBasePath(
 builder.Services.AddDbContext<MyDbContext>(options =>
     options.UseNpgsql(configuration.GetConnectionString("ConnectionDb")));
 
+builder.Services.AddScoped<IDevSvc, DevSvc>();
 builder.Services.AddControllers();
 // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
 builder.Services.AddEndpointsApiExplorer();

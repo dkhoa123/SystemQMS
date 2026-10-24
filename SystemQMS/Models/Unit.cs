@@ -19,17 +19,17 @@ namespace SystemQMS.Models
         public byte[]? logo { get; set; }
         public bool isBan { get; set; }
 
-        public ICollection<Users> users = new List<Users>();
-        public ICollection<Service> services = new List<Service>();
+        public ICollection<Users> Users { get; set; } = new List<Users>();
+        public ICollection<Service> Services { get; set; } = new List<Service>();
 
-        public ICollection<Guest> guests = new List<Guest>();
+        public ICollection<Guest> Guests { get; set; } = new List<Guest>();
 
-        public ICollection<Diary> diaries = new List<Diary>();
-        public ICollection<Counter> counters = new List<Counter>();
-        public ICollection<Sticker > stickers = new List<Sticker>();
-        public ICollection<Notification> noti = new List<Notification>();
-        public ICollection<Evaluation> evaluations = new List<Evaluation>();
-        public ICollection<EvaluationTemplate> evaluationTemplates = new List<EvaluationTemplate>();
+        public ICollection<Diary> Diaries { get; set; } = new List<Diary>();
+        public ICollection<Counter> Counters { get; set; } = new List<Counter>();
+        public ICollection<Sticker > Stickers { get; set; } = new List<Sticker>();
+        public ICollection<Notification> Notifications { get; set; } = new List<Notification>();
+        public ICollection<Evaluation> Evaluations { get; set; } = new List<Evaluation>();
+        public ICollection<EvaluationTemplate> EvaluationTemplates { get; set; } = new List<EvaluationTemplate>();
 
 
 

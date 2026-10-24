@@ -23,9 +23,13 @@ namespace SystemQMS.Migrations
                     deviceType = table.Column<string>(type: "character varying(100)", maxLength: 100, nullable: false),
                     statusActive = table.Column<string>(type: "character varying(100)", maxLength: 100, nullable: false),
                     statusConnect = table.Column<string>(type: "character varying(100)", maxLength: 100, nullable: false),
-                    ipAddress = table.Column<string>(type: "character varying(100)", maxLength: 100, nullable: false),
-                    voice = table.Column<byte[]>(type: "bytea", nullable: true),
-                    show = table.Column<bool>(type: "boolean", nullable: false)
+                    ipAddress = table.Column<string>(type: "character varying(100)", maxLength: 100, nullable: true),
+                    volume = table.Column<int>(type: "integer", nullable: false),
+                    show = table.Column<bool>(type: "boolean", nullable: false),
+                    loginCodeHash = table.Column<string>(type: "text", nullable: true),
+                    loginCodeExpiresAt = table.Column<DateTime>(type: "timestamp with time zone", nullable: true),
+                    sessionTokenHash = table.Column<string>(type: "text", nullable: true),
+                    sessionExpiresAt = table.Column<DateTime>(type: "timestamp with time zone", nullable: true)
                 },
                 constraints: table =>
                 {
@@ -76,7 +80,7 @@ namespace SystemQMS.Migrations
                     counterName = table.Column<string>(type: "character varying(100)", maxLength: 100, nullable: true),
                     description = table.Column<string>(type: "character varying(255)", maxLength: 255, nullable: true),
                     isActive = table.Column<bool>(type: "boolean", nullable: false),
-                    Status = table.Column<string>(type: "character varying(100)", maxLength: 100, nullable: false)
+                    status = table.Column<string>(type: "character varying(100)", maxLength: 100, nullable: false)
                 },
                 constraints: table =>
                 {
@@ -190,6 +194,30 @@ namespace SystemQMS.Migrations
                 });
 
             migrationBuilder.CreateTable(
+                name: "CounterDevice",
+                columns: table => new
+                {
+                    Countersid = table.Column<int>(type: "integer", nullable: false),
+                    Devicesid = table.Column<int>(type: "integer", nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_CounterDevice", x => new { x.Countersid, x.Devicesid });
+                    table.ForeignKey(
+                        name: "FK_CounterDevice_counters_Countersid",
+                        column: x => x.Countersid,
+                        principalTable: "counters",
+                        principalColumn: "id",
+                        onDelete: ReferentialAction.Cascade);
+                    table.ForeignKey(
+                        name: "FK_CounterDevice_devices_Devicesid",
+                        column: x => x.Devicesid,
+                        principalTable: "devices",
+                        principalColumn: "id",
+                        onDelete: ReferentialAction.Cascade);
+                });
+
+            migrationBuilder.CreateTable(
                 name: "users",
                 columns: table => new
                 {
@@ -250,6 +278,54 @@ namespace SystemQMS.Migrations
                         column: x => x.notiId,
                         principalTable: "notifications",
                         principalColumn: "Id",
+                        onDelete: ReferentialAction.Cascade);
+                });
+
+            migrationBuilder.CreateTable(
+                name: "CounterService",
+                columns: table => new
+                {
+                    Servicesid = table.Column<int>(type: "integer", nullable: false),
+                    countersid = table.Column<int>(type: "integer", nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_CounterService", x => new { x.Servicesid, x.countersid });
+                    table.ForeignKey(
+                        name: "FK_CounterService_counters_countersid",
+                        column: x => x.countersid,
+                        principalTable: "counters",
+                        principalColumn: "id",
+                        onDelete: ReferentialAction.Cascade);
+                    table.ForeignKey(
+                        name: "FK_CounterService_services_Servicesid",
+                        column: x => x.Servicesid,
+                        principalTable: "services",
+                        principalColumn: "id",
+                        onDelete: ReferentialAction.Cascade);
+                });
+
+            migrationBuilder.CreateTable(
+                name: "DeviceService",
+                columns: table => new
+                {
+                    Devicesid = table.Column<int>(type: "integer", nullable: false),
+                    Servicesid = table.Column<int>(type: "integer", nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_DeviceService", x => new { x.Devicesid, x.Servicesid });
+                    table.ForeignKey(
+                        name: "FK_DeviceService_devices_Devicesid",
+                        column: x => x.Devicesid,
+                        principalTable: "devices",
+                        principalColumn: "id",
+                        onDelete: ReferentialAction.Cascade);
+                    table.ForeignKey(
+                        name: "FK_DeviceService_services_Servicesid",
+                        column: x => x.Servicesid,
+                        principalTable: "services",
+                        principalColumn: "id",
                         onDelete: ReferentialAction.Cascade);
                 });
 
@@ -520,9 +596,24 @@ namespace SystemQMS.Migrations
                 column: "sttId");
 
             migrationBuilder.CreateIndex(
+                name: "IX_CounterDevice_Devicesid",
+                table: "CounterDevice",
+                column: "Devicesid");
+
+            migrationBuilder.CreateIndex(
                 name: "IX_counters_unitId",
                 table: "counters",
                 column: "unitId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_CounterService_countersid",
+                table: "CounterService",
+                column: "countersid");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_DeviceService_Servicesid",
+                table: "DeviceService",
+                column: "Servicesid");
 
             migrationBuilder.CreateIndex(
                 name: "IX_diaries_unitId",
@@ -635,7 +726,13 @@ namespace SystemQMS.Migrations
                 name: "counterChanges");
 
             migrationBuilder.DropTable(
-                name: "devices");
+                name: "CounterDevice");
+
+            migrationBuilder.DropTable(
+                name: "CounterService");
+
+            migrationBuilder.DropTable(
+                name: "DeviceService");
 
             migrationBuilder.DropTable(
                 name: "diaries");
@@ -654,6 +751,9 @@ namespace SystemQMS.Migrations
 
             migrationBuilder.DropTable(
                 name: "shedules");
+
+            migrationBuilder.DropTable(
+                name: "devices");
 
             migrationBuilder.DropTable(
                 name: "stickers");

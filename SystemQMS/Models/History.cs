@@ -12,8 +12,8 @@ namespace SystemQMS.Models
         public string status { get; set; }
 
         [ForeignKey("guestId")]
-        public virtual Guest? guest { get; set; }
+        public virtual Guest? Guest { get; set; }
         [ForeignKey("notiId")]
-        public virtual Notification? notification { get; set; }
+        public virtual Notification? Notification { get; set; }
     }
 }

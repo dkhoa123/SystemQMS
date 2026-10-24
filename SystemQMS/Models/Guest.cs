@@ -24,9 +24,10 @@ namespace SystemQMS.Models
         public string? status { get; set; }
 
         [ForeignKey("unitId")]
-        public virtual Unit? unit { get; set; }
+        public virtual Unit? Unit { get; set; }
 
-        public ICollection<Booking> bookings = new List<Booking>();
-        public ICollection<History> histories = new List<History>();  
+
+        public ICollection<Booking> Bookings { get; set; } = new List<Booking>();
+        public ICollection<History> Histories { get; set; } = new List<History>();  
     }
 }

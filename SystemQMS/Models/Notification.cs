@@ -20,8 +20,8 @@ namespace SystemQMS.Models
         public string status { get; set; }
 
         [ForeignKey("unitId")]
-        public virtual Unit? unit { get; set; }
+        public virtual Unit? Unit { get; set; }
 
-        public ICollection<History> Histories { get; set; }
+        public ICollection<History> Histories { get; set; } = new List<History>();
     }
 }

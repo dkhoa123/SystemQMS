@@ -17,11 +17,19 @@ namespace SystemQMS.Models
         [MaxLength(100)]
         public string statusConnect { get; set; }
         [MaxLength(100)]
-        public string ipAddress { get; set; }
-        public byte[]? voice { get; set; }
+        public string? ipAddress { get; set; }
+        public int volume { get; set; }
         public bool show { get; set; }
 
-        public ICollection<Service> services = new List<Service>();
-        public ICollection<Counter> counters = new List<Counter>();
+        // Mã đăng nhập 6 số
+        public string? loginCodeHash { get; set; }
+        public DateTime? loginCodeExpiresAt { get; set; }
+
+        // Phiên đăng nhập hiện tại
+        public string? sessionTokenHash { get; set; }
+        public DateTime? sessionExpiresAt { get; set; }
+
+        public ICollection<Service> Services { get; set; } = new List<Service>();
+        public ICollection<Counter> Counters { get; set; } = new List<Counter>();
     }
 }

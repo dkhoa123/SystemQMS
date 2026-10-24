@@ -16,18 +16,17 @@ namespace SystemQMS.Models
         public string? description { get; set; }
         public bool isActive { get; set; }
         [MaxLength(100)]
-        public string Status { get; set; }
+        public string status { get; set; }
 
-        public ICollection<Service> services = new List<Service>();
         [ForeignKey("unitId")]
-        public virtual Unit? unit { get; set; }
-        public ICollection<CounterChange> counterSend = new List<CounterChange>();
-        public ICollection<CounterChange> counterReceive = new List<CounterChange>();
-        public ICollection<Device> devices = new List<Device>();
-        public ICollection<Service> service = new List<Service>();
-        public ICollection<Sticker> stickers = new List<Sticker>();
-        public ICollection<Evaluation> evaluations = new List<Evaluation>();
-        public ICollection<Users> users = new List<Users>();
+        public virtual Unit? Unit { get; set; }
+        public ICollection<CounterChange> CounterSend { get; set; } = new List<CounterChange>();
+        public ICollection<CounterChange> CounterReceive { get; set; } = new List<CounterChange>();
+        public ICollection<Device> Devices { get; set; } = new List<Device>();
+        public ICollection<Service> Services { get; set; } = new List<Service>();
+        public ICollection<Sticker> Stickers { get; set; } = new List<Sticker>();
+        public ICollection<Evaluation> Evaluations { get; set; } = new List<Evaluation>();
+        public ICollection<Users> Users { get; set; } = new List<Users>();
 
     }
 }
