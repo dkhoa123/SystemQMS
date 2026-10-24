@@ -36,9 +36,10 @@ namespace SystemQMS.Models
                 .WithMany(r => r.users)
                 .HasForeignKey(u => u.unitId);
             modelBuilder.Entity<Users>()
-                .HasOne(u => u.counter)
-                .WithMany(r => r.users)
-                .HasForeignKey(u => u.counterId);
+                .HasOne(u => u.Counter)
+                .WithMany(r => r.Users)
+                .HasForeignKey(u => u.counterId)
+                .OnDelete(DeleteBehavior.Restrict);
             modelBuilder.Entity<Users>()
                 .HasMany(u => u.diaries)
                 .WithOne(d => d.User)
@@ -185,9 +186,11 @@ namespace SystemQMS.Models
                 .WithMany(c => c.stickers)
                 .HasForeignKey(st => st.unitId);
             modelBuilder.Entity<Sticker>()
-                .HasOne(c => c.counter)
-                .WithMany(s => s.stickers)
-                .HasForeignKey(st => st.counterId);
+                .HasOne(c => c.Counter)
+                .WithMany(s => s.Stickers)
+                .HasForeignKey(st => st.counterId)
+                .OnDelete(DeleteBehavior.Restrict);
+
             modelBuilder.Entity<Sticker>()
                 .HasOne(s => s.service)
                 .WithMany(st => st.stickers)

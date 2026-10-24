@@ -14,9 +14,11 @@ namespace SystemQMS.Controllers
     public class CountersController : ControllerBase
     {
         private readonly MyDbContext _context;
-        public CountersController(MyDbContext context)
+        private readonly ILogger<CountersController> _logger;
+        public CountersController(MyDbContext context,ILogger<CountersController> logger)
         {
             _context = context;
+            _logger = logger;
         }
         private CounterResponse ToResponse(Counter counter)
         {
@@ -218,6 +220,45 @@ namespace SystemQMS.Controllers
                 serviceName = s.Service != null ? s.Service.serviceName : null,
                 handlerName = s.Users != null ? s.Users.username : null
             }).ToListAsync();
+        }
+        //CNT-05: xoá quầy (do chưa biết yc nên thêm điều kiện xoá)
+        
+        [HttpDelete("{id}")]
+        public async Task<ActionResult>DeleteCounter(int id, CancellationToken ct)
+        {
+            var counter = await _context.counters
+                .Include(c => c.Services)
+                .FirstOrDefaultAsync(c => c.id == id);
+            if (counter == null)
+            {
+                _logger.LogWarning("Xóa quầy thất bại: không tìm thấy CounterId={CounterId}", id);
+                return NotFound(new { message = "Quầy không tồn tại" });
+            }
+
+            if (await _context.stickers.AnyAsync(s => s.counterId == id, ct))
+            {
+                _logger.LogWarning("Xóa quầy thất bại: CounterId={CounterId} đã có phiếu gọi số", id);
+                return BadRequest(new { message = "Quầy đã có phiếu gọi số, không thể xóa" });
+            }
+
+            if (await _context.users.AnyAsync(u => u.counterId == id, ct))
+            {
+                _logger.LogWarning("Xóa quầy thất bại: CounterId={CounterId} đã có cán bộ được gán", id);
+                return BadRequest(new { message = "Quầy đã có cán bộ được gán, không thể xóa" });
+            }
+
+            
+            _context.counters.Remove(counter);
+            try { await _context.SaveChangesAsync(); }
+            catch (DbUpdateException)
+            {
+                _logger.LogWarning("Xóa quầy thất bại: CounterId={CounterId} vừa phát sinh dữ liệu tham chiếu", id);
+                return BadRequest(new { message = "Quầy vừa phát sinh dữ liệu liên quan, không thể xóa" });
+            }
+
+
+            _logger.LogInformation("Đã xóa quầy: CounterId={CounterId}, UnitId={UnitId}", id, counter.unitId);
+            return NoContent(); // 204 
         }
 
     }
