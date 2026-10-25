@@ -21,14 +21,14 @@ namespace SystemQMS.Models
 
         public ICollection<Evaluation> Evaluations = new List<Evaluation>();
         public ICollection<CounterChange> CounterChanges = new List<CounterChange>();
-        public ICollection<Booking> bookings = new List<Booking>();
+        public ICollection<Booking> Bookings = new List<Booking>();
         [ForeignKey("unitId")]
-        public virtual Unit? unit { get; set; }
+        public virtual Unit? Unit { get; set; }
         [ForeignKey("serviceId")]
-        public virtual Service? service { get; set; }
+        public virtual Service? Service { get; set; }
         [ForeignKey("counterId")]
-        public virtual Counter? counter { get; set; }
+        public virtual Counter? Counter { get; set; }
         [ForeignKey("userId")]
-        public virtual Users? users { get; set; }
+        public virtual Users? Users { get; set; }
     }
 }

@@ -1,5 +1,6 @@
 using Microsoft.EntityFrameworkCore;
 using SystemQMS.Models;
+using SystemQMS.Services;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -10,6 +11,8 @@ builder.Services.AddDbContext<MyDbContext>(options =>
     options.UseNpgsql(configuration.GetConnectionString("ConnectionDb")));
 
 builder.Services.AddControllers();
+builder.Services.AddScoped<INumberFomularSvc, NumberFomularSvc>();
+builder.Services.AddScoped<IStickerSvc, StickerSvc>();
 // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();

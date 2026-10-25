@@ -22,13 +22,13 @@ namespace SystemQMS.Models
         public int counterId { get; set; }
 
         [ForeignKey("roleId")]
-        public virtual Roles? role { get; set; }
+        public virtual Roles? Role { get; set; }
         [ForeignKey("counterId")]
-        public virtual Counter? counter { get; set; }
+        public virtual Counter? Counter { get; set; }
         [ForeignKey("unitId")]
-        public virtual Unit? unit { get; set; }
-        public ICollection<Diary>? diaries = new List<Diary>();
-        public ICollection<Sticker>? stickers = new List<Sticker>();
+        public virtual Unit? Unit { get; set; }
+        public ICollection<Diary>? Diaries { get; set; } = new List<Diary>();
+        public ICollection<Sticker>? Stickers { get; set; } = new List<Sticker>();
 
     }
 }
