@@ -24,71 +24,72 @@ namespace SystemQMS.Models
         public DbSet<Sticker> stickers { get; set; }
         public DbSet<History> histories { get; set; }
         public DbSet<Notification> notifications { get; set; }
+        public DbSet<UnitConfig> unitConfigs { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
             modelBuilder.Entity<Users>()
-                .HasOne(u => u.role)
+                .HasOne(u => u.Role)
                 .WithMany(r => r.Users)
                 .HasForeignKey(u => u.roleId);
             modelBuilder.Entity<Users>()
-                .HasOne(u => u.unit)
-                .WithMany(r => r.users)
+                .HasOne(u => u.Unit)
+                .WithMany(r => r.Users)
                 .HasForeignKey(u => u.unitId);
             modelBuilder.Entity<Users>()
-                .HasOne(u => u.counter)
-                .WithMany(r => r.users)
+                .HasOne(u => u.Counter)
+                .WithMany(r => r.Users)
                 .HasForeignKey(u => u.counterId);
             modelBuilder.Entity<Users>()
-                .HasMany(u => u.diaries)
+                .HasMany(u => u.Diaries)
                 .WithOne(d => d.User)
                 .HasForeignKey(d => d.userId);
             modelBuilder.Entity<Users>()
-                .HasMany(u => u.stickers)
-                .WithOne(s => s.users)
+                .HasMany(u => u.Stickers)
+                .WithOne(s => s.Users)
                 .HasForeignKey(s => s.userId);
 
             modelBuilder.Entity<Roles>()
                 .HasMany(r => r.Users)
-                .WithOne(u => u.role)
+                .WithOne(u => u.Role)
                 .HasForeignKey(u => u.roleId);
 
             modelBuilder.Entity<Counter>()
-                .HasMany(c => c.users)
-                .WithOne(u => u.counter)
+                .HasMany(c => c.Users)
+                .WithOne(u => u.Counter)
                 .HasForeignKey(u => u.counterId);
             modelBuilder.Entity<Counter>()
-                .HasOne(c => c.unit)
-                .WithMany(u => u.counters)
+                .HasOne(c => c.Unit)
+                .WithMany(u => u.Counters)
                 .HasForeignKey(c => c.unitId);
             modelBuilder.Entity<Counter>()
-                .HasMany(c => c.counterSend)
+                .HasMany(c => c.CounterSend)
                 .WithOne(cc => cc.CounterSender)
                 .HasForeignKey(cc => cc.id);
             modelBuilder.Entity<Counter>()
-                .HasMany(c => c.counterReceive)
+                .HasMany(c => c.CounterReceive)
                 .WithOne(cc => cc.CounterReceiver)
                 .HasForeignKey(cc => cc.id);
            modelBuilder.Entity<Counter>()
-                .HasMany(c => c.stickers)
-                .WithOne(s => s.counter)
+                .HasMany(c => c.Stickers)
+                .WithOne(s => s.Counter)
                 .HasForeignKey(s => s.counterId);
             modelBuilder.Entity<Counter>()
-                .HasMany(c => c.evaluations)
+                .HasMany(c => c.Evaluations)
                 .WithOne(e => e.Counter)
                 .HasForeignKey(e => e.counterId);
             modelBuilder.Entity<Counter>()
-                .HasOne(c => c.unit)
-                .WithMany(u => u.counters)
+                .HasOne(c => c.Unit)
+                .WithMany(u => u.Counters)
                 .HasForeignKey(c => c.unitId);
 
             modelBuilder.Entity<CounterChange>()
                 .HasOne(cc => cc.CounterSender)
-                .WithMany(c => c.counterSend)
+                .WithMany(c => c.CounterSend)
                 .HasForeignKey(cc => cc.id);
             modelBuilder.Entity<CounterChange>()
                 .HasOne(cc => cc.CounterReceiver)
-                .WithMany(c => c.counterReceive)
+                .WithMany(c => c.CounterReceive)
                 .HasForeignKey(cc => cc.id);
             modelBuilder.Entity<CounterChange>()
                 .HasOne(cc => cc.Sticker)
@@ -96,75 +97,76 @@ namespace SystemQMS.Models
                 .HasForeignKey(cc => cc.sttId);
 
            modelBuilder.Entity<Service>()
-                .HasMany(s => s.numberFomulars)
+                .HasMany(s => s.NumberFomulars)
                 .WithOne(nf => nf.Service)
                 .HasForeignKey(nf => nf.serviceId);
             modelBuilder.Entity<Service>()
-                .HasMany(s => s.bookings)
+                .HasMany(s => s.Bookings)
                 .WithOne(b => b.Service)
                 .HasForeignKey(b => b.serviceId);
 
             modelBuilder.Entity<Service>()
-                .HasMany(s => s.stickers)
-                .WithOne(st => st.service)
+                .HasMany(s => s.Stickers)
+                .WithOne(st => st.Service)
                 .HasForeignKey(st => st.serviceId);
             modelBuilder.Entity<Service>()
-                .HasMany(s => s.evaluations)
+                .HasMany(s => s.Evaluations)
                 .WithOne(e => e.Service)
                 .HasForeignKey(e => e.serviceId);
             modelBuilder.Entity<Service>()
-                .HasMany(s => s.sheduleActives)
+                .HasMany(s => s.SheduleActives)
                 .WithOne(sa => sa.Service)
                 .HasForeignKey(sa => sa.serviceId);
             modelBuilder.Entity<Service>()
-                .HasOne(s => s.unit)
-                .WithMany(u => u.services)
+                .HasOne(s => s.Unit)
+                .WithMany(u => u.Services)
                 .HasForeignKey(s => s.unitId);
+
 
             modelBuilder.Entity<NumberFomular>()
                 .HasOne(nf => nf.Service)
-                .WithMany(s => s.numberFomulars)
+                .WithMany(s => s.NumberFomulars)
                 .HasForeignKey(nf => nf.serviceId);
 
             modelBuilder.Entity<SheduleActive>()
                 .HasOne(sa => sa.Service)
-                .WithMany(s => s.sheduleActives)
+                .WithMany(s => s.SheduleActives)
                 .HasForeignKey(sa => sa.serviceId);
 
              modelBuilder.Entity<Unit>()
-                .HasMany(u => u.services)
-                .WithOne(s => s.unit)
+                .HasMany(u => u.Services)
+                .WithOne(s => s.Unit)
                 .HasForeignKey(s => s.unitId);
             modelBuilder.Entity<Unit>()
-                .HasMany(u => u.users)
-                .WithOne(us => us.unit)
+                .HasMany(u => u.Users)
+                .WithOne(us => us.Unit)
                 .HasForeignKey(us => us.unitId);
             modelBuilder.Entity<Unit>()
-                .HasMany(g => g.guests)
-                .WithOne(u => u.unit)
-                .HasForeignKey(u => u.unitId);
-            modelBuilder.Entity<Unit>()
-                .HasMany(d => d.diaries)
+                .HasMany(g => g.Guests)
                 .WithOne(u => u.Unit)
                 .HasForeignKey(u => u.unitId);
             modelBuilder.Entity<Unit>()
-                .HasMany(c => c.counters)
-                .WithOne(u => u.unit)
+                .HasMany(d => d.Diaries)
+                .WithOne(u => u.Unit)
                 .HasForeignKey(u => u.unitId);
             modelBuilder.Entity<Unit>()
-                .HasMany(st => st.stickers)
-                .WithOne(s => s.unit)
+                .HasMany(c => c.Counters)
+                .WithOne(u => u.Unit)
+                .HasForeignKey(u => u.unitId);
+            modelBuilder.Entity<Unit>()
+                .HasMany(st => st.Stickers)
+                .WithOne(s => s.Unit)   
                 .HasForeignKey(s => s.unitId);
             modelBuilder.Entity<Unit>()
-                .HasMany(n => n.noti)
-                .WithOne(u => u.unit)
-                .HasForeignKey(u => u.unitId);
-            modelBuilder.Entity<Unit>()
-                .HasMany(e => e.evaluations)
+                .HasMany(n => n.Notifications)
                 .WithOne(u => u.Unit)
                 .HasForeignKey(u => u.unitId);
             modelBuilder.Entity<Unit>()
-                .HasMany(et => et.evaluationTemplates)
+                .HasMany(e => e.Evaluations)
+                .WithOne(u => u.Unit)
+                .HasForeignKey(u => u.unitId);
+            modelBuilder.Entity<Unit>()
+                .HasMany(et => et.EvaluationTemplates)
                 .WithOne(u => u.Unit)
                 .HasForeignKey(u => u.unitId);
 
@@ -177,79 +179,79 @@ namespace SystemQMS.Models
                 .WithOne(e => e.Sticker)
                 .HasForeignKey(st => st.sttId);
             modelBuilder.Entity<Sticker>()
-                .HasMany(b => b.bookings)
+                .HasMany(b => b.Bookings)
                 .WithOne(b => b.Sticker)
                 .HasForeignKey(st => st.sttId);
             modelBuilder.Entity<Sticker>()
-                .HasOne(u => u.unit)
-                .WithMany(c => c.stickers)
+                .HasOne(u => u.Unit)
+                .WithMany(c => c.Stickers)
                 .HasForeignKey(st => st.unitId);
             modelBuilder.Entity<Sticker>()
-                .HasOne(c => c.counter)
-                .WithMany(s => s.stickers)
+                .HasOne(c => c.Counter)
+                .WithMany(s => s.Stickers)
                 .HasForeignKey(st => st.counterId);
             modelBuilder.Entity<Sticker>()
-                .HasOne(s => s.service)
-                .WithMany(st => st.stickers)
+                .HasOne(s => s.Service)
+                .WithMany(st => st.Stickers)
                 .HasForeignKey(st => st.serviceId);
             modelBuilder.Entity<Sticker>()
-                .HasOne(u => u.users)
-                .WithMany(s => s.stickers)
+                .HasOne(u => u.Users)
+                .WithMany(s => s.Stickers)
                 .HasForeignKey(st => st.userId);
 
             modelBuilder.Entity<Booking>()
                 .HasOne(b => b.Service)
-                .WithMany(s => s.bookings)
+                .WithMany(s => s.Bookings)
                 .HasForeignKey(b => b.serviceId);
             modelBuilder.Entity<Booking>()
                 .HasOne(b => b.Sticker)
-                .WithMany(st => st.bookings)
+                .WithMany(st => st.Bookings)
                 .HasForeignKey(b => b.sttId);
             modelBuilder.Entity<Booking>()
                 .HasOne(b => b.Guest)
-                .WithMany(g => g.bookings)
+                .WithMany(g => g.Bookings)
                 .HasForeignKey(b => b.guestId);
 
             modelBuilder.Entity<Guest>()
-                .HasMany(g => g.bookings)
+                .HasMany(g => g.Bookings)
                 .WithOne(b => b.Guest)
                 .HasForeignKey(b => b.guestId);
             modelBuilder.Entity<Guest>()
-                .HasOne(g => g.unit)
-                .WithMany(u => u.guests)
+                .HasOne(g => g.Unit)
+                .WithMany(u => u.Guests)
                 .HasForeignKey(g => g.unitId);
             modelBuilder.Entity<Guest>()
-                .HasMany(g => g.histories)
-                .WithOne(d => d.guest)
+                .HasMany(g => g.Histories)
+                .WithOne(d => d.Guest)
                 .HasForeignKey(d => d.guestId);
 
             modelBuilder.Entity<History>()
                 .HasKey(h => new { h.notiId, h.guestId });
             modelBuilder.Entity<History>()
-                .HasOne(h => h.guest)
-                .WithMany(g => g.histories)
+                .HasOne(h => h.Guest)
+                .WithMany(g => g.Histories)
                 .HasForeignKey(h => h.guestId);
             modelBuilder.Entity<History>()
-                .HasOne(h => h.notification)
+                .HasOne(h => h.Notification)
                 .WithMany(n => n.Histories)
                 .HasForeignKey(h => h.notiId);
 
             modelBuilder.Entity<Notification>()
                 .HasMany(n => n.Histories)
-                .WithOne(h => h.notification)
+                .WithOne(h => h.Notification)
                 .HasForeignKey(h => h.notiId);
             modelBuilder.Entity<Notification>()
-                .HasOne(n => n.unit)
-                .WithMany(u => u.noti)
+                .HasOne(n => n.Unit)
+                .WithMany(u => u.Notifications)
                 .HasForeignKey(n => n.unitId);
 
             modelBuilder.Entity<Evaluation>()
                 .HasOne(e => e.Service)
-                .WithMany(s => s.evaluations)
+                .WithMany(s => s.Evaluations)
                 .HasForeignKey(e => e.serviceId);
             modelBuilder.Entity<Evaluation>()
                 .HasOne(e => e.Counter)
-                .WithMany(g => g.evaluations)
+                .WithMany(g => g.Evaluations)
                 .HasForeignKey(e => e.counterId);
             modelBuilder.Entity<Evaluation>()
                 .HasOne(e => e.Sticker)
@@ -257,24 +259,35 @@ namespace SystemQMS.Models
                 .HasForeignKey(e => e.sttId);
             modelBuilder.Entity<Evaluation>()
                 .HasOne(e => e.Unit)
-                .WithMany(u => u.evaluations)
+                .WithMany(u => u.Evaluations)
                 .HasForeignKey(e => e.unitId);
 
             modelBuilder.Entity<EvaluationTemplate>()
                 .HasOne(et => et.Unit)
-                .WithMany(u => u.evaluationTemplates)
+                .WithMany(u => u.EvaluationTemplates)
                 .HasForeignKey(et => et.unitId);
 
             modelBuilder.Entity<Diary>()
                 .HasOne(d => d.User)
-                .WithMany(u => u.diaries)
+                .WithMany(u => u.Diaries)
                 .HasForeignKey(d => d.userId);
             modelBuilder.Entity<Diary>()
                 .HasOne(d => d.Unit)
-                .WithMany(u => u.diaries)
+                .WithMany(u => u.Diaries)
                 .HasForeignKey(d => d.unitId);
 
-            
+            modelBuilder.Entity<Unit>()
+                .HasOne(u => u.UnitConfig)
+                .WithOne(uc => uc.Unit)
+                .HasForeignKey<UnitConfig>(uc => uc.UnitId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            modelBuilder.Entity<UnitConfig>()
+                .HasOne(uc => uc.EvaluationTemplate)
+                .WithMany()
+                .HasForeignKey(uc => uc.ActiveEvaluationTemplateId)
+                .OnDelete(DeleteBehavior.SetNull);
+
         }
     }
 }

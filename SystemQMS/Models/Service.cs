@@ -19,15 +19,15 @@ namespace SystemQMS.Models
         public string sharingLink { get; set; }
         public DateTimeOffset averageTime { get; set; }
 
-        public ICollection<Counter> counters = new List<Counter>();
+        public ICollection<Counter> counters { get; set; } = new List<Counter>();
         [ForeignKey("unitId")]
-        public virtual Unit? unit { get; set; }
-        public ICollection<Device> devices = new List<Device>();
-        public ICollection<Sticker> stickers = new List<Sticker>();
-        public ICollection<Evaluation> evaluations = new List<Evaluation>();
-        public ICollection<SheduleActive> sheduleActives = new List<SheduleActive>();
+        public virtual Unit? Unit { get; set; }
+        public ICollection<Device> Devices { get; set; } = new List<Device>();
+        public ICollection<Sticker> Stickers { get; set; } = new List<Sticker>();
+        public ICollection<Evaluation> Evaluations { get; set; } = new List<Evaluation>();
+        public ICollection<SheduleActive> SheduleActives { get; set; } = new List<SheduleActive>();
 
-        public ICollection<NumberFomular> numberFomulars = new List<NumberFomular>();
-        public ICollection<Booking> bookings = new List<Booking>();
+        public ICollection<NumberFomular> NumberFomulars { get; set; } = new List<NumberFomular>();
+        public ICollection<Booking> Bookings { get; set; } = new List<Booking>();
     }
 }
