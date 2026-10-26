@@ -4,6 +4,7 @@ using SystemQMS.Dtos;
 using SystemQMS.Models;
 using Microsoft.EntityFrameworkCore;
 using SystemQMS.Hubs;
+using System.IO;
 
 namespace SystemQMS.Services
 {
@@ -60,7 +61,23 @@ namespace SystemQMS.Services
             if (dto.BannerText != null) unit.UnitConfig.BannerText = dto.BannerText;
             if (dto.ToneColorHex != null) unit.UnitConfig.ToneColorHex = dto.ToneColorHex;
 
+            if (dto.BackgroundFile != null)
+            {
+                unit.UnitConfig.BackgroundImage = await SaveFileAsync(dto.BackgroundFile, "backgrounds");
+            }
+
+            if (dto.LogoFile != null)
+            {
+                using (var memoryStream = new MemoryStream())
+                {
+                    await dto.LogoFile.CopyToAsync(memoryStream);
+                    unit.logo = memoryStream.ToArray();
+                }
+            }
+
             await _context.SaveChangesAsync();
+
+            await _hubContext.Clients.Group($"Unit_{unitId}").SendAsync("OnDisplayConfigChanged");
 
             return await GetDisplayConfigAsync(unitId);
         }
@@ -94,7 +111,14 @@ namespace SystemQMS.Services
             var config = await _context.unitConfigs.FirstOrDefaultAsync(c => c.UnitId == unitId);
             if (config == null)
             {
-                config = new UnitConfig { UnitId = unitId, ActiveAudioTemplateId = templateId };
+                config = new UnitConfig
+                {
+                    UnitId = unitId,
+                    ActiveAudioTemplateId = templateId,
+                    BackgroundImage = "",
+                    BannerText = "",
+                    ToneColorHex = ""
+                };
                 _context.unitConfigs.Add(config);
             }
             else
@@ -107,8 +131,16 @@ namespace SystemQMS.Services
 
         private async Task<string> SaveFileAsync(IFormFile file, string folder)
         {
+            var folderPath = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot", folder);
+
+            if (!Directory.Exists(folderPath))
+            {
+                Directory.CreateDirectory(folderPath);
+            }
+
             var fileName = $"{Guid.NewGuid()}_{file.FileName}";
-            var filePath = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot", folder, fileName);
+            var filePath = Path.Combine(folderPath, fileName);
+
             using (var stream = new FileStream(filePath, FileMode.Create))
             {
                 await file.CopyToAsync(stream);
