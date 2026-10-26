@@ -8,6 +8,11 @@
         {
             var audioFiles = new List<string>();
 
+            if (templateId == 1 || templateId == 3)
+            {
+                audioFiles.Add($"{_audioBaseUrl}welcome.wav");
+            }
+
             if (!string.IsNullOrEmpty(ticketNumber))
             {
                 foreach (char c in ticketNumber.ToUpper())
@@ -19,11 +24,11 @@
                 }
             }
 
-            switch (templateId)
+            if (templateId == 3) return audioFiles;
+
+            if (templateId == 1 || templateId == 2)
             {
-                default:
-                    audioFiles.Add($"{_audioBaseUrl}come-to.wav");
-                    break;
+                audioFiles.Add($"{_audioBaseUrl}come-to.wav");
             }
 
             if (!string.IsNullOrEmpty(counterName))

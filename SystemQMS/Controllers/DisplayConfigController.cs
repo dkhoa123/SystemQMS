@@ -86,4 +86,32 @@ public class AudioConfigController : ControllerBase
         var audioUrls = _audioService.BuildAudioSequence(request.SampleTicketNumber, request.SampleCounterName, request.TemplateId);
         return Ok(new { playSequence = audioUrls });
     }
+
+    [HttpGet("AudioTemplates")]
+    public IActionResult GetAudioTemplates()
+    {
+        var templates = new List<AudioTemplateDto>
+        {
+            new AudioTemplateDto
+            {
+                Id = 1,
+                Name = "Đọc đầy đủ",
+                Description = "Xin mời số thứ tự [...] đến quầy [...]"
+            },
+            new AudioTemplateDto
+            {
+                Id = 2,
+                Name = "Đọc ngắn gọn",
+                Description = "[...] đến quầy [...]"
+            },
+            new AudioTemplateDto
+            {
+                Id = 3,
+                Name = "Chỉ đọc số thứ tự",
+                Description = "Xin mời số thứ tự [...]"
+            }
+        };
+
+        return Ok(templates);
+    }
 }
