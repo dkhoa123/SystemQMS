@@ -1,4 +1,4 @@
-﻿namespace SystemQMS.Models
+﻿namespace SystemQMS.ViewModels.AudioDto
 {
     public class AudioPreviewDto
     {

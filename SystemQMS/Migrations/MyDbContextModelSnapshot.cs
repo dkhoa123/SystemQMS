@@ -34,7 +34,11 @@ namespace SystemQMS.Migrations
 
                     b.HasIndex("Devicesid");
 
+
                     b.ToTable("CounterDevice");
+
+                    b.ToTable("CounterDevice", (string)null);
+
                 });
 
             modelBuilder.Entity("CounterService", b =>
@@ -49,7 +53,10 @@ namespace SystemQMS.Migrations
 
                     b.HasIndex("countersid");
 
+
                     b.ToTable("CounterService");
+
+                    b.ToTable("CounterService", (string)null);
                 });
 
             modelBuilder.Entity("DeviceService", b =>
@@ -65,6 +72,8 @@ namespace SystemQMS.Migrations
                     b.HasIndex("Servicesid");
 
                     b.ToTable("DeviceService");
+
+                    b.ToTable("DeviceService", (string)null);
                 });
 
             modelBuilder.Entity("SystemQMS.Models.Booking", b =>
@@ -105,7 +114,7 @@ namespace SystemQMS.Migrations
 
                     b.HasIndex("sttId");
 
-                    b.ToTable("bookings");
+                    b.ToTable("bookings", (string)null);
                 });
 
             modelBuilder.Entity("SystemQMS.Models.Counter", b =>
@@ -144,7 +153,7 @@ namespace SystemQMS.Migrations
 
                     b.HasIndex("unitId");
 
-                    b.ToTable("counters");
+                    b.ToTable("counters", (string)null);
                 });
 
             modelBuilder.Entity("SystemQMS.Models.CounterChange", b =>
@@ -182,7 +191,7 @@ namespace SystemQMS.Migrations
 
                     b.HasIndex("sttId");
 
-                    b.ToTable("counterChanges");
+                    b.ToTable("counterChanges", (string)null);
                 });
 
             modelBuilder.Entity("SystemQMS.Models.Device", b =>
@@ -242,7 +251,7 @@ namespace SystemQMS.Migrations
 
                     b.HasKey("id");
 
-                    b.ToTable("devices");
+                    b.ToTable("devices", (string)null);
                 });
 
             modelBuilder.Entity("SystemQMS.Models.Diary", b =>
@@ -281,7 +290,7 @@ namespace SystemQMS.Migrations
 
                     b.HasIndex("userId");
 
-                    b.ToTable("diaries");
+                    b.ToTable("diaries", (string)null);
                 });
 
             modelBuilder.Entity("SystemQMS.Models.Evaluation", b =>
@@ -351,7 +360,7 @@ namespace SystemQMS.Migrations
 
                     b.HasIndex("unitId");
 
-                    b.ToTable("evaluations");
+                    b.ToTable("evaluations", (string)null);
                 });
 
             modelBuilder.Entity("SystemQMS.Models.EvaluationTemplate", b =>
@@ -384,7 +393,7 @@ namespace SystemQMS.Migrations
 
                     b.HasIndex("unitId");
 
-                    b.ToTable("evaluationTemplates");
+                    b.ToTable("evaluationTemplates", (string)null);
                 });
 
             modelBuilder.Entity("SystemQMS.Models.Guest", b =>
@@ -436,7 +445,7 @@ namespace SystemQMS.Migrations
 
                     b.HasIndex("unitId");
 
-                    b.ToTable("guests");
+                    b.ToTable("guests", (string)null);
                 });
 
             modelBuilder.Entity("SystemQMS.Models.History", b =>
@@ -456,7 +465,7 @@ namespace SystemQMS.Migrations
 
                     b.HasIndex("guestId");
 
-                    b.ToTable("histories");
+                    b.ToTable("histories", (string)null);
                 });
 
             modelBuilder.Entity("SystemQMS.Models.Notification", b =>
@@ -502,7 +511,7 @@ namespace SystemQMS.Migrations
 
                     b.HasIndex("unitId");
 
-                    b.ToTable("notifications");
+                    b.ToTable("notifications", (string)null);
                 });
 
             modelBuilder.Entity("SystemQMS.Models.NumberFomular", b =>
@@ -513,6 +522,9 @@ namespace SystemQMS.Migrations
 
                     NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("id"));
 
+                    b.Property<int?>("dailyEndNumber")
+                        .HasColumnType("integer");
+
                     b.Property<int>("endNumber")
                         .HasColumnType("integer");
 
@@ -520,6 +532,9 @@ namespace SystemQMS.Migrations
                         .IsRequired()
                         .HasMaxLength(20)
                         .HasColumnType("character varying(20)");
+
+                    b.Property<bool>("isDailyLimitEnabled")
+                        .HasColumnType("boolean");
 
                     b.Property<string>("lastName")
                         .IsRequired()
@@ -534,6 +549,11 @@ namespace SystemQMS.Migrations
                         .HasMaxLength(100)
                         .HasColumnType("character varying(100)");
 
+                    b.Property<string>("sequenceMode")
+                        .IsRequired()
+                        .HasMaxLength(20)
+                        .HasColumnType("character varying(20)");
+
                     b.Property<int>("serviceId")
                         .HasColumnType("integer");
 
@@ -544,7 +564,7 @@ namespace SystemQMS.Migrations
 
                     b.HasIndex("serviceId");
 
-                    b.ToTable("numberFomulars");
+                    b.ToTable("numberFomulars", (string)null);
                 });
 
             modelBuilder.Entity("SystemQMS.Models.Roles", b =>
@@ -565,7 +585,7 @@ namespace SystemQMS.Migrations
 
                     b.HasKey("roleId");
 
-                    b.ToTable("roles");
+                    b.ToTable("roles", (string)null);
                 });
 
             modelBuilder.Entity("SystemQMS.Models.Service", b =>
@@ -610,7 +630,7 @@ namespace SystemQMS.Migrations
 
                     b.HasIndex("unitId");
 
-                    b.ToTable("services");
+                    b.ToTable("services", (string)null);
                 });
 
             modelBuilder.Entity("SystemQMS.Models.SheduleActive", b =>
@@ -639,7 +659,7 @@ namespace SystemQMS.Migrations
 
                     b.HasIndex("serviceId");
 
-                    b.ToTable("shedules");
+                    b.ToTable("shedules", (string)null);
                 });
 
             modelBuilder.Entity("SystemQMS.Models.Sticker", b =>
@@ -686,7 +706,7 @@ namespace SystemQMS.Migrations
 
                     b.HasIndex("userId");
 
-                    b.ToTable("stickers");
+                    b.ToTable("stickers", (string)null);
                 });
 
             modelBuilder.Entity("SystemQMS.Models.Unit", b =>
@@ -730,7 +750,7 @@ namespace SystemQMS.Migrations
 
                     b.HasKey("unitId");
 
-                    b.ToTable("units");
+                    b.ToTable("units", (string)null);
                 });
 
             modelBuilder.Entity("SystemQMS.Models.UnitConfig", b =>
@@ -819,7 +839,52 @@ namespace SystemQMS.Migrations
 
                     b.HasIndex("unitId");
 
-                    b.ToTable("users");
+                    b.ToTable("users", (string)null);
+                });
+
+            modelBuilder.Entity("CounterDevice", b =>
+                {
+                    b.HasOne("SystemQMS.Models.Counter", null)
+                        .WithMany()
+                        .HasForeignKey("Countersid")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("SystemQMS.Models.Device", null)
+                        .WithMany()
+                        .HasForeignKey("Devicesid")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("CounterService", b =>
+                {
+                    b.HasOne("SystemQMS.Models.Service", null)
+                        .WithMany()
+                        .HasForeignKey("Servicesid")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("SystemQMS.Models.Counter", null)
+                        .WithMany()
+                        .HasForeignKey("countersid")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("DeviceService", b =>
+                {
+                    b.HasOne("SystemQMS.Models.Device", null)
+                        .WithMany()
+                        .HasForeignKey("Devicesid")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("SystemQMS.Models.Service", null)
+                        .WithMany()
+                        .HasForeignKey("Servicesid")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
                 });
 
             modelBuilder.Entity("CounterDevice", b =>

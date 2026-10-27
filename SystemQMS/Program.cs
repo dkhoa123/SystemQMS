@@ -13,9 +13,14 @@ builder.Services.AddDbContext<MyDbContext>(options =>
 
 builder.Services.AddScoped<IDevSvc, DevSvc>();
 builder.Services.AddControllers();
+
 builder.Services.AddSignalR();
 builder.Services.AddScoped<IConfigSvc, ConfigService>();
 builder.Services.AddScoped<IAudioMappingSvc, AudioMappingService>();
+
+builder.Services.AddScoped<INumberFomularSvc, NumberFomularSvc>();
+builder.Services.AddScoped<IStickerSvc, StickerSvc>();
+
 // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
