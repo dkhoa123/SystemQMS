@@ -1,10 +1,10 @@
 ﻿
 using Microsoft.AspNetCore.SignalR;
-using SystemQMS.Dtos;
 using SystemQMS.Models;
 using Microsoft.EntityFrameworkCore;
 using SystemQMS.Hubs;
 using System.IO;
+using SystemQMS.ViewModels.AudioDto;
 
 namespace SystemQMS.Services
 {

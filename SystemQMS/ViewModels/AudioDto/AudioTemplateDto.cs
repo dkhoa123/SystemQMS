@@ -1,4 +1,4 @@
-﻿namespace SystemQMS.Dtos
+﻿namespace SystemQMS.ViewModels.AudioDto
 {
     public class AudioTemplateDto
     {

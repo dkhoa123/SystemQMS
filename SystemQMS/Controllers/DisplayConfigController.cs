@@ -1,8 +1,7 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using System.Threading.Tasks;
-using SystemQMS.Dtos;
 using SystemQMS.Services;
-using SystemQMS.Models;
+using SystemQMS.ViewModels.AudioDto;
 
 [ApiController]
 [Route("api/v1/configs/display")]

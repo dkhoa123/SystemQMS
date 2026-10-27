@@ -1,6 +1,6 @@
 ﻿using Microsoft.AspNetCore.Http;
 
-namespace SystemQMS.Dtos
+namespace SystemQMS.ViewModels.AudioDto
 {
     public class DisplayConfigUpdateDto
     {
