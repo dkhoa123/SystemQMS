@@ -1,4 +1,4 @@
-﻿using SystemQMS.Dtos;
+﻿using SystemQMS.ViewModels.CountersDto;
 
 namespace SystemQMS.Services.Interface
 {

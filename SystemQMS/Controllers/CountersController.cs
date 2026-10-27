@@ -1,7 +1,7 @@
 ﻿using Microsoft.AspNetCore.Mvc;
-using SystemQMS.Dtos;
 using SystemQMS.Services;
 using SystemQMS.Services.Interface;
+using SystemQMS.ViewModels.CountersDto;
 
 namespace SystemQMS.Controllers
 {

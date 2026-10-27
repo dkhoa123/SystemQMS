@@ -1,5 +1,5 @@
 ﻿using SystemQMS.Models;
-using SystemQMS.ViewModels;
+using SystemQMS.ViewModels.DevicesDto;
 
 namespace SystemQMS.Services.Interface
 {

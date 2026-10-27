@@ -2,7 +2,7 @@
 using Microsoft.AspNetCore.Mvc;
 using SystemQMS.Models;
 using SystemQMS.Services.Interface;
-using SystemQMS.ViewModels;
+using SystemQMS.ViewModels.DevicesDto;
 
 namespace SystemQMS.Controllers
 {

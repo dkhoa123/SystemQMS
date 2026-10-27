@@ -1,4 +1,4 @@
-﻿namespace SystemQMS.ViewModels
+﻿namespace SystemQMS.ViewModels.DevicesDto
 {
     public class UpdateDeviceDto
     {

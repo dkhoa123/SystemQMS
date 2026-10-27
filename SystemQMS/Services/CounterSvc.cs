@@ -1,9 +1,9 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using Npgsql;
 using System.Text.RegularExpressions;
-using SystemQMS.Dtos;
 using SystemQMS.Models;
 using SystemQMS.Services.Interface;
+using SystemQMS.ViewModels.CountersDto;
 
 namespace SystemQMS.Services
 {

@@ -1,6 +1,6 @@
 ﻿using System.ComponentModel.DataAnnotations;
 
-namespace SystemQMS.ViewModels
+namespace SystemQMS.ViewModels.DevicesDto
 {
     public class DeviceLoginDto
     {
