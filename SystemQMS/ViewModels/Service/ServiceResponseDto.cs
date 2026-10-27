@@ -1,4 +1,4 @@
-namespace SystemQMS.DTOs.Service
+namespace SystemQMS.ViewModels.Service
 {
     // DTO trả về danh sách dịch vụ (SVC-01)
     public class ServiceResponseDto

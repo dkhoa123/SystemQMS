@@ -1,7 +1,7 @@
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
-using SystemQMS.DTOs.Service;
 using SystemQMS.Models;
+using SystemQMS.ViewModels.Service;
 
 namespace SystemQMS.Controllers
 {
@@ -28,7 +28,7 @@ namespace SystemQMS.Controllers
         {
             var query = _context.services
                 .AsNoTracking()
-                .Include(s => s.stickers)
+                .Include(s => s.Stickers)
                 .AsQueryable();
 
             if (unitId.HasValue)
@@ -43,7 +43,7 @@ namespace SystemQMS.Controllers
 
             if (counterId.HasValue)
             {
-                query = query.Where(s => s.stickers.Any(st => st.counterId == counterId.Value));
+                query = query.Where(s => s.Stickers.Any(st => st.counterId == counterId.Value));
             }
 
             if (!string.IsNullOrWhiteSpace(search))
@@ -64,7 +64,7 @@ namespace SystemQMS.Controllers
                 isActive = s.isActive,
                 sharingLink = s.sharingLink,
                 averageTime = s.averageTime,
-                totalTicketsIssued = s.stickers.Count
+                totalTicketsIssued = s.Stickers.Count
             }).ToListAsync();
 
             return Ok(result);
@@ -82,10 +82,10 @@ namespace SystemQMS.Controllers
         {
             var service = await _context.services
                 .AsNoTracking()
-                .Include(s => s.stickers)
-                    .ThenInclude(st => st.counter)
-                .Include(s => s.stickers)
-                    .ThenInclude(st => st.users)
+                .Include(s => s.Stickers)
+                    .ThenInclude(st => st.Counter)
+                .Include(s => s.Stickers)
+                    .ThenInclude(st => st.Users)
                 .FirstOrDefaultAsync(s => s.id == id);
 
             if (service == null)
@@ -94,7 +94,7 @@ namespace SystemQMS.Controllers
             }
 
             // Lọc danh sách STT theo trạng thái và thời gian cấp (SVC-05)
-            var ticketsQuery = service.stickers.AsQueryable();
+            var ticketsQuery = service.Stickers.AsQueryable();
 
             if (!string.IsNullOrWhiteSpace(ticketStatus))
             {
@@ -117,16 +117,16 @@ namespace SystemQMS.Controllers
                 ticketNumber = t.sttId,
                 status = t.status,
                 stage = t.stage,
-                handlerUser = t.users != null ? t.users.username : "Chưa xử lý",
+                handlerUser = t.Users != null ? t.Users.username : "Chưa xử lý",
                 issuanceTime = t.issuanceTime,
                 useTime = t.useTime,
-                counterName = t.counter != null ? t.counter.counterName : "Trống"
+                counterName = t.Counter != null ? t.Counter.counterName : "Trống"
             }).ToList();
 
             // Lấy danh sách các quầy đã phục vụ dịch vụ này
-            var assignedCounters = service.stickers
-                .Where(t => t.counter != null)
-                .Select(t => t.counter!)
+            var assignedCounters = service.Stickers
+                .Where(t => t.Counter != null)
+                .Select(t => t.Counter!)
                 .GroupBy(c => c.id)
                 .Select(g => g.First())
                 .Select(c => new ServiceCounterItemDto
@@ -135,7 +135,7 @@ namespace SystemQMS.Controllers
                     counterId = c.counterId,
                     counterName = c.counterName,
                     isActive = c.isActive,
-                    status = c.Status
+                    status = c.status
                 }).ToList();
 
             var detailDto = new ServiceDetailDto
@@ -149,7 +149,7 @@ namespace SystemQMS.Controllers
                 isActive = service.isActive,
                 sharingLink = service.sharingLink,
                 averageTime = service.averageTime,
-                totalTicketsIssued = service.stickers.Count,
+                totalTicketsIssued = service.Stickers.Count,
                 assignedCounters = assignedCounters,
                 issuedTickets = ticketItems
             };
@@ -240,7 +240,7 @@ namespace SystemQMS.Controllers
         public async Task<IActionResult> DeleteService(int id)
         {
             var service = await _context.services
-                .Include(s => s.stickers)
+                .Include(s => s.Stickers)
                 .FirstOrDefaultAsync(s => s.id == id);
 
             if (service == null)
@@ -249,7 +249,7 @@ namespace SystemQMS.Controllers
             }
 
             // Chặn xóa nếu dịch vụ đã có STT (bảng stickers) được cấp
-            if (service.stickers.Any())
+            if (service.Stickers.Any())
             {
                 return BadRequest(new 
                 { 

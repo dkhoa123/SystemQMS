@@ -1,6 +1,6 @@
 using System.ComponentModel.DataAnnotations;
 
-namespace SystemQMS.DTOs.Service
+namespace SystemQMS.ViewModels.Service
 {
     public class UpdateServiceDto
     {
