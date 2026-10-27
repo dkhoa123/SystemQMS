@@ -30,7 +30,7 @@ namespace SystemQMS.Models
         public ICollection<Notification> Notifications { get; set; } = new List<Notification>();
         public ICollection<Evaluation> Evaluations { get; set; } = new List<Evaluation>();
         public ICollection<EvaluationTemplate> EvaluationTemplates { get; set; } = new List<EvaluationTemplate>();
-
+        public virtual UnitConfig UnitConfig { get; set; }
 
 
 

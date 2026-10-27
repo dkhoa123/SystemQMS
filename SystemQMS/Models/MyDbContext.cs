@@ -24,6 +24,7 @@ namespace SystemQMS.Models
         public DbSet<Sticker> stickers { get; set; }
         public DbSet<History> histories { get; set; }
         public DbSet<Notification> notifications { get; set; }
+        public DbSet<UnitConfig> unitConfigs { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
@@ -278,7 +279,19 @@ namespace SystemQMS.Models
                 .HasOne(d => d.Unit)
                 .WithMany(u => u.Diaries)
                 .HasForeignKey(d => d.unitId);
-            
+
+            modelBuilder.Entity<Unit>()
+                .HasOne(u => u.UnitConfig)
+                .WithOne(uc => uc.Unit)
+                .HasForeignKey<UnitConfig>(uc => uc.UnitId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            modelBuilder.Entity<UnitConfig>()
+                .HasOne(uc => uc.EvaluationTemplate)
+                .WithMany()
+                .HasForeignKey(uc => uc.ActiveEvaluationTemplateId)
+                .OnDelete(DeleteBehavior.SetNull);
+
         }
     }
 }

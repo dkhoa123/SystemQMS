@@ -7,6 +7,7 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <PackageReference Include="Microsoft.AspNetCore.SignalR" Version="1.2.13" />
     <PackageReference Include="Microsoft.EntityFrameworkCore" Version="8.0.30" />
     <PackageReference Include="Microsoft.EntityFrameworkCore.Tools" Version="8.0.30">
       <PrivateAssets>all</PrivateAssets>
@@ -14,6 +15,52 @@
     </PackageReference>
     <PackageReference Include="Npgsql.EntityFrameworkCore.PostgreSQL" Version="8.0.11" />
     <PackageReference Include="Swashbuckle.AspNetCore" Version="6.6.2" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Include="wwwroot\AudioConfigs\0-default.wav" />
+    <None Include="wwwroot\AudioConfigs\1-default.wav" />
+    <None Include="wwwroot\AudioConfigs\2-default.wav" />
+    <None Include="wwwroot\AudioConfigs\3-default.wav" />
+    <None Include="wwwroot\AudioConfigs\4-default.wav" />
+    <None Include="wwwroot\AudioConfigs\5-default.wav" />
+    <None Include="wwwroot\AudioConfigs\6-default.wav" />
+    <None Include="wwwroot\AudioConfigs\7-default.wav" />
+    <None Include="wwwroot\AudioConfigs\8-default.wav" />
+    <None Include="wwwroot\AudioConfigs\9-default.wav" />
+    <None Include="wwwroot\AudioConfigs\A-default.wav" />
+    <None Include="wwwroot\AudioConfigs\B-default.wav" />
+    <None Include="wwwroot\AudioConfigs\C-default.wav" />
+    <None Include="wwwroot\AudioConfigs\come-to.wav" />
+    <None Include="wwwroot\AudioConfigs\D-default.wav" />
+    <None Include="wwwroot\AudioConfigs\E-default.wav" />
+    <None Include="wwwroot\AudioConfigs\F-default.wav" />
+    <None Include="wwwroot\AudioConfigs\G-default.wav" />
+    <None Include="wwwroot\AudioConfigs\H-default.wav" />
+    <None Include="wwwroot\AudioConfigs\I-default.wav" />
+    <None Include="wwwroot\AudioConfigs\J-default.wav" />
+    <None Include="wwwroot\AudioConfigs\K-default.wav" />
+    <None Include="wwwroot\AudioConfigs\L-default.wav" />
+    <None Include="wwwroot\AudioConfigs\M-default.wav" />
+    <None Include="wwwroot\AudioConfigs\N-default.wav" />
+    <None Include="wwwroot\AudioConfigs\O-default.wav" />
+    <None Include="wwwroot\AudioConfigs\P-default.wav" />
+    <None Include="wwwroot\AudioConfigs\Q-default.wav" />
+    <None Include="wwwroot\AudioConfigs\R-default.wav" />
+    <None Include="wwwroot\AudioConfigs\S-default.wav" />
+    <None Include="wwwroot\AudioConfigs\T-default.wav" />
+    <None Include="wwwroot\AudioConfigs\U-default.wav" />
+    <None Include="wwwroot\AudioConfigs\V-default.wav" />
+    <None Include="wwwroot\AudioConfigs\W-default.wav" />
+    <None Include="wwwroot\AudioConfigs\welcome.wav" />
+    <None Include="wwwroot\AudioConfigs\X-default.wav" />
+    <None Include="wwwroot\AudioConfigs\Y-default.wav" />
+    <None Include="wwwroot\AudioConfigs\Z-default.wav" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Folder Include="wwwroot\logos\" />
+    <Folder Include="wwwroot\backgrounds\" />
   </ItemGroup>
 
 </Project>

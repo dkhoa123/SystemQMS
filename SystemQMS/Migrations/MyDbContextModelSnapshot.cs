@@ -733,6 +733,45 @@ namespace SystemQMS.Migrations
                     b.ToTable("units");
                 });
 
+            modelBuilder.Entity("SystemQMS.Models.UnitConfig", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+
+                    b.Property<int?>("ActiveAudioTemplateId")
+                        .HasColumnType("integer");
+
+                    b.Property<int?>("ActiveEvaluationTemplateId")
+                        .HasColumnType("integer");
+
+                    b.Property<string>("BackgroundImage")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<string>("BannerText")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<string>("ToneColorHex")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<int>("UnitId")
+                        .HasColumnType("integer");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("ActiveEvaluationTemplateId");
+
+                    b.HasIndex("UnitId")
+                        .IsUnique();
+
+                    b.ToTable("unitConfigs");
+                });
+
             modelBuilder.Entity("SystemQMS.Models.Users", b =>
                 {
                     b.Property<int>("userId")
@@ -1067,6 +1106,24 @@ namespace SystemQMS.Migrations
                     b.Navigation("Users");
                 });
 
+            modelBuilder.Entity("SystemQMS.Models.UnitConfig", b =>
+                {
+                    b.HasOne("SystemQMS.Models.EvaluationTemplate", "EvaluationTemplate")
+                        .WithMany()
+                        .HasForeignKey("ActiveEvaluationTemplateId")
+                        .OnDelete(DeleteBehavior.SetNull);
+
+                    b.HasOne("SystemQMS.Models.Unit", "Unit")
+                        .WithOne("UnitConfig")
+                        .HasForeignKey("SystemQMS.Models.UnitConfig", "UnitId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("EvaluationTemplate");
+
+                    b.Navigation("Unit");
+                });
+
             modelBuilder.Entity("SystemQMS.Models.Users", b =>
                 {
                     b.HasOne("SystemQMS.Models.Counter", "Counter")
@@ -1163,6 +1220,9 @@ namespace SystemQMS.Migrations
                     b.Navigation("Services");
 
                     b.Navigation("Stickers");
+
+                    b.Navigation("UnitConfig")
+                        .IsRequired();
 
                     b.Navigation("Users");
                 });
