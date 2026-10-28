@@ -1,7 +1,7 @@
 ﻿using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using SystemQMS.Models;
-using SystemQMS.Services;
+using SystemQMS.Services.Interface;
 
 namespace SystemQMS.Controllers
 {

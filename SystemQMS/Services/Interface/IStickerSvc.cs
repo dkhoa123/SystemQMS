@@ -1,6 +1,6 @@
 ﻿using SystemQMS.Models;
 
-namespace SystemQMS.Services
+namespace SystemQMS.Services.Interface
 {
     public interface IStickerSvc
     {

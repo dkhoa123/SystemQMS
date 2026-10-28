@@ -1,5 +1,6 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using SystemQMS.Models;
+using SystemQMS.Services.Interface;
 
 namespace SystemQMS.Services
 {

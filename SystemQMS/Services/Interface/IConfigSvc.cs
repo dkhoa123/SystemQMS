@@ -1,6 +1,6 @@
 ﻿using SystemQMS.ViewModels.AudioDto;
 
-namespace SystemQMS.Services
+namespace SystemQMS.Services.Interface
 {
     public interface IConfigSvc
     {

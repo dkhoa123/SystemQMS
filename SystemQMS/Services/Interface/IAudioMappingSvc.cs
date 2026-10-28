@@ -1,4 +1,4 @@
-﻿namespace SystemQMS.Services
+﻿namespace SystemQMS.Services.Interface
 {
     public interface IAudioMappingSvc
     {
