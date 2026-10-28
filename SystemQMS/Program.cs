@@ -21,6 +21,8 @@ builder.Services.AddScoped<IAudioMappingSvc, AudioMappingService>();
 builder.Services.AddScoped<INumberFomularSvc, NumberFomularSvc>();
 builder.Services.AddScoped<IStickerSvc, StickerSvc>();
 
+builder.Services.AddScoped<IServiceSvc, ServiceSvc>();
+
 // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();

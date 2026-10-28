@@ -1,8 +1,8 @@
-namespace SystemQMS.ViewModels.Service
+namespace SystemQMS.ViewModels.ServiceDto
 {
-    // DTO trả về danh sách dịch vụ (SVC-01)
     public class ServiceResponseDto
     {
+        // DTO trả về danh sách dịch vụ (SVC-01)
         public int id { get; set; }
         public int unitId { get; set; }
         public string serviceId { get; set; } = string.Empty;
@@ -16,6 +16,7 @@ namespace SystemQMS.ViewModels.Service
     }
 
     // DTO chi tiết dịch vụ gồm quầy xử lý và danh sách STT đã cấp (SVC-05)
+
     public class ServiceDetailDto : ServiceResponseDto
     {
         public List<ServiceCounterItemDto> assignedCounters { get; set; } = new List<ServiceCounterItemDto>();
@@ -33,7 +34,7 @@ namespace SystemQMS.ViewModels.Service
 
     public class ServiceTicketItemDto
     {
-        public string id { get; set; } = string.Empty; 
+        public string id { get; set; } = string.Empty;
         public string ticketNumber { get; set; } = string.Empty;
         public string status { get; set; } = string.Empty;
         public string stage { get; set; } = string.Empty;
