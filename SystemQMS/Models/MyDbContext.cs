@@ -64,14 +64,7 @@ namespace SystemQMS.Models
                 .HasOne(c => c.Unit)
                 .WithMany(u => u.Counters)
                 .HasForeignKey(c => c.unitId);
-            modelBuilder.Entity<Counter>()
-                .HasMany(c => c.CounterSend)
-                .WithOne(cc => cc.CounterSender)
-                .HasForeignKey(cc => cc.id);
-            modelBuilder.Entity<Counter>()
-                .HasMany(c => c.CounterReceive)
-                .WithOne(cc => cc.CounterReceiver)
-                .HasForeignKey(cc => cc.id);
+            
            modelBuilder.Entity<Counter>()
                 .HasMany(c => c.Stickers)
                 .WithOne(s => s.Counter)
@@ -88,11 +81,13 @@ namespace SystemQMS.Models
             modelBuilder.Entity<CounterChange>()
                 .HasOne(cc => cc.CounterSender)
                 .WithMany(c => c.CounterSend)
-                .HasForeignKey(cc => cc.id);
+                .HasForeignKey(cc => cc.counterIdSender) 
+                .OnDelete(DeleteBehavior.Restrict);
             modelBuilder.Entity<CounterChange>()
                 .HasOne(cc => cc.CounterReceiver)
                 .WithMany(c => c.CounterReceive)
-                .HasForeignKey(cc => cc.id);
+                .HasForeignKey(cc => cc.counterIdReceive)
+                .OnDelete(DeleteBehavior.Restrict);
             modelBuilder.Entity<CounterChange>()
                 .HasOne(cc => cc.Sticker)
                 .WithMany(s => s.CounterChanges)

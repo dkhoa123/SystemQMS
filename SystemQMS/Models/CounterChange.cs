@@ -15,9 +15,9 @@ namespace SystemQMS.Models
 
         [ForeignKey("sttId")]
         public virtual Sticker? Sticker { get; set; }
-        [ForeignKey("counterSenderId")]
+        [ForeignKey("counterIdSender")]
         public virtual Counter? CounterSender { get; set; }
-        [ForeignKey("counterIdReceiver")]
+        [ForeignKey("counterIdReceive")]
         public virtual Counter? CounterReceiver { get; set; }
     }
 }
