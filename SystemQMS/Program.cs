@@ -23,6 +23,10 @@ builder.Services.AddScoped<IStickerSvc, StickerSvc>();
 
 builder.Services.AddScoped<IServiceSvc, ServiceSvc>();
 
+builder.Services.AddScoped<ICounterSessionSvc, CounterSessionSvc>();
+builder.Services.AddScoped<IScheduleSvc, ScheduleSvc>();
+builder.Services.AddScoped<ICounterTicketSvc, CounterTicketSvc>();
+
 // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
