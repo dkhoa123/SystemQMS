@@ -21,10 +21,20 @@ builder.Services.AddScoped<IAudioMappingSvc, AudioMappingService>();
 builder.Services.AddScoped<INumberFomularSvc, NumberFomularSvc>();
 builder.Services.AddScoped<IStickerSvc, StickerSvc>();
 
+builder.Services.AddScoped<ICounterSvc, CounterSvc>();
+
+builder.Services.AddScoped<IQueueSvc, QueueSvc>();
+builder.Services.AddScoped<IScheduleSvc, ScheduleSvc>();
+builder.Services.AddScoped<ITransferSvc, TransferSvc>();
+
+
+// Job nền: tự nhận chuyển quầy quá hạn + mở lại quầy qua ngày mới
+builder.Services.AddHostedService<OprBackgroundSvc>();
+
+
 // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
-builder.Services.AddScoped<ICounterSvc, CounterSvc>();
 var app = builder.Build();
 
 // Configure the HTTP request pipeline.
