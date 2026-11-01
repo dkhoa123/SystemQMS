@@ -25,6 +25,7 @@ namespace SystemQMS.Models
         public DbSet<History> histories { get; set; }
         public DbSet<Notification> notifications { get; set; }
         public DbSet<UnitConfig> unitConfigs { get; set; }
+        public DbSet<CounterSession> counterSessions { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
@@ -291,7 +292,23 @@ namespace SystemQMS.Models
                 .WithMany()
                 .HasForeignKey(uc => uc.ActiveEvaluationTemplateId)
                 .OnDelete(DeleteBehavior.SetNull);
+            modelBuilder.Entity<CounterSession>()
+                .HasOne(x => x.Counter)
+                .WithMany()
+                .HasForeignKey(x => x.counterId)
+                .OnDelete(DeleteBehavior.Restrict);
 
+            modelBuilder.Entity<CounterSession>()
+                .HasOne(x => x.User)
+                .WithMany()
+                .HasForeignKey(x => x.userId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            modelBuilder.Entity<CounterSession>()
+                .HasOne(x => x.Device)
+                .WithMany()
+                .HasForeignKey(x => x.deviceId)
+                .OnDelete(DeleteBehavior.Restrict);
         }
     }
 }

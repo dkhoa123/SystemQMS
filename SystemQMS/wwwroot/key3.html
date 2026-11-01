@@ -1,0 +1,285 @@
+﻿
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SystemQMS - KEY-03</title>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/microsoft-signalr/8.0.7/signalr.min.js"></script>
+
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 750px;
+            margin: 30px auto;
+            padding: 20px;
+        }
+
+        .section {
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            padding: 20px;
+            margin-bottom: 20px;
+        }
+
+        button, select, input {
+            padding: 8px 12px;
+            margin: 5px;
+        }
+
+        button {
+            cursor: pointer;
+        }
+
+        .status {
+            font-weight: bold;
+        }
+
+        .connected {
+            color: green;
+        }
+
+        .disconnected {
+            color: red;
+        }
+
+        .counter-list {
+            list-style: none;
+            padding: 0;
+        }
+
+            .counter-list li {
+                padding: 10px;
+                border-bottom: 1px solid #eee;
+            }
+
+        .keypad-icon {
+            color: green;
+            margin-left: 8px;
+            font-weight: bold;
+        }
+    </style>
+</head>
+
+<body>
+    <h1>SystemQMS - Test KEY-03</h1>
+
+    <div class="section">
+        <h2>1. Kết nối SignalR</h2>
+
+        <label for="deviceType">Thiết bị:</label>
+        <select id="deviceType">
+            <option value="Keypad">Keypad</option>
+            <option value="CMS">CMS</option>
+        </select>
+
+        <label for="userId">User ID:</label>
+        <input id="userId" type="number" value="1" min="1">
+
+        <button id="connectBtn">Kết nối</button>
+        <button id="disconnectBtn" disabled>Ngắt kết nối</button>
+
+        <p id="connectionStatus" class="status disconnected">
+            Chưa kết nối
+        </p>
+    </div>
+
+    <div class="section">
+        <h2>2. Truy cập quầy (Keypad)</h2>
+
+        <label for="counterId">Quầy:</label>
+        <select id="counterId">
+            <option value="1">Quầy 1</option>
+            <option value="2">Quầy 2</option>
+            <option value="3">Quầy 3</option>
+            <option value="4">Quầy 4</option>
+            <option value="5">Quầy 5</option>
+        </select>
+
+        <button id="accessBtn" disabled>Truy cập quầy</button>
+        <button id="leaveBtn" disabled>Rời quầy</button>
+
+        <p id="counterStatus">Chưa truy cập quầy</p>
+    </div>
+
+    <div class="section">
+        <h2>3. Trạng thái keypad tại các quầy</h2>
+
+        <button id="refreshBtn" disabled>Làm mới danh sách</button>
+
+        <ul id="counterList" class="counter-list">
+            <li>Đang chờ kết nối...</li>
+        </ul>
+    </div>
+
+    <script>
+                const hubUrl = "/sessionHub";
+
+                let connection = null;
+                let currentCounterId = null;
+                let connectedCounters = new Set();
+
+                const deviceType = document.getElementById("deviceType");
+                const userIdInput = document.getElementById("userId");
+                const counterSelect = document.getElementById("counterId");
+
+                const connectBtn = document.getElementById("connectBtn");
+                const disconnectBtn = document.getElementById("disconnectBtn");
+                const accessBtn = document.getElementById("accessBtn");
+                const leaveBtn = document.getElementById("leaveBtn");
+                const refreshBtn = document.getElementById("refreshBtn");
+
+                const connectionStatus = document.getElementById("connectionStatus");
+                const counterStatus = document.getElementById("counterStatus");
+                const counterList = document.getElementById("counterList");
+
+                function renderCounters() {
+                    counterList.innerHTML = "";
+
+                    for (let id = 1; id <= 5; id++) {
+                        const li = document.createElement("li");
+                        li.textContent = `Quầy ${id}`;
+
+                        if (connectedCounters.has(id)) {
+                            const icon = document.createElement("span");
+                            icon.className = "keypad-icon";
+                            icon.textContent = "⌨ Keypad đang kết nối";
+                            li.appendChild(icon);
+                        }
+
+                        counterList.appendChild(li);
+                    }
+                }
+
+                function updateConnectionStatus(connected) {
+                    connectionStatus.textContent = connected
+                        ? "Đã kết nối SignalR"
+                        : "Chưa kết nối SignalR";
+
+                    connectionStatus.className = connected
+                        ? "status connected"
+                        : "status disconnected";
+
+                    connectBtn.disabled = connected;
+                    disconnectBtn.disabled = !connected;
+                    accessBtn.disabled = !connected || deviceType.value !== "Keypad";
+                    leaveBtn.disabled = !connected || currentCounterId === null;
+                    refreshBtn.disabled = !connected;
+                }
+
+                async function connectSignalR() {
+                    try {
+                        connection = new signalR.HubConnectionBuilder()
+                            .withUrl(hubUrl)
+                            .withAutomaticReconnect()
+                            .build();
+
+                        connection.on("KeypadConnectionChanged", (counterId, isConnected) => {
+                            if (isConnected) {
+                                connectedCounters.add(counterId);
+                            } else {
+                                connectedCounters.delete(counterId);
+                            }
+
+                            renderCounters();
+                        });
+
+                        connection.onreconnecting(() => {
+                            connectionStatus.textContent = "Đang kết nối lại...";
+                        });
+
+                        connection.onreconnected(async () => {
+                            updateConnectionStatus(true);
+                            await loadConnectedCounters();
+
+                            if (currentCounterId !== null && deviceType.value === "Keypad") {
+                                await connection.invoke("AccessCounter", currentCounterId);
+                            }
+                        });
+
+                        await connection.start();
+
+                        await connection.invoke(
+                            "RegisterSession",
+                            Number(userIdInput.value),
+                            deviceType.value
+                        );
+
+                        updateConnectionStatus(true);
+
+                        await loadConnectedCounters();
+                    } catch (error) {
+                        console.error(error);
+                        alert("Không thể kết nối SignalR: " + error.message);
+                    }
+                }
+
+                async function loadConnectedCounters() {
+                    try {
+                        const ids = await connection.invoke("GetConnectedCounters");
+                        connectedCounters = new Set(ids);
+                        renderCounters();
+                    } catch (error) {
+                        console.error("Lỗi lấy danh sách quầy:", error);
+                    }
+                }
+
+                async function accessCounter() {
+                    try {
+                        const counterId = Number(counterSelect.value);
+
+                        await connection.invoke("AccessCounter", counterId);
+
+                        currentCounterId = counterId;
+                        counterStatus.textContent = `Đang truy cập quầy ${counterId}`;
+
+                        updateConnectionStatus(true);
+                    } catch (error) {
+                        console.error(error);
+                        alert("Không thể truy cập quầy: " + error.message);
+                    }
+                }
+
+                async function leaveCounter() {
+                    try {
+                        if (currentCounterId === null) return;
+
+                        await connection.invoke("LeaveCounter", currentCounterId);
+
+                        counterStatus.textContent = "Đã rời quầy";
+                        currentCounterId = null;
+
+                        updateConnectionStatus(true);
+                    } catch (error) {
+                        console.error(error);
+                        alert("Không thể rời quầy: " + error.message);
+                    }
+                }
+
+                async function disconnectSignalR() {
+                    try {
+                        if (connection) {
+                            await connection.stop();
+                            connection = null;
+                        }
+
+                        currentCounterId = null;
+                        connectedCounters.clear();
+
+                        counterStatus.textContent = "Chưa truy cập quầy";
+                        renderCounters();
+                        updateConnectionStatus(false);
+                    } catch (error) {
+                        console.error(error);
+                    }
+                }
+
+                connectBtn.addEventListener("click", connectSignalR);
+                disconnectBtn.addEventListener("click", disconnectSignalR);
+                accessBtn.addEventListener("click", accessCounter);
+                leaveBtn.addEventListener("click", leaveCounter);
+                refreshBtn.addEventListener("click", loadConnectedCounters);
+    </script>
+</body>
+</html>

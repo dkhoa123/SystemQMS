@@ -1,4 +1,8 @@
 ﻿using ClosedXML.Excel;
+using DocumentFormat.OpenXml.Office2010.Excel;
+using Microsoft.AspNetCore.SignalR;
+using Microsoft.EntityFrameworkCore;
+using SystemQMS.Hubs;
 using SystemQMS.Models;
 using SystemQMS.Services.Interface;
 
@@ -10,6 +14,16 @@ namespace SystemQMS.Services
         public StickerSvc (MyDbContext context)
         {
             _context = context;
+        }
+
+
+        private IHubContext<SessionHub> _hubContext;
+        public StickerSvc(
+            MyDbContext context,
+            IHubContext<SessionHub> hubContext)
+        {
+            _context = context;
+            _hubContext = hubContext;
         }
 
         public string AddNew(Sticker sticker)
@@ -165,6 +179,78 @@ namespace SystemQMS.Services
             
         }
 
+        public async Task<List<Sticker>> CallMultiple(int counterId, int quantity)
+        {
+            if (quantity < 1 || quantity > 6)
+                throw new ArgumentException("Số lượng gọi phải từ 1 đến 6");
+            var counter = await _context.counters.FirstOrDefaultAsync(x => x.id == counterId);
+            if (counter == null)
+                throw new Exception("Quầy không tồn tại");
+
+            // lay phiieu cho
+            var stickers = await _context.stickers
+                .Where(x => x.status == "Waiting")
+                .OrderBy(x => x.issuanceTime)
+                .Take(quantity)
+                .ToListAsync();
+
+            // kiem tra hang cho
+            if (stickers.Count == 0)
+                return stickers;
+
+            // cap nhat trang thai phieu
+
+            foreach(var sticker in stickers)
+            {
+                sticker.status = "Calling";
+                sticker.counterId = counterId;
+                sticker.useTime = DateTimeOffset.Now;
+                 
+            }
+
+            await _context.SaveChangesAsync();
+
+            return stickers;
+        }
+
+        public async Task<Sticker?> CallNext(int counterId)
+        {
+            var counter = await _context.counters.FirstOrDefaultAsync(x => x.id == counterId);
+            if (counter == null)
+            {
+                throw new Exception(" Quầy không tồn tại");
+            }
+
+            // tim phieu
+            var sticker = await _context.stickers
+                .Where(x => x.status == "Waiting")
+                .OrderBy(x => x.issuanceTime)
+                .FirstOrDefaultAsync();
+           if(sticker == null)
+            {
+                return null;
+            }
+
+
+            //cap nhat phieu
+
+            sticker.status = "Calling";
+            sticker.counterId = counterId;
+            sticker.useTime = DateTimeOffset.Now;
+
+            await _context.SaveChangesAsync();
+
+            await _hubContext.Clients.All.SendAsync(
+                 "NumbersCalled",
+                 new
+                 {
+                     counterId,
+                     sticker,
+                     calledAt = DateTimeOffset.Now
+                 });
+            return sticker;
+        }
+
         public byte[] ExportExcel()
         {
             var data = _context.stickers.ToList();
@@ -186,6 +272,157 @@ namespace SystemQMS.Services
             using var stream = new MemoryStream();
             workbook.SaveAs(stream);
             return stream.ToArray();
+        }
+
+        public async Task<Sticker?> CallAgain(int counterId)
+        {
+            var counter = await _context.counters.FirstOrDefaultAsync(x => x.id == counterId);
+            if (counter == null)
+                throw new Exception("Quầy không tồn tại");
+
+            // tim stt dang dc goi tai quay
+            var sticker = await _context.stickers
+                .Where(x => x.counterId == counterId && x.status == "Calling")
+                .OrderByDescending(x => x.useTime)
+                .FirstOrDefaultAsync();
+
+            if (sticker == null)
+                return null;
+
+            //cap naht thoi diem goi
+            sticker.useTime = DateTimeOffset.Now;
+
+            await _context.SaveChangesAsync();
+            // phat su kien signalR
+            await _hubContext.Clients.All.SendAsync(
+                "NumbersCalled",
+                new
+                {
+                    counterId,
+                    sticker = new List<Sticker> { sticker },
+                    calledAt = sticker.useTime
+                });
+
+
+            return sticker;
+        }
+
+        public async Task<Sticker?> Skip(int counterId)
+        {
+            var counter = await _context.counters.FirstOrDefaultAsync(x => x.id == counterId);
+            var sticker = await _context.stickers.Where(x => x.counterId == counterId && x.status == "Calling")
+                .OrderByDescending(x => x.useTime)
+                .FirstOrDefaultAsync();
+            if (sticker == null)
+                return null;
+            // chuyen trang thai
+
+            sticker.status = "Absent";
+
+            //luu
+
+            await _context.SaveChangesAsync();
+            // phat su kien
+
+            await _hubContext.Clients.All.SendAsync(
+                "NumbersCalled",
+                new
+                {
+                    counterId,
+                    sticker,
+                    skippedAd = DateTimeOffset.Now
+                });
+
+            return sticker;
+        }
+
+        public async Task<Sticker?> TransferCounter(string sttId, int targetCounterId)
+        {
+            var sticker = await _context.stickers
+                .FirstOrDefaultAsync(x => x.sttId == sttId);
+            if (sticker == null)
+                return null;
+
+            var targetCounter = await _context.counters.FirstOrDefaultAsync(x => x.id == targetCounterId);
+            if (targetCounter == null)
+                throw new Exception("Quầy đích không tồn tại.");
+
+            if (targetCounterId == sticker.counterId)
+                throw new Exception("STT đang ở quầy này.");
+
+            if (sticker.status != "Waiting " && sticker.status != "Calling")
+                throw new Exception("Chỉ được chuyển STT đang chờ hoặc đang xử lý");
+
+            if(sticker.status== "Waiting")
+            {
+                sticker.status = "Calling";
+                sticker.useTime = DateTimeOffset.Now;
+            }
+            // chuyen quay
+
+            int sourceCounterId = sticker.counterId;
+            sticker.counterId = targetCounterId;
+
+            await _context.SaveChangesAsync();
+            await _hubContext.Clients.All.SendAsync(
+                "NumberTransferred",
+                new
+                {
+                    sttId = sticker.sttId,
+                    sourceCounterId,
+                    targetCounterId,
+                    status = sticker.status
+                });
+
+            return sticker;
+            
+        }
+
+        public async Task<List<Sticker>> TransferSelected(List<string> sttIds, int targetCounterId)
+        {
+            var targetCouter = await _context.counters.FirstOrDefaultAsync(x => x.id == targetCounterId);
+            if (targetCounterId == null)
+                throw new Exception("Quầy đích không tồn tại");
+
+            // cac stt duoc chon
+            var stickers = await _context.stickers
+                .Where(x => sttIds.Contains(x.sttId))
+                .ToListAsync();
+
+            if (!stickers.Any())
+                throw new Exception("Không tìm thấy stt được chọn");
+
+            // kiem tra va chuyen  tung stt
+            foreach (var sticker in stickers)
+            {
+                if (sticker.status != "Waiting" &&
+                    sticker.status != "Calling")
+                {
+                    continue;
+                }
+
+                if (sticker.status == "Waiting")
+                {
+                    sticker.status = "Calling";
+                    sticker.useTime = DateTimeOffset.Now;
+                }
+                if (sticker.counterId == targetCounterId)
+                    continue;
+                sticker.counterId = targetCounterId;
+
+
+            }
+            await _context.SaveChangesAsync();
+            await _hubContext.Clients.All.SendAsync(
+                "NumbersTransferred",
+                    new
+                    {
+                        targetCounterId,
+                        stickers
+                    });
+
+            return stickers;
+
         }
     }
 }

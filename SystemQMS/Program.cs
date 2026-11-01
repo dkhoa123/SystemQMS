@@ -1,4 +1,5 @@
 using Microsoft.EntityFrameworkCore;
+using SystemQMS.Hubs;
 using SystemQMS.Models;
 using SystemQMS.Services;
 using SystemQMS.Services.Interface;
@@ -21,10 +22,15 @@ builder.Services.AddScoped<IAudioMappingSvc, AudioMappingService>();
 builder.Services.AddScoped<INumberFomularSvc, NumberFomularSvc>();
 builder.Services.AddScoped<IStickerSvc, StickerSvc>();
 
+
 // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 builder.Services.AddScoped<ICounterSvc, CounterSvc>();
+builder.Services.AddScoped<ICounterSessionSvc, CounterSessionSvc>();
+builder.Services.AddSingleton<SessionService>();
+builder.Services.AddSingleton<KeypadConnectionService>();
+
 var app = builder.Build();
 
 // Configure the HTTP request pipeline.
@@ -34,10 +40,14 @@ if (app.Environment.IsDevelopment())
     app.UseSwaggerUI();
 }
 
+app.UseStaticFiles();
+
 app.UseHttpsRedirection();
 
 app.UseAuthorization();
+app.UseRouting();
 
 app.MapControllers();
+app.MapHub<SessionHub>("/sessionHub");
 
 app.Run();
