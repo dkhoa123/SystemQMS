@@ -17,7 +17,7 @@ namespace SystemQMS.Models
         public byte[]? image { get; set; }
         public bool isActive { get; set; }
         public string sharingLink { get; set; }
-        public DateTimeOffset averageTime { get; set; }
+        public int averageTime { get; set; }
 
         public ICollection<Counter> counters { get; set; } = new List<Counter>();
         [ForeignKey("unitId")]

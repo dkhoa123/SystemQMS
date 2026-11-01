@@ -9,8 +9,8 @@ namespace SystemQMS.Models
         public int serviceId { get; set; }
         [MaxLength(20)]
         public string wordShift { get; set; }
-        public DateTimeOffset startTime { get; set; }
-        public DateTimeOffset endTime { get; set; }
+        public TimeSpan startTime { get; set; }
+        public TimeSpan endTime { get; set; }
 
         [ForeignKey("serviceId")]
         public virtual Service? Service { get; set; }

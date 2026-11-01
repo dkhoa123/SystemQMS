@@ -19,6 +19,6 @@ namespace SystemQMS.ViewModels.Service
         [Required(ErrorMessage = "Chế độ chia quầy không được để trống")]
         public string sharingLink { get; set; } = "Chỉ định quầy khi cấp số";
 
-        public DateTimeOffset averageTime { get; set; }
+        public int averageTime { get; set; }
     }
 }

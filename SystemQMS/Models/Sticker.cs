@@ -12,6 +12,8 @@ namespace SystemQMS.Models
         public int serviceId { get; set; }
         public int counterId { get; set; }
         public int userId { get; set; }
+
+        public int ticketNumber { get; set; }
         public DateTimeOffset issuanceTime { get; set; }
         public DateTimeOffset useTime { get; set; }
         [MaxLength(100)]

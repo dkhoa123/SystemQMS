@@ -12,8 +12,8 @@ using SystemQMS.Models;
 namespace SystemQMS.Migrations
 {
     [DbContext(typeof(MyDbContext))]
-    [Migration("20261023162246_AddDailyEndNumber")]
-    partial class AddDailyEndNumber
+    [Migration("20261030073138_initData")]
+    partial class initData
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -214,6 +214,18 @@ namespace SystemQMS.Migrations
                     b.Property<string>("ipAddress")
                         .HasMaxLength(100)
                         .HasColumnType("character varying(100)");
+
+                    b.Property<DateTime?>("loginCodeExpiresAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("loginCodeHash")
+                        .HasColumnType("text");
+
+                    b.Property<DateTime?>("sessionExpiresAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("sessionTokenHash")
+                        .HasColumnType("text");
 
                     b.Property<bool>("show")
                         .HasColumnType("boolean");
@@ -578,8 +590,8 @@ namespace SystemQMS.Migrations
 
                     NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("id"));
 
-                    b.Property<DateTimeOffset>("averageTime")
-                        .HasColumnType("timestamp with time zone");
+                    b.Property<int>("averageTime")
+                        .HasColumnType("integer");
 
                     b.Property<string>("description")
                         .HasMaxLength(255)
@@ -623,14 +635,14 @@ namespace SystemQMS.Migrations
 
                     NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("id"));
 
-                    b.Property<DateTimeOffset>("endTime")
-                        .HasColumnType("timestamp with time zone");
+                    b.Property<TimeSpan>("endTime")
+                        .HasColumnType("interval");
 
                     b.Property<int>("serviceId")
                         .HasColumnType("integer");
 
-                    b.Property<DateTimeOffset>("startTime")
-                        .HasColumnType("timestamp with time zone");
+                    b.Property<TimeSpan>("startTime")
+                        .HasColumnType("interval");
 
                     b.Property<string>("wordShift")
                         .IsRequired()
@@ -733,6 +745,45 @@ namespace SystemQMS.Migrations
                     b.HasKey("unitId");
 
                     b.ToTable("units");
+                });
+
+            modelBuilder.Entity("SystemQMS.Models.UnitConfig", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+
+                    b.Property<int?>("ActiveAudioTemplateId")
+                        .HasColumnType("integer");
+
+                    b.Property<int?>("ActiveEvaluationTemplateId")
+                        .HasColumnType("integer");
+
+                    b.Property<string>("BackgroundImage")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<string>("BannerText")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<string>("ToneColorHex")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<int>("UnitId")
+                        .HasColumnType("integer");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("ActiveEvaluationTemplateId");
+
+                    b.HasIndex("UnitId")
+                        .IsUnique();
+
+                    b.ToTable("unitConfigs");
                 });
 
             modelBuilder.Entity("SystemQMS.Models.Users", b =>
@@ -1039,7 +1090,7 @@ namespace SystemQMS.Migrations
                     b.HasOne("SystemQMS.Models.Counter", "Counter")
                         .WithMany("Stickers")
                         .HasForeignKey("counterId")
-                        .OnDelete(DeleteBehavior.Cascade)
+                        .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 
                     b.HasOne("SystemQMS.Models.Service", "Service")
@@ -1069,12 +1120,30 @@ namespace SystemQMS.Migrations
                     b.Navigation("Users");
                 });
 
+            modelBuilder.Entity("SystemQMS.Models.UnitConfig", b =>
+                {
+                    b.HasOne("SystemQMS.Models.EvaluationTemplate", "EvaluationTemplate")
+                        .WithMany()
+                        .HasForeignKey("ActiveEvaluationTemplateId")
+                        .OnDelete(DeleteBehavior.SetNull);
+
+                    b.HasOne("SystemQMS.Models.Unit", "Unit")
+                        .WithOne("UnitConfig")
+                        .HasForeignKey("SystemQMS.Models.UnitConfig", "UnitId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("EvaluationTemplate");
+
+                    b.Navigation("Unit");
+                });
+
             modelBuilder.Entity("SystemQMS.Models.Users", b =>
                 {
                     b.HasOne("SystemQMS.Models.Counter", "Counter")
                         .WithMany("Users")
                         .HasForeignKey("counterId")
-                        .OnDelete(DeleteBehavior.Cascade)
+                        .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 
                     b.HasOne("SystemQMS.Models.Roles", "Role")
@@ -1165,6 +1234,9 @@ namespace SystemQMS.Migrations
                     b.Navigation("Services");
 
                     b.Navigation("Stickers");
+
+                    b.Navigation("UnitConfig")
+                        .IsRequired();
 
                     b.Navigation("Users");
                 });
