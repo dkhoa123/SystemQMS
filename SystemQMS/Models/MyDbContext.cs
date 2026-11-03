@@ -25,6 +25,7 @@ namespace SystemQMS.Models
         public DbSet<History> histories { get; set; }
         public DbSet<Notification> notifications { get; set; }
         public DbSet<UnitConfig> unitConfigs { get; set; }
+        public DbSet<Ticket> Tickets { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
@@ -290,6 +291,12 @@ namespace SystemQMS.Models
                 .HasOne(uc => uc.EvaluationTemplate)
                 .WithMany()
                 .HasForeignKey(uc => uc.ActiveEvaluationTemplateId)
+                .OnDelete(DeleteBehavior.SetNull);
+
+            modelBuilder.Entity<Ticket>()
+                .HasOne(t => t.Counter)
+                .WithMany()
+                .HasForeignKey(t => t.CounterId)
                 .OnDelete(DeleteBehavior.SetNull);
 
         }

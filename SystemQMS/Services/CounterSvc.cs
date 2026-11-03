@@ -3,7 +3,7 @@ using Npgsql;
 using System.Text.RegularExpressions;
 using SystemQMS.Models;
 using SystemQMS.Services.Interface;
-using SystemQMS.ViewModels.CountersDto;
+using SystemQMS.ViewModels.DspDto;
 
 namespace SystemQMS.Services
 {
