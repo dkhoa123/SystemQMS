@@ -9,7 +9,6 @@ namespace SystemQMS.System.Controllers
     [Route("api/v1/dsp")]
     public class DspController : ControllerBase
     {
-        // Giả lập service xử lý logic database
         private readonly IDspSvc _dspService;
 
         public DspController(IDspSvc dspService)
@@ -17,7 +16,6 @@ namespace SystemQMS.System.Controllers
             _dspService = dspService;
         }
 
-        // Khởi tạo Màn hình trung tâm (DSP-01, DSP-02)
         [HttpGet("main-display/state")]
         public async Task<ActionResult<MainDisplayResponseDto>> GetMainDisplayState()
         {
@@ -25,7 +23,6 @@ namespace SystemQMS.System.Controllers
             return Ok(result);
         }
 
-        // Khởi tạo Màn hình quầy (DSP-03, DSP-04)
         [HttpGet("counters/{counterId}/state")]
         public async Task<ActionResult<CounterDisplayResponseDto>> GetCounterDisplayState(int counterId)
         {
@@ -35,12 +32,11 @@ namespace SystemQMS.System.Controllers
             return Ok(result);
         }
 
-        // Thiết bị báo lỗi kết nối/hiển thị (DSP-06)
         [HttpPost("devices/{deviceId}/logs")]
         public async Task<IActionResult> LogDeviceError(string deviceId, [FromBody] ErrorLogRequestDto error)
         {
             await _dspService.LogDeviceErrorAsync(deviceId, error);
-            return Ok(); // Client sẽ chuyển sang màn hình bảo trì sau khi gọi API này
+            return Ok();
         }
     }
 }
