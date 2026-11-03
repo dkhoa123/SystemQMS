@@ -10,15 +10,15 @@ namespace SystemQMS.Migrations
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
         {
-            migrationBuilder.DropColumn(
-                name: "voice",
-                table: "devices");
+            migrationBuilder.Sql(
+            @"ALTER TABLE devices DROP COLUMN IF EXISTS voice;");
 
+            /*
             migrationBuilder.RenameColumn(
                 name: "Status",
                 table: "counters",
                 newName: "status");
-
+            */
             migrationBuilder.AddColumn<string>(
                 name: "sequenceMode",
                 table: "numberFomulars",
@@ -37,13 +37,16 @@ namespace SystemQMS.Migrations
                 oldType: "character varying(100)",
                 oldMaxLength: 100);
 
+            /*
             migrationBuilder.AddColumn<int>(
                 name: "volume",
                 table: "devices",
                 type: "integer",
                 nullable: false,
                 defaultValue: 0);
+            */
 
+            /*
             migrationBuilder.CreateTable(
                 name: "CounterDevice",
                 columns: table => new
@@ -91,6 +94,7 @@ namespace SystemQMS.Migrations
                         principalColumn: "id",
                         onDelete: ReferentialAction.Cascade);
                 });
+            
 
             migrationBuilder.CreateTable(
                 name: "DeviceService",
@@ -115,21 +119,24 @@ namespace SystemQMS.Migrations
                         principalColumn: "id",
                         onDelete: ReferentialAction.Cascade);
                 });
+            
 
             migrationBuilder.CreateIndex(
                 name: "IX_CounterDevice_Devicesid",
                 table: "CounterDevice",
                 column: "Devicesid");
+            
 
             migrationBuilder.CreateIndex(
                 name: "IX_CounterService_countersid",
                 table: "CounterService",
                 column: "countersid");
-
+            
             migrationBuilder.CreateIndex(
                 name: "IX_DeviceService_Servicesid",
                 table: "DeviceService",
                 column: "Servicesid");
+            */
         }
 
         /// <inheritdoc />
@@ -152,10 +159,12 @@ namespace SystemQMS.Migrations
                 name: "volume",
                 table: "devices");
 
+            
             migrationBuilder.RenameColumn(
                 name: "status",
                 table: "counters",
                 newName: "Status");
+            
 
             migrationBuilder.AlterColumn<string>(
                 name: "ipAddress",

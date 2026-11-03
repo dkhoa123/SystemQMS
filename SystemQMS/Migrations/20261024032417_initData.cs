@@ -12,7 +12,7 @@ namespace SystemQMS.Migrations
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
         {
-            migrationBuilder.CreateTable(
+            /*migrationBuilder.CreateTable(
                 name: "devices",
                 columns: table => new
                 {
@@ -35,7 +35,7 @@ namespace SystemQMS.Migrations
                 {
                     table.PrimaryKey("PK_devices", x => x.id);
                 });
-
+        
             migrationBuilder.CreateTable(
                 name: "roles",
                 columns: table => new
@@ -714,6 +714,7 @@ namespace SystemQMS.Migrations
                 name: "IX_users_unitId",
                 table: "users",
                 column: "unitId");
+            */
         }
 
         /// <inheritdoc />
