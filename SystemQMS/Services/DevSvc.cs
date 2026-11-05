@@ -3,6 +3,7 @@ using System.Security.Cryptography;
 using SystemQMS.Models;
 using SystemQMS.Services.Interface;
 using SystemQMS.ViewModels.DevicesDto;
+using System.Text;
 
 namespace SystemQMS.Services
 {
@@ -21,8 +22,8 @@ namespace SystemQMS.Services
             var secretKey = _config["DeviceAuth:Secret"]
                 ?? throw new Exception("Secret key not found in configuration.");
 
-            using var hmac = new System.Security.Cryptography.HMACSHA256(System.Text.Encoding.UTF8.GetBytes(secretKey));
-            return Convert.ToHexString(hmac.ComputeHash(System.Text.Encoding.UTF8.GetBytes(value)));
+            using var hmac = new HMACSHA256(Encoding.UTF8.GetBytes(secretKey));
+            return Convert.ToHexString(hmac.ComputeHash(Encoding.UTF8.GetBytes(value)));
         }
 
         
