@@ -14,6 +14,6 @@ namespace SystemQMS.ViewModels.ServiceDto
         public bool isActive { get; set; }
         [Required(ErrorMessage = "Chế độ chia quầy không được để trống")]
         public string sharingLink { get; set; } = "Chỉ định quầy khi cấp số";
-        public DateTimeOffset averageTime { get; set; } = DateTimeOffset.UtcNow;
+        public int averageTime { get; set; }
     }
 }

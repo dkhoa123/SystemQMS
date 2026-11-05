@@ -11,7 +11,7 @@ IConfiguration configuration = new ConfigurationBuilder().SetBasePath(
 builder.Services.AddDbContext<MyDbContext>(options =>
     options.UseNpgsql(configuration.GetConnectionString("ConnectionDb")));
 
-builder.Services.AddScoped<IDevSvc, DevSvc>();
+
 builder.Services.AddControllers();
 
 builder.Services.AddSignalR();
@@ -20,6 +20,9 @@ builder.Services.AddScoped<IAudioMappingSvc, AudioMappingService>();
 
 builder.Services.AddScoped<INumberFomularSvc, NumberFomularSvc>();
 builder.Services.AddScoped<IStickerSvc, StickerSvc>();
+builder.Services.AddScoped<ICounterSvc, CounterSvc>();
+builder.Services.AddScoped<IDevSvc, DevSvc>();
+builder.Services.AddScoped<IKioskSvc, KioskSvc>();
 
 builder.Services.AddScoped<IServiceSvc, ServiceSvc>();
 
@@ -39,6 +42,7 @@ builder.Services.AddHostedService<OprBackgroundSvc>();
 // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
+
 var app = builder.Build();
 
 // Configure the HTTP request pipeline.

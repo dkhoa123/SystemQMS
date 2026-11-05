@@ -11,7 +11,7 @@ namespace SystemQMS.ViewModels.ServiceDto
         public byte[]? image { get; set; }
         public bool isActive { get; set; }
         public string sharingLink { get; set; } = string.Empty;
-        public DateTimeOffset averageTime { get; set; }
+        public int averageTime { get; set; }
         public int totalTicketsIssued { get; set; }
     }
 

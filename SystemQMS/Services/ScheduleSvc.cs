@@ -30,9 +30,10 @@ public class ScheduleSvc : IScheduleSvc
     /// </remarks>
     private static bool IsInShift(DateTimeOffset now, SheduleActive shift)
     {
-        var t = now.ToUniversalTime().TimeOfDay;
-        var start = shift.startTime.ToUniversalTime().TimeOfDay;
-        var end = shift.endTime.ToUniversalTime().TimeOfDay;
+        // Use the local wall-clock time because startTime/endTime are TimeSpan values.
+        var t = now.TimeOfDay;
+        var start = shift.startTime;
+        var end = shift.endTime;
 
         return start <= end
             ? t >= start && t <= end
@@ -82,9 +83,8 @@ public class ScheduleSvc : IScheduleSvc
             shifts = shifts.Select(x => new ShiftDto
             {
                 wordShift = x.wordShift,
-                // Hiển thị theo giờ địa phương của server (cấu hình lưu kèm +07:00)
-                startTime = x.startTime.ToLocalTime().ToString("HH:mm"),
-                endTime = x.endTime.ToLocalTime().ToString("HH:mm")
+                startTime = x.startTime.ToString(@"hh\:mm"),
+                endTime = x.endTime.ToString(@"hh\:mm")
             }).ToList()
         };
 
