@@ -19,6 +19,9 @@ namespace SystemQMS.Models
         [MaxLength(100)]
         public string stage { get; set; }
 
+        // OPR-14: phiếu ưu tiên được xếp lên đầu hàng chờ
+        public bool isPriority { get; set; }
+
         public ICollection<Evaluation> Evaluations = new List<Evaluation>();
         public ICollection<CounterChange> CounterChanges = new List<CounterChange>();
         public ICollection<Booking> Bookings = new List<Booking>();

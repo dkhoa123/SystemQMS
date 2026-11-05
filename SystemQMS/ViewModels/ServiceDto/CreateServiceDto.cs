@@ -1,19 +1,19 @@
 using System.ComponentModel.DataAnnotations;
 
-namespace SystemQMS.ViewModels.Service
+namespace SystemQMS.ViewModels.ServiceDto
 {
     public class CreateServiceDto
     {
+        [Required(ErrorMessage = "Mã đơn vị không được để trống")]
         public int unitId { get; set; } = 1;
 
         [Required(ErrorMessage = "Mã dịch vụ không được để trống")]
         [MaxLength(100, ErrorMessage = "Mã dịch vụ tối đa 100 ký tự")]
-        [RegularExpression(@"^[a-zA-Z0-9\s_-]+$", ErrorMessage = "Mã dịch vụ chỉ gồm chữ, số, dấu '-', '_' và khoảng trắng")]
+        [RegularExpression(@"^[a-zA-Z0-9_-]+$", ErrorMessage = "Mã dịch vụ không chứa dấu cách hoặc ký tự đặc biệt")]
         public string serviceId { get; set; } = string.Empty;
 
         [Required(ErrorMessage = "Tên dịch vụ không được để trống")]
         [MaxLength(100, ErrorMessage = "Tên dịch vụ tối đa 100 ký tự")]
-        [RegularExpression(@"^[a-zA-Z0-9_-]+$", ErrorMessage = "Tên dịch vụ chỉ gồm chữ, số, dấu '-' và '_'")]
         public string serviceName { get; set; } = string.Empty;
 
         [MaxLength(255, ErrorMessage = "Mô tả tối đa 255 ký tự")]
