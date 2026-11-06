@@ -4,7 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace SystemQMS.Models
+namespace SystemQMS.Constants
 {
     public static class CounterStatus
     {

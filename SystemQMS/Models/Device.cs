@@ -1,11 +1,13 @@
 ﻿using Microsoft.EntityFrameworkCore.Storage.ValueConversion.Internal;
 using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations.Schema;
 
 namespace SystemQMS.Models
 {
     public class Device
     {
         public int id { get; set; }
+        public int unitId { get; set; }
         [MaxLength(100)]
         public string deviceId { get; set; }
         [MaxLength(100)]
@@ -28,6 +30,9 @@ namespace SystemQMS.Models
         // Phiên đăng nhập hiện tại
         public string? sessionTokenHash { get; set; }
         public DateTime? sessionExpiresAt { get; set; }
+
+        [ForeignKey("unitId")]
+        public virtual Unit? Unit { get; set; }
 
         public ICollection<Service> Services { get; set; } = new List<Service>();
         public ICollection<Counter> Counters { get; set; } = new List<Counter>();

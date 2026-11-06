@@ -13,7 +13,7 @@ namespace SystemQMS.Models
         public DateTimeOffset Date { get; set; }
         public DateTimeOffset timeDate { get; set; }
         [MaxLength(100)]
-        public string status { get; set; }
+        public string? status { get; set; }
         [MaxLength(100)]
         public string sttId { get; set; }
 

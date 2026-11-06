@@ -38,6 +38,8 @@ builder.Services.AddScoped<ITransferSvc, TransferSvc>();
 // Job nền: tự nhận chuyển quầy quá hạn + mở lại quầy qua ngày mới
 builder.Services.AddHostedService<OprBackgroundSvc>();
 
+builder.Services.AddScoped<IDashboardSvc, DashboardSvc>();
+
 
 // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
 builder.Services.AddEndpointsApiExplorer();

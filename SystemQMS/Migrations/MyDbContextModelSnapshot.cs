@@ -85,7 +85,6 @@ namespace SystemQMS.Migrations
                         .HasColumnType("integer");
 
                     b.Property<string>("status")
-                        .IsRequired()
                         .HasMaxLength(100)
                         .HasColumnType("character varying(100)");
 
@@ -150,18 +149,15 @@ namespace SystemQMS.Migrations
             modelBuilder.Entity("SystemQMS.Models.CounterChange", b =>
                 {
                     b.Property<int>("id")
+                        .ValueGeneratedOnAdd()
                         .HasColumnType("integer");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("id"));
 
                     b.Property<int>("counterIdReceive")
                         .HasColumnType("integer");
 
-                    b.Property<int>("counterIdReceiver")
-                        .HasColumnType("integer");
-
                     b.Property<int>("counterIdSender")
-                        .HasColumnType("integer");
-
-                    b.Property<int>("counterSenderId")
                         .HasColumnType("integer");
 
                     b.Property<DateTimeOffset>("createTime")
@@ -178,7 +174,9 @@ namespace SystemQMS.Migrations
 
                     b.HasKey("id");
 
-                    b.HasIndex("counterSenderId");
+                    b.HasIndex("counterIdReceive");
+
+                    b.HasIndex("counterIdSender");
 
                     b.HasIndex("sttId");
 
@@ -237,10 +235,15 @@ namespace SystemQMS.Migrations
                         .HasMaxLength(100)
                         .HasColumnType("character varying(100)");
 
+                    b.Property<int>("unitId")
+                        .HasColumnType("integer");
+
                     b.Property<int>("volume")
                         .HasColumnType("integer");
 
                     b.HasKey("id");
+
+                    b.HasIndex("unitId");
 
                     b.ToTable("devices");
                 });
@@ -659,11 +662,20 @@ namespace SystemQMS.Migrations
                         .HasMaxLength(100)
                         .HasColumnType("character varying(100)");
 
+                    b.Property<DateTimeOffset?>("callTime")
+                        .HasColumnType("timestamp with time zone");
+
                     b.Property<int>("counterId")
                         .HasColumnType("integer");
 
+                    b.Property<bool>("isPriority")
+                        .HasColumnType("boolean");
+
                     b.Property<DateTimeOffset>("issuanceTime")
                         .HasColumnType("timestamp with time zone");
+
+                    b.Property<int>("recallCount")
+                        .HasColumnType("integer");
 
                     b.Property<int>("serviceId")
                         .HasColumnType("integer");
@@ -677,6 +689,9 @@ namespace SystemQMS.Migrations
                         .IsRequired()
                         .HasMaxLength(100)
                         .HasColumnType("character varying(100)");
+
+                    b.Property<int>("ticketNumber")
+                        .HasColumnType("integer");
 
                     b.Property<int>("unitId")
                         .HasColumnType("integer");
@@ -918,16 +933,16 @@ namespace SystemQMS.Migrations
 
             modelBuilder.Entity("SystemQMS.Models.CounterChange", b =>
                 {
-                    b.HasOne("SystemQMS.Models.Counter", "CounterSender")
-                        .WithMany("CounterSend")
-                        .HasForeignKey("counterSenderId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
                     b.HasOne("SystemQMS.Models.Counter", "CounterReceiver")
                         .WithMany("CounterReceive")
-                        .HasForeignKey("id")
-                        .OnDelete(DeleteBehavior.Cascade)
+                        .HasForeignKey("counterIdReceive")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("SystemQMS.Models.Counter", "CounterSender")
+                        .WithMany("CounterSend")
+                        .HasForeignKey("counterIdSender")
+                        .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 
                     b.HasOne("SystemQMS.Models.Sticker", "Sticker")
@@ -941,6 +956,17 @@ namespace SystemQMS.Migrations
                     b.Navigation("CounterSender");
 
                     b.Navigation("Sticker");
+                });
+
+            modelBuilder.Entity("SystemQMS.Models.Device", b =>
+                {
+                    b.HasOne("SystemQMS.Models.Unit", "Unit")
+                        .WithMany("Devices")
+                        .HasForeignKey("unitId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Unit");
                 });
 
             modelBuilder.Entity("SystemQMS.Models.Diary", b =>
@@ -1217,6 +1243,8 @@ namespace SystemQMS.Migrations
             modelBuilder.Entity("SystemQMS.Models.Unit", b =>
                 {
                     b.Navigation("Counters");
+
+                    b.Navigation("Devices");
 
                     b.Navigation("Diaries");
 

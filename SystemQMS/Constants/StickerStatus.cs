@@ -1,4 +1,4 @@
-namespace SystemQMS.Models
+namespace SystemQMS.Constants
 {
     // Trạng thái phiếu (Sticker.status) - vòng đời phiếu do Toàn phụ trách.
     // Dùng hằng số thay vì gõ chuỗi để tránh lệch giữa các service.

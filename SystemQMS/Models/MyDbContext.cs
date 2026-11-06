@@ -166,6 +166,15 @@ namespace SystemQMS.Models
                 .HasMany(et => et.EvaluationTemplates)
                 .WithOne(u => u.Unit)
                 .HasForeignKey(u => u.unitId);
+            modelBuilder.Entity<Unit>()
+                .HasMany(d => d.Devices)
+                .WithOne(u => u.Unit)
+                .HasForeignKey(u => u.unitId);
+
+            modelBuilder.Entity<Device>()
+                .HasOne(d => d.Unit)
+                .WithMany(u => u.Devices)
+                .HasForeignKey(d => d.unitId);
 
             modelBuilder.Entity<Sticker>()
                 .HasMany(st => st.CounterChanges)

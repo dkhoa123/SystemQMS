@@ -16,6 +16,10 @@ namespace SystemQMS.Models
         public int ticketNumber { get; set; }
         public DateTimeOffset issuanceTime { get; set; }
         public DateTimeOffset useTime { get; set; }
+
+        public DateTimeOffset? callTime { get; set; }
+
+        public int recallCount { get; set; }
         [MaxLength(100)]
         public string status { get; set; }
         [MaxLength(100)]
@@ -24,9 +28,9 @@ namespace SystemQMS.Models
         // OPR-14: phiếu ưu tiên được xếp lên đầu hàng chờ
         public bool isPriority { get; set; }
 
-        public ICollection<Evaluation> Evaluations = new List<Evaluation>();
-        public ICollection<CounterChange> CounterChanges = new List<CounterChange>();
-        public ICollection<Booking> Bookings = new List<Booking>();
+        public ICollection<Evaluation> Evaluations { get; set; } = new List<Evaluation>();
+        public ICollection<CounterChange> CounterChanges { get; set; } = new List<CounterChange>();
+        public ICollection<Booking> Bookings { get; set; } = new List<Booking>();
         [ForeignKey("unitId")]
         public virtual Unit? Unit { get; set; }
         [ForeignKey("serviceId")]
