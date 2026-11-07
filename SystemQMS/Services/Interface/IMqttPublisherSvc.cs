@@ -1,4 +1,5 @@
-﻿/*
+﻿using System.Threading.Tasks;
+
 namespace SystemQMS.Services.Interface
 {
     public interface IMqttPublisherSvc
@@ -6,4 +7,3 @@ namespace SystemQMS.Services.Interface
         Task PublishMessageAsync(string topic, object payload);
     }
 }
-*/
