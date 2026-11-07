@@ -35,3 +35,4 @@ namespace SystemQMS.Models
         public const string Transferred = "Transferred"; // phiếu đã được chuyển sang quầy khác
     }
 }
+

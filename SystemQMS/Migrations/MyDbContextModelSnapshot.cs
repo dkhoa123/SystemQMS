@@ -587,8 +587,8 @@ namespace SystemQMS.Migrations
 
                     NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("id"));
 
-                    b.Property<DateTimeOffset>("averageTime")
-                        .HasColumnType("timestamp with time zone");
+                    b.Property<int>("averageTime")
+                        .HasColumnType("integer");
 
                     b.Property<string>("description")
                         .HasMaxLength(255)
@@ -632,14 +632,14 @@ namespace SystemQMS.Migrations
 
                     NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("id"));
 
-                    b.Property<DateTimeOffset>("endTime")
-                        .HasColumnType("timestamp with time zone");
+                    b.Property<TimeSpan>("endTime")
+                        .HasColumnType("interval");
 
                     b.Property<int>("serviceId")
                         .HasColumnType("integer");
 
-                    b.Property<DateTimeOffset>("startTime")
-                        .HasColumnType("timestamp with time zone");
+                    b.Property<TimeSpan>("startTime")
+                        .HasColumnType("interval");
 
                     b.Property<string>("wordShift")
                         .IsRequired()
