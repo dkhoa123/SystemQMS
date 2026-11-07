@@ -1,5 +1,4 @@
 ﻿using Microsoft.AspNetCore.Mvc;
-using SystemQMS.Services;
 using SystemQMS.Services.Interface;
 using SystemQMS.ViewModels.DspDto;
 
@@ -16,27 +15,15 @@ namespace SystemQMS.System.Controllers
             _dspService = dspService;
         }
 
-        [HttpGet("main-display/state")]
-        public async Task<ActionResult<MainDisplayResponseDto>> GetMainDisplayState()
+        private int GetCurrentUnitId() => 1;
+
+        [HttpGet("main-display/page")]
+        public async Task<ActionResult<DisplayBoardPageResponseDto>> GetMainDisplayPage(
+            [FromQuery] int page = 1,
+            [FromQuery] bool showWaitlist = true)
         {
-            var result = await _dspService.GetMainDisplayStateAsync();
+            var result = await _dspService.GetDisplayBoardPageAsync(page, showWaitlist, GetCurrentUnitId());
             return Ok(result);
-        }
-
-        [HttpGet("counters/{counterId}/state")]
-        public async Task<ActionResult<CounterDisplayResponseDto>> GetCounterDisplayState(int counterId)
-        {
-            var result = await _dspService.GetCounterDisplayStateAsync(counterId);
-            if (result == null) return NotFound();
-
-            return Ok(result);
-        }
-
-        [HttpPost("devices/{deviceId}/logs")]
-        public async Task<IActionResult> LogDeviceError(string deviceId, [FromBody] ErrorLogRequestDto error)
-        {
-            await _dspService.LogDeviceErrorAsync(deviceId, error);
-            return Ok();
         }
     }
 }

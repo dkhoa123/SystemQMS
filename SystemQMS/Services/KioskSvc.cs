@@ -75,8 +75,7 @@ namespace SystemQMS.Services
             var endOfDay = today.AddDays(1).AddTicks(-1);
 
             // Dùng Transaction để khóa dòng, chống cấp trùng số khi bốc số đồng thời
-            using var transaction = await _context.Database.BeginTransactionAsync(System.Data.IsolationLevel.Serializable);
-            try
+            using var transaction = await _context.Database.BeginTransactionAsync(global::System.Data.IsolationLevel.Serializable); try
             {
                 var nay = DateTime.Now.TimeOfDay;
 
