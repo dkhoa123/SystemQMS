@@ -1,5 +1,4 @@
-﻿using DocumentFormat.OpenXml.Office2016.Excel;
-using Microsoft.EntityFrameworkCore;
+﻿using Microsoft.EntityFrameworkCore;
 using SystemQMS.Models;
 using SystemQMS.Services.Interface;
 using SystemQMS.ViewModels.KioskDto;
@@ -38,7 +37,8 @@ namespace SystemQMS.Services
                     // 2. KSK-01: Kiểm tra xem có quầy nào đang mở cho dịch vụ này không
                     HasOpenCounter = s.counters.Any(c => 
                     c.isActive == true &&
-                    c.status == "Open"),
+                    c.status != CounterStatus.PausedAccepting &&
+                    c.status != CounterStatus.Closed),
 
                     // 3. KSK-01: STT cấp gần nhất trong ngày
                     LatestStickerId = _context.stickers
@@ -91,7 +91,8 @@ namespace SystemQMS.Services
                 var hasOpenCounter = await _context.counters.AnyAsync(c =>
                     c.Services.Any(s => s.id == serviceId) &&
                     c.isActive &&
-                    c.status == "Open"
+                    c.status != CounterStatus.PausedAccepting &&
+                    c.status != CounterStatus.Closed
                 );
 
                 if (!hasOpenCounter)
@@ -137,7 +138,8 @@ namespace SystemQMS.Services
                          .FirstOrDefaultAsync(c =>
                               c.id == counterId &&
                               c.isActive &&
-                              c.status == "Open" &&
+                              c.status != CounterStatus.PausedAccepting &&
+                              c.status != CounterStatus.Closed &&
                               c.Services.Any(s => s.id == serviceId)
                           );
 

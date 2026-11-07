@@ -25,5 +25,41 @@ namespace SystemQMS.System.Controllers
             var result = await _dspService.GetDisplayBoardPageAsync(page, showWaitlist, GetCurrentUnitId());
             return Ok(result);
         }
+
+        [HttpGet("main-display/counter-status")]
+        public async Task<ActionResult<DisplayCounterStatusResponseDto>> GetCounterStatus()
+        {
+            var result = await _dspService.GetDisplayCounterStatusAsync(GetCurrentUnitId());
+            return Ok(result);
+        }
+
+        [HttpGet("counters/{counterId:int}/screen")]
+        public async Task<ActionResult<CounterScreenStateResponseDto>> GetCounterScreenState(
+            int counterId,
+            [FromQuery] bool showWaitlist = true)
+        {
+            var result = await _dspService.GetCounterScreenStateAsync(counterId, showWaitlist);
+            if (result == null) return NotFound();
+            return Ok(result);
+        }
+
+        [HttpGet("counters/{counterId:int}/multi-call")]
+        public async Task<ActionResult<CounterMultiCallDisplayResponseDto>> GetCounterMultiCallDisplay(
+            int counterId,
+            [FromQuery] int waitingLimit = 9)
+        {
+            var result = await _dspService.GetCounterMultiCallDisplayAsync(counterId, waitingLimit);
+            if (result == null) return NotFound();
+            return Ok(result);
+        }
+
+        [HttpPost("devices/{deviceId}/display-errors")]
+        public async Task<ActionResult<DisplayMaintenanceResponseDto>> ReportDisplayError(
+            string deviceId,
+            [FromBody] DisplayErrorRequestDto request)
+        {
+            var result = await _dspService.ReportDisplayErrorAndSwitchMaintenanceAsync(deviceId, request);
+            return Ok(result);
+        }
     }
 }
