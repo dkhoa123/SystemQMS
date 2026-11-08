@@ -5,20 +5,14 @@
 namespace SystemQMS.Migrations
 {
     /// <inheritdoc />
-    public partial class AddDailyEndNumber : Migration
+    public partial class AddAllowOnlineBookingToService : Migration
     {
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
         {
-            migrationBuilder.AddColumn<int>(
-                name: "dailyEndNumber",
-                table: "numberFomulars",
-                type: "integer",
-                nullable: true);
-
             migrationBuilder.AddColumn<bool>(
-                name: "isDailyLimitEnabled",
-                table: "numberFomulars",
+                name: "allowOnlineBooking",
+                table: "services",
                 type: "boolean",
                 nullable: false,
                 defaultValue: false);
@@ -28,12 +22,8 @@ namespace SystemQMS.Migrations
         protected override void Down(MigrationBuilder migrationBuilder)
         {
             migrationBuilder.DropColumn(
-                name: "dailyEndNumber",
-                table: "numberFomulars");
-
-            migrationBuilder.DropColumn(
-                name: "isDailyLimitEnabled",
-                table: "numberFomulars");
+                name: "allowOnlineBooking",
+                table: "services");
         }
     }
 }

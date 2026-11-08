@@ -12,8 +12,8 @@ using SystemQMS.Models;
 namespace SystemQMS.Migrations
 {
     [DbContext(typeof(MyDbContext))]
-    [Migration("20261025054105_AddUnitConfigAndKeys")]
-    partial class AddUnitConfigAndKeys
+    [Migration("20261107011929_CreatePasswordResetOtp")]
+    partial class CreatePasswordResetOtp
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -188,6 +188,80 @@ namespace SystemQMS.Migrations
                     b.ToTable("counterChanges");
                 });
 
+            modelBuilder.Entity("SystemQMS.Models.CounterSession", b =>
+                {
+                    b.Property<int>("id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("id"));
+
+                    b.Property<int>("counterId")
+                        .HasColumnType("integer");
+
+                    b.Property<int>("deviceId")
+                        .HasColumnType("integer");
+
+                    b.Property<DateTime?>("endedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<bool>("isActive")
+                        .HasColumnType("boolean");
+
+                    b.Property<DateTime>("startedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<int>("userId")
+                        .HasColumnType("integer");
+
+                    b.HasKey("id");
+
+                    b.HasIndex("counterId");
+
+                    b.HasIndex("deviceId");
+
+                    b.HasIndex("userId");
+
+                    b.ToTable("counterSessions");
+                });
+
+            modelBuilder.Entity("SystemQMS.Models.CustomerOtp", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+
+                    b.Property<DateTimeOffset>("CreatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<DateTimeOffset>("ExpiresAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<bool>("IsUsed")
+                        .HasColumnType("boolean");
+
+                    b.Property<string>("OtpHash")
+                        .IsRequired()
+                        .HasMaxLength(255)
+                        .HasColumnType("character varying(255)");
+
+                    b.Property<string>("PasswordHash")
+                        .IsRequired()
+                        .HasMaxLength(255)
+                        .HasColumnType("character varying(255)");
+
+                    b.Property<string>("email")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("CustomerOtps");
+                });
+
             modelBuilder.Entity("SystemQMS.Models.Device", b =>
                 {
                     b.Property<int>("id")
@@ -214,6 +288,18 @@ namespace SystemQMS.Migrations
                     b.Property<string>("ipAddress")
                         .HasMaxLength(100)
                         .HasColumnType("character varying(100)");
+
+                    b.Property<DateTime?>("loginCodeExpiresAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("loginCodeHash")
+                        .HasColumnType("text");
+
+                    b.Property<DateTime?>("sessionExpiresAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("sessionTokenHash")
+                        .HasColumnType("text");
 
                     b.Property<bool>("show")
                         .HasColumnType("boolean");
@@ -504,6 +590,9 @@ namespace SystemQMS.Migrations
 
                     NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("id"));
 
+                    b.Property<int?>("dailyEndNumber")
+                        .HasColumnType("integer");
+
                     b.Property<int>("endNumber")
                         .HasColumnType("integer");
 
@@ -511,6 +600,9 @@ namespace SystemQMS.Migrations
                         .IsRequired()
                         .HasMaxLength(20)
                         .HasColumnType("character varying(20)");
+
+                    b.Property<bool>("isDailyLimitEnabled")
+                        .HasColumnType("boolean");
 
                     b.Property<string>("lastName")
                         .IsRequired()
@@ -525,6 +617,11 @@ namespace SystemQMS.Migrations
                         .HasMaxLength(100)
                         .HasColumnType("character varying(100)");
 
+                    b.Property<string>("sequenceMode")
+                        .IsRequired()
+                        .HasMaxLength(20)
+                        .HasColumnType("character varying(20)");
+
                     b.Property<int>("serviceId")
                         .HasColumnType("integer");
 
@@ -536,6 +633,59 @@ namespace SystemQMS.Migrations
                     b.HasIndex("serviceId");
 
                     b.ToTable("numberFomulars");
+                });
+
+            modelBuilder.Entity("SystemQMS.Models.PasswordResetOtp", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("Email")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<DateTime>("ExpiresAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<bool>("IsUsed")
+                        .HasColumnType("boolean");
+
+                    b.Property<string>("OtpHash")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("passwordResetOtps");
+                });
+
+            modelBuilder.Entity("SystemQMS.Models.RevokedToken", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+
+                    b.Property<DateTime>("ExpiresAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<DateTime>("RevokedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("TokenHash")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("revokedTokens");
                 });
 
             modelBuilder.Entity("SystemQMS.Models.Roles", b =>
@@ -760,7 +910,7 @@ namespace SystemQMS.Migrations
                     b.HasIndex("UnitId")
                         .IsUnique();
 
-                    b.ToTable("UnitConfig");
+                    b.ToTable("unitConfigs");
                 });
 
             modelBuilder.Entity("SystemQMS.Models.Users", b =>
@@ -774,14 +924,20 @@ namespace SystemQMS.Migrations
                     b.Property<byte[]>("avatar")
                         .HasColumnType("bytea");
 
-                    b.Property<int>("counterId")
+                    b.Property<int?>("counterId")
                         .HasColumnType("integer");
+
+                    b.Property<DateTimeOffset?>("createdAt")
+                        .HasColumnType("timestamp with time zone");
 
                     b.Property<string>("email")
                         .HasMaxLength(100)
                         .HasColumnType("character varying(100)");
 
                     b.Property<bool>("isActive")
+                        .HasColumnType("boolean");
+
+                    b.Property<bool>("isVerified")
                         .HasColumnType("boolean");
 
                     b.Property<string>("numberPhone")
@@ -795,7 +951,7 @@ namespace SystemQMS.Migrations
                     b.Property<int>("roleId")
                         .HasColumnType("integer");
 
-                    b.Property<int>("unitId")
+                    b.Property<int?>("unitId")
                         .HasColumnType("integer");
 
                     b.Property<string>("username")
@@ -921,6 +1077,33 @@ namespace SystemQMS.Migrations
                     b.Navigation("CounterSender");
 
                     b.Navigation("Sticker");
+                });
+
+            modelBuilder.Entity("SystemQMS.Models.CounterSession", b =>
+                {
+                    b.HasOne("SystemQMS.Models.Counter", "Counter")
+                        .WithMany()
+                        .HasForeignKey("counterId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("SystemQMS.Models.Device", "Device")
+                        .WithMany()
+                        .HasForeignKey("deviceId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("SystemQMS.Models.Users", "User")
+                        .WithMany()
+                        .HasForeignKey("userId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("Counter");
+
+                    b.Navigation("Device");
+
+                    b.Navigation("User");
                 });
 
             modelBuilder.Entity("SystemQMS.Models.Diary", b =>
@@ -1067,7 +1250,7 @@ namespace SystemQMS.Migrations
                     b.HasOne("SystemQMS.Models.Counter", "Counter")
                         .WithMany("Stickers")
                         .HasForeignKey("counterId")
-                        .OnDelete(DeleteBehavior.Cascade)
+                        .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 
                     b.HasOne("SystemQMS.Models.Service", "Service")
@@ -1101,7 +1284,8 @@ namespace SystemQMS.Migrations
                 {
                     b.HasOne("SystemQMS.Models.EvaluationTemplate", "EvaluationTemplate")
                         .WithMany()
-                        .HasForeignKey("ActiveEvaluationTemplateId");
+                        .HasForeignKey("ActiveEvaluationTemplateId")
+                        .OnDelete(DeleteBehavior.SetNull);
 
                     b.HasOne("SystemQMS.Models.Unit", "Unit")
                         .WithOne("UnitConfig")
@@ -1119,8 +1303,7 @@ namespace SystemQMS.Migrations
                     b.HasOne("SystemQMS.Models.Counter", "Counter")
                         .WithMany("Users")
                         .HasForeignKey("counterId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
+                        .OnDelete(DeleteBehavior.Restrict);
 
                     b.HasOne("SystemQMS.Models.Roles", "Role")
                         .WithMany("Users")
@@ -1130,9 +1313,7 @@ namespace SystemQMS.Migrations
 
                     b.HasOne("SystemQMS.Models.Unit", "Unit")
                         .WithMany("Users")
-                        .HasForeignKey("unitId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
+                        .HasForeignKey("unitId");
 
                     b.Navigation("Counter");
 

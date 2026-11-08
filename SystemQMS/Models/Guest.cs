@@ -6,7 +6,7 @@ namespace SystemQMS.Models
     public class Guest
     {
         public int id { get; set; }
-        public int unitId { get; set; }
+        public int? unitId { get; set; }
         [MaxLength(100)]
         public string guestId { get; set; }
         [MaxLength(100)]
@@ -16,7 +16,7 @@ namespace SystemQMS.Models
         [MaxLength(100)]
         public string? email { get; set; }
         [MaxLength(100)]
-        public string CCCD { get; set; }
+        public string? CCCD { get; set; }
         [MaxLength(100)]
         public string password { get; set; }
         public DateTimeOffset registerTime { get; set; }

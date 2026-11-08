@@ -16,6 +16,7 @@ namespace SystemQMS.Models
         public string? description { get; set; }
         public byte[]? image { get; set; }
         public bool isActive { get; set; }
+        public bool allowOnlineBooking { get; set; } = false;
         public string sharingLink { get; set; }
         public DateTimeOffset averageTime { get; set; }
 

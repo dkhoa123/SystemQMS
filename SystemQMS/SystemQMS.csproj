@@ -4,11 +4,12 @@
     <TargetFramework>net8.0</TargetFramework>
     <Nullable>enable</Nullable>
     <ImplicitUsings>enable</ImplicitUsings>
+    <UserSecretsId>208c6aa4-b380-4b54-94ce-a254cc08b420</UserSecretsId>
   </PropertyGroup>
 
   <ItemGroup>
     <PackageReference Include="ClosedXML" Version="0.105.1" />
-    <PackageReference Include="Microsoft.AspNetCore.Authentication.JwtBearer" Version="8.0.14" />
+    <PackageReference Include="Microsoft.AspNetCore.Authentication.JwtBearer" Version="8.0.10" />
     <PackageReference Include="Microsoft.AspNetCore.SignalR" Version="1.2.13" />
     <PackageReference Include="Microsoft.EntityFrameworkCore" Version="8.0.30" />
     <PackageReference Include="Microsoft.EntityFrameworkCore.Tools" Version="8.0.30">

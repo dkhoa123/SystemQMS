@@ -7,11 +7,29 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace SystemQMS.Migrations
 {
     /// <inheritdoc />
-    public partial class initData : Migration
+    public partial class InitialCreate : Migration
     {
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
         {
+            migrationBuilder.CreateTable(
+                name: "CustomerOtps",
+                columns: table => new
+                {
+                    Id = table.Column<int>(type: "integer", nullable: false)
+                        .Annotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.IdentityByDefaultColumn),
+                    email = table.Column<string>(type: "character varying(100)", maxLength: 100, nullable: false),
+                    PasswordHash = table.Column<string>(type: "character varying(255)", maxLength: 255, nullable: false),
+                    OtpHash = table.Column<string>(type: "character varying(255)", maxLength: 255, nullable: false),
+                    ExpiresAt = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: false),
+                    IsUsed = table.Column<bool>(type: "boolean", nullable: false),
+                    CreatedAt = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_CustomerOtps", x => x.Id);
+                });
+
             migrationBuilder.CreateTable(
                 name: "devices",
                 columns: table => new
@@ -226,6 +244,8 @@ namespace SystemQMS.Migrations
                     unitId = table.Column<int>(type: "integer", nullable: false),
                     username = table.Column<string>(type: "character varying(100)", maxLength: 100, nullable: true),
                     password = table.Column<string>(type: "character varying(100)", maxLength: 100, nullable: true),
+                    isVerified = table.Column<bool>(type: "boolean", nullable: false),
+                    createdAt = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: true),
                     email = table.Column<string>(type: "character varying(100)", maxLength: 100, nullable: true),
                     numberPhone = table.Column<string>(type: "character varying(10)", maxLength: 10, nullable: true),
                     roleId = table.Column<int>(type: "integer", nullable: false),
@@ -241,7 +261,7 @@ namespace SystemQMS.Migrations
                         column: x => x.counterId,
                         principalTable: "counters",
                         principalColumn: "id",
-                        onDelete: ReferentialAction.Cascade);
+                        onDelete: ReferentialAction.Restrict);
                     table.ForeignKey(
                         name: "FK_users_roles_roleId",
                         column: x => x.roleId,
@@ -251,6 +271,36 @@ namespace SystemQMS.Migrations
                     table.ForeignKey(
                         name: "FK_users_units_unitId",
                         column: x => x.unitId,
+                        principalTable: "units",
+                        principalColumn: "unitId",
+                        onDelete: ReferentialAction.Cascade);
+                });
+
+            migrationBuilder.CreateTable(
+                name: "unitConfigs",
+                columns: table => new
+                {
+                    Id = table.Column<int>(type: "integer", nullable: false)
+                        .Annotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.IdentityByDefaultColumn),
+                    UnitId = table.Column<int>(type: "integer", nullable: false),
+                    ActiveEvaluationTemplateId = table.Column<int>(type: "integer", nullable: true),
+                    BackgroundImage = table.Column<string>(type: "text", nullable: false),
+                    BannerText = table.Column<string>(type: "text", nullable: false),
+                    ToneColorHex = table.Column<string>(type: "text", nullable: false),
+                    ActiveAudioTemplateId = table.Column<int>(type: "integer", nullable: true)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_unitConfigs", x => x.Id);
+                    table.ForeignKey(
+                        name: "FK_unitConfigs_evaluationTemplates_ActiveEvaluationTemplateId",
+                        column: x => x.ActiveEvaluationTemplateId,
+                        principalTable: "evaluationTemplates",
+                        principalColumn: "id",
+                        onDelete: ReferentialAction.SetNull);
+                    table.ForeignKey(
+                        name: "FK_unitConfigs_units_UnitId",
+                        column: x => x.UnitId,
                         principalTable: "units",
                         principalColumn: "unitId",
                         onDelete: ReferentialAction.Cascade);
@@ -341,7 +391,10 @@ namespace SystemQMS.Migrations
                     lastName = table.Column<string>(type: "character varying(20)", maxLength: 20, nullable: false),
                     startNumber = table.Column<int>(type: "integer", nullable: false),
                     endNumber = table.Column<int>(type: "integer", nullable: false),
-                    limitDay = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: false)
+                    isDailyLimitEnabled = table.Column<bool>(type: "boolean", nullable: false),
+                    dailyEndNumber = table.Column<int>(type: "integer", nullable: true),
+                    limitDay = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: false),
+                    sequenceMode = table.Column<string>(type: "character varying(20)", maxLength: 20, nullable: false)
                 },
                 constraints: table =>
                 {
@@ -374,6 +427,42 @@ namespace SystemQMS.Migrations
                         principalTable: "services",
                         principalColumn: "id",
                         onDelete: ReferentialAction.Cascade);
+                });
+
+            migrationBuilder.CreateTable(
+                name: "counterSessions",
+                columns: table => new
+                {
+                    id = table.Column<int>(type: "integer", nullable: false)
+                        .Annotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.IdentityByDefaultColumn),
+                    counterId = table.Column<int>(type: "integer", nullable: false),
+                    userId = table.Column<int>(type: "integer", nullable: false),
+                    deviceId = table.Column<int>(type: "integer", nullable: false),
+                    startedAt = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
+                    endedAt = table.Column<DateTime>(type: "timestamp with time zone", nullable: true),
+                    isActive = table.Column<bool>(type: "boolean", nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_counterSessions", x => x.id);
+                    table.ForeignKey(
+                        name: "FK_counterSessions_counters_counterId",
+                        column: x => x.counterId,
+                        principalTable: "counters",
+                        principalColumn: "id",
+                        onDelete: ReferentialAction.Restrict);
+                    table.ForeignKey(
+                        name: "FK_counterSessions_devices_deviceId",
+                        column: x => x.deviceId,
+                        principalTable: "devices",
+                        principalColumn: "id",
+                        onDelete: ReferentialAction.Restrict);
+                    table.ForeignKey(
+                        name: "FK_counterSessions_users_userId",
+                        column: x => x.userId,
+                        principalTable: "users",
+                        principalColumn: "userId",
+                        onDelete: ReferentialAction.Restrict);
                 });
 
             migrationBuilder.CreateTable(
@@ -428,7 +517,7 @@ namespace SystemQMS.Migrations
                         column: x => x.counterId,
                         principalTable: "counters",
                         principalColumn: "id",
-                        onDelete: ReferentialAction.Cascade);
+                        onDelete: ReferentialAction.Restrict);
                     table.ForeignKey(
                         name: "FK_stickers_services_serviceId",
                         column: x => x.serviceId,
@@ -611,6 +700,21 @@ namespace SystemQMS.Migrations
                 column: "countersid");
 
             migrationBuilder.CreateIndex(
+                name: "IX_counterSessions_counterId",
+                table: "counterSessions",
+                column: "counterId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_counterSessions_deviceId",
+                table: "counterSessions",
+                column: "deviceId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_counterSessions_userId",
+                table: "counterSessions",
+                column: "userId");
+
+            migrationBuilder.CreateIndex(
                 name: "IX_DeviceService_Servicesid",
                 table: "DeviceService",
                 column: "Servicesid");
@@ -701,6 +805,17 @@ namespace SystemQMS.Migrations
                 column: "userId");
 
             migrationBuilder.CreateIndex(
+                name: "IX_unitConfigs_ActiveEvaluationTemplateId",
+                table: "unitConfigs",
+                column: "ActiveEvaluationTemplateId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_unitConfigs_UnitId",
+                table: "unitConfigs",
+                column: "UnitId",
+                unique: true);
+
+            migrationBuilder.CreateIndex(
                 name: "IX_users_counterId",
                 table: "users",
                 column: "counterId");
@@ -732,6 +847,12 @@ namespace SystemQMS.Migrations
                 name: "CounterService");
 
             migrationBuilder.DropTable(
+                name: "counterSessions");
+
+            migrationBuilder.DropTable(
+                name: "CustomerOtps");
+
+            migrationBuilder.DropTable(
                 name: "DeviceService");
 
             migrationBuilder.DropTable(
@@ -741,9 +862,6 @@ namespace SystemQMS.Migrations
                 name: "evaluations");
 
             migrationBuilder.DropTable(
-                name: "evaluationTemplates");
-
-            migrationBuilder.DropTable(
                 name: "histories");
 
             migrationBuilder.DropTable(
@@ -751,6 +869,9 @@ namespace SystemQMS.Migrations
 
             migrationBuilder.DropTable(
                 name: "shedules");
+
+            migrationBuilder.DropTable(
+                name: "unitConfigs");
 
             migrationBuilder.DropTable(
                 name: "devices");
@@ -763,6 +884,9 @@ namespace SystemQMS.Migrations
 
             migrationBuilder.DropTable(
                 name: "notifications");
+
+            migrationBuilder.DropTable(
+                name: "evaluationTemplates");
 
             migrationBuilder.DropTable(
                 name: "services");

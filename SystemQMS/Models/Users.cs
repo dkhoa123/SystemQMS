@@ -7,11 +7,15 @@ namespace SystemQMS.Models
     {
         [Key]
         public int userId { get; set; }
-        public int unitId { get; set; }
+        public int? unitId { get; set; }
         [MaxLength(100)]
         public string? username { get; set; }
+        
         [MaxLength(100)]
         public string? password { get; set; }
+        public bool isVerified { get; set; } = false;
+
+        public DateTimeOffset? createdAt { get; set; }
         [MaxLength(100)]
         public string? email { get; set; }
         [MaxLength(10)]
@@ -19,7 +23,7 @@ namespace SystemQMS.Models
         public int roleId { get; set; }
         public byte[]? avatar { get; set; }
         public bool isActive { get; set; }
-        public int counterId { get; set; }
+        public int? counterId { get; set; }
 
         [ForeignKey("roleId")]
         public virtual Roles? Role { get; set; }

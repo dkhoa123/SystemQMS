@@ -1,4 +1,5 @@
 ﻿using Microsoft.EntityFrameworkCore;
+using SystemQMS.Models.Password;
 
 namespace SystemQMS.Models
 {
@@ -26,7 +27,11 @@ namespace SystemQMS.Models
         public DbSet<Notification> notifications { get; set; }
         public DbSet<UnitConfig> unitConfigs { get; set; }
         public DbSet<CounterSession> counterSessions { get; set; }
-
+        public DbSet<CustomerOtp> CustomerOtps { get; set; }
+        public DbSet<RevokedToken> revokedTokens { get; set; }
+        public DbSet<PasswordResetOtp> passwordResetOtps { get; set; }
+        public DbSet<News> news { get; set; }
+        public DbSet<NewsAttachment> newsAttachments { get; set; }
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
             modelBuilder.Entity<Users>()

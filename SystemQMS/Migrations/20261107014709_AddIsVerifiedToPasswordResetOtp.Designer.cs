@@ -12,8 +12,8 @@ using SystemQMS.Models;
 namespace SystemQMS.Migrations
 {
     [DbContext(typeof(MyDbContext))]
-    [Migration("20261030134227_AddCounterSession")]
-    partial class AddCounterSession
+    [Migration("20261107014709_AddIsVerifiedToPasswordResetOtp")]
+    partial class AddIsVerifiedToPasswordResetOtp
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -598,6 +598,99 @@ namespace SystemQMS.Migrations
                     b.ToTable("numberFomulars");
                 });
 
+            modelBuilder.Entity("SystemQMS.Models.Password.CustomerOtp", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+
+                    b.Property<DateTimeOffset>("CreatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<DateTimeOffset>("ExpiresAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<bool>("IsUsed")
+                        .HasColumnType("boolean");
+
+                    b.Property<string>("OtpHash")
+                        .IsRequired()
+                        .HasMaxLength(255)
+                        .HasColumnType("character varying(255)");
+
+                    b.Property<string>("PasswordHash")
+                        .IsRequired()
+                        .HasMaxLength(255)
+                        .HasColumnType("character varying(255)");
+
+                    b.Property<string>("email")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("CustomerOtps");
+                });
+
+            modelBuilder.Entity("SystemQMS.Models.Password.PasswordResetOtp", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("Email")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<DateTime>("ExpiresAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<bool>("IsUsed")
+                        .HasColumnType("boolean");
+
+                    b.Property<bool>("IsVerified")
+                        .HasColumnType("boolean");
+
+                    b.Property<string>("OtpHash")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("passwordResetOtps");
+                });
+
+            modelBuilder.Entity("SystemQMS.Models.Password.RevokedToken", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+
+                    b.Property<DateTime>("ExpiresAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<DateTime>("RevokedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("TokenHash")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("revokedTokens");
+                });
+
             modelBuilder.Entity("SystemQMS.Models.Roles", b =>
                 {
                     b.Property<int>("roleId")
@@ -834,14 +927,20 @@ namespace SystemQMS.Migrations
                     b.Property<byte[]>("avatar")
                         .HasColumnType("bytea");
 
-                    b.Property<int>("counterId")
+                    b.Property<int?>("counterId")
                         .HasColumnType("integer");
+
+                    b.Property<DateTimeOffset?>("createdAt")
+                        .HasColumnType("timestamp with time zone");
 
                     b.Property<string>("email")
                         .HasMaxLength(100)
                         .HasColumnType("character varying(100)");
 
                     b.Property<bool>("isActive")
+                        .HasColumnType("boolean");
+
+                    b.Property<bool>("isVerified")
                         .HasColumnType("boolean");
 
                     b.Property<string>("numberPhone")
@@ -855,7 +954,7 @@ namespace SystemQMS.Migrations
                     b.Property<int>("roleId")
                         .HasColumnType("integer");
 
-                    b.Property<int>("unitId")
+                    b.Property<int?>("unitId")
                         .HasColumnType("integer");
 
                     b.Property<string>("username")
@@ -1207,8 +1306,7 @@ namespace SystemQMS.Migrations
                     b.HasOne("SystemQMS.Models.Counter", "Counter")
                         .WithMany("Users")
                         .HasForeignKey("counterId")
-                        .OnDelete(DeleteBehavior.Restrict)
-                        .IsRequired();
+                        .OnDelete(DeleteBehavior.Restrict);
 
                     b.HasOne("SystemQMS.Models.Roles", "Role")
                         .WithMany("Users")
@@ -1218,9 +1316,7 @@ namespace SystemQMS.Migrations
 
                     b.HasOne("SystemQMS.Models.Unit", "Unit")
                         .WithMany("Users")
-                        .HasForeignKey("unitId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
+                        .HasForeignKey("unitId");
 
                     b.Navigation("Counter");
 
