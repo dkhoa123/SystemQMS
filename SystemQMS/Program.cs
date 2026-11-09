@@ -3,6 +3,7 @@ using MQTTnet;
 using SystemQMS.Models;
 using SystemQMS.Services;
 using SystemQMS.Services.Interface;
+using SystemQMS.Services.Interfaces;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -36,6 +37,7 @@ builder.Services.AddScoped<IQueueSvc, QueueSvc>();
 builder.Services.AddScoped<ITransferSvc, TransferSvc>();
 
 builder.Services.AddScoped<IWebConfigSvc, WebConfigSvc>();
+builder.Services.AddScoped<INewsSvc, NewsSvc>();
 
 
 // Job nền: tự nhận chuyển quầy quá hạn + mở lại quầy qua ngày mới
