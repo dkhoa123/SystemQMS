@@ -38,6 +38,8 @@ builder.Services.AddScoped<ITransferSvc, TransferSvc>();
 builder.Services.AddScoped<IWebConfigSvc, WebConfigSvc>();
 builder.Services.AddScoped<INewsSvc, NewsSvc>();
 builder.Services.AddScoped<INotificationSvc, NotificationSvc>();
+builder.Services.AddScoped<IIntegrationSvc, IntegrationSvc>();
+builder.Services.AddScoped<ISlotSvc, SlotSvc>();
 
 
 // Job nền: tự nhận chuyển quầy quá hạn + mở lại quầy qua ngày mới
