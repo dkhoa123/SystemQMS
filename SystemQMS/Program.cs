@@ -31,13 +31,13 @@ builder.Services.AddScoped<IServiceSvc, ServiceSvc>();
 builder.Services.AddScoped<ICounterSessionSvc, CounterSessionSvc>();
 builder.Services.AddScoped<IScheduleSvc, ScheduleSvc>();
 builder.Services.AddScoped<ICounterTicketSvc, CounterTicketSvc>();
-builder.Services.AddScoped<ICounterSvc, CounterSvc>();
 
 builder.Services.AddScoped<IQueueSvc, QueueSvc>();
 builder.Services.AddScoped<ITransferSvc, TransferSvc>();
 
 builder.Services.AddScoped<IWebConfigSvc, WebConfigSvc>();
 builder.Services.AddScoped<INewsSvc, NewsSvc>();
+builder.Services.AddScoped<INotificationSvc, NotificationSvc>();
 
 
 // Job nền: tự nhận chuyển quầy quá hạn + mở lại quầy qua ngày mới
