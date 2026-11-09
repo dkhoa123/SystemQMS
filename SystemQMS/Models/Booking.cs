@@ -23,5 +23,6 @@ namespace SystemQMS.Models
         public virtual Service? Service { get; set; }
         [ForeignKey("sttId")]
         public virtual Sticker? Sticker { get; set; }
+        public DateTimeOffset? ExpiresAt { get; set; }
     }
 }

@@ -35,6 +35,8 @@ builder.Services.AddScoped<ICounterSvc, CounterSvc>();
 builder.Services.AddScoped<IQueueSvc, QueueSvc>();
 builder.Services.AddScoped<ITransferSvc, TransferSvc>();
 
+builder.Services.AddScoped<IWebConfigSvc, WebConfigSvc>();
+
 
 // Job nền: tự nhận chuyển quầy quá hạn + mở lại quầy qua ngày mới
 builder.Services.AddHostedService<OprBackgroundSvc>();

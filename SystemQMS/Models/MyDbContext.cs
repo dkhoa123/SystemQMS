@@ -26,6 +26,7 @@ namespace SystemQMS.Models
         public DbSet<Notification> notifications { get; set; }
         public DbSet<UnitConfig> unitConfigs { get; set; }
         public DbSet<Ticket> Tickets { get; set; }
+        public DbSet<News> News { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
@@ -293,7 +294,23 @@ namespace SystemQMS.Models
                 .WithMany()
                 .HasForeignKey(t => t.CounterId)
                 .OnDelete(DeleteBehavior.SetNull);
+            modelBuilder.Entity<News>(entity =>
+            {
+                entity.HasOne(n => n.Unit)
+                      .WithMany(u => u.News)
+                      .HasForeignKey(n => n.UnitId)
+                      .OnDelete(DeleteBehavior.Cascade);
 
+                entity.HasOne(n => n.CreatedBy)
+                      .WithMany(u => u.CreatedNews)
+                      .HasForeignKey(n => n.CreatedById)
+                      .OnDelete(DeleteBehavior.Restrict);
+
+                entity.HasOne(n => n.UpdatedBy)
+                      .WithMany(u => u.UpdatedNews)
+                      .HasForeignKey(n => n.UpdatedById)
+                      .OnDelete(DeleteBehavior.Restrict);
+            });
         }
     }
 }

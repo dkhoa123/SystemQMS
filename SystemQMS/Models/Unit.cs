@@ -31,7 +31,7 @@ namespace SystemQMS.Models
         public ICollection<Evaluation> Evaluations { get; set; } = new List<Evaluation>();
         public ICollection<EvaluationTemplate> EvaluationTemplates { get; set; } = new List<EvaluationTemplate>();
         public virtual UnitConfig UnitConfig { get; set; }
-
+        public virtual ICollection<News> News { get; set; } = new List<News>();
 
 
 

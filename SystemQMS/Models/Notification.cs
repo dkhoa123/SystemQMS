@@ -23,5 +23,7 @@ namespace SystemQMS.Models
         public virtual Unit? Unit { get; set; }
 
         public ICollection<History> Histories { get; set; } = new List<History>();
+        [MaxLength(255)]
+        public string AttachmentUrl { get; set; }
     }
 }
