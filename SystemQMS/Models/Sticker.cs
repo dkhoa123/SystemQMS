@@ -18,10 +18,12 @@ namespace SystemQMS.Models
         public string status { get; set; }
         [MaxLength(100)]
         public string stage { get; set; }
+        [MaxLength(100)]
+        public string? cancelReason { get; set; }
 
-        public ICollection<Evaluation> Evaluations = new List<Evaluation>();
-        public ICollection<CounterChange> CounterChanges = new List<CounterChange>();
-        public ICollection<Booking> Bookings = new List<Booking>();
+        public ICollection<Evaluation> Evaluations { get; set; } = new List<Evaluation>();
+        public ICollection<CounterChange> CounterChanges { get; set; } = new List<CounterChange>();
+        public ICollection<Booking> Bookings { get; set; } = new List<Booking>();
         [ForeignKey("unitId")]
         public virtual Unit? Unit { get; set; }
         [ForeignKey("serviceId")]

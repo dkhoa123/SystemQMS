@@ -10,6 +10,7 @@ using SystemQMS.Services;
 using SystemQMS.Services.Interface;
 using SystemQMS.ViewModels.CallNumberDto;
 using SystemQMS.ViewModels.CallNumberDto.SystemQMS.DTOs;
+using SystemQMS.ViewModels.Sticker;
 namespace SystemQMS.Controllers;
 
 [Route("api/[controller]")]
@@ -23,15 +24,15 @@ public class StickersController : ControllerBase
     }
 
     [HttpPost]
-    public IActionResult AddNew([FromBody] Sticker sticker)
+    public async Task<IActionResult> AddNew([FromBody] CreateStickerDto dto)
     {
-        if (sticker == null)
+        if (dto == null)
             return BadRequest("Dữ liệu phiếu không hợp lệ");
-        var result = _sticker.AddNew(sticker);
+        var result = await _sticker.AddNew(dto);
         return Ok(result);
     }
 
-    [HttpGet("export")]
+    [HttpGet("export-excel")]
     
     public IActionResult Export()
     {
@@ -44,6 +45,36 @@ public class StickersController : ControllerBase
         );
     }
 
+    [HttpPost("ResetNumbers")]
+    public async Task<IActionResult> ResetNumbers()
+    {
+        try
+        {
+            var count = await _sticker.ResetNumbers();
+
+            return Ok(new
+            {
+                message = "Reset dãy số thành công.",
+                cancelledCount = count
+            });
+        }
+        catch (Exception ex)
+        {
+            return BadRequest(new
+            {
+                message = ex.Message
+            });
+        }
+    }
+
+
+    [HttpGet("list")]
+    public async Task<IActionResult> GetStickerList()
+    {
+        var data = await _sticker.GetStickerList();
+
+        return Ok(data);
+    }
 
     [HttpPost("call-next")]
     public async Task<IActionResult> CallNext([FromBody] CallNumberRequest request)

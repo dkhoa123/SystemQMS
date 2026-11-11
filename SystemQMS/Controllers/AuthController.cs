@@ -151,7 +151,7 @@ namespace SystemQMS.Controllers
             double duration = double.TryParse(
                 HttpContext.RequestServices
                     .GetRequiredService<IConfiguration>()["Jwt:Duration"],
-                out double minutes) ? minutes : 30000;
+                out double minutes) ? minutes : 120;
 
             var response = new LoginResponse
             {

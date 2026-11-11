@@ -135,5 +135,34 @@ namespace SystemQMS.Hubs
                     calledAt = DateTimeOffset.Now
                 });
         }
+
+
+
+        public async Task NotifyNumbersReset(List<string> sttIds)
+        {
+            await Clients.All.SendAsync(
+                "NumbersReset",
+                new
+                {
+                    sttIds,
+                    reason = "Reset quy tắc cấp số",
+                    resetAt = DateTimeOffset.UtcNow
+                });
+        }
+
+
+
+        public async Task NotifyNumberCreated(Sticker sticker)
+        {
+            await Clients.Group($"Counter_{sticker.counterId}")
+                .SendAsync("NumberCreated", new
+                {
+                    sttId = sticker.sttId,
+                    serviceId = sticker.serviceId,
+                    counterId = sticker.counterId,
+                    status = sticker.status,
+                    issuanceTime = sticker.issuanceTime
+                });
+        }
     }
 }

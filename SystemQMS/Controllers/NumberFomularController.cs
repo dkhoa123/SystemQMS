@@ -1,7 +1,7 @@
-﻿using Microsoft.AspNetCore.Http;
-using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Mvc;
 using SystemQMS.Models;
 using SystemQMS.Services.Interface;
+using SystemQMS.ViewModels.NumberFomular;
 
 namespace SystemQMS.Controllers
 {
@@ -9,85 +9,113 @@ namespace SystemQMS.Controllers
     [ApiController]
     public class NumberFomularController : ControllerBase
     {
-        private INumberFomularSvc _number;
-        public NumberFomularController(INumberFomularSvc number)
+        private readonly INumberFomularSvc _numberFomularSvc;
+
+        public NumberFomularController(INumberFomularSvc numberFomularSvc)
         {
-            _number = number;
+            _numberFomularSvc = numberFomularSvc;
         }
 
+        // GET: api/NumberFomular/
+        [HttpGet("GetAll")]
+        public async Task<IActionResult> GetAll()
+        {
+            var result = await _numberFomularSvc.GetAll();
+            return Ok(result);
+        }
+
+        // POST: api/NumberFomular
         [HttpPost]
-        public IActionResult AddNew([FromBody] NumberFomular numberFomular)
+        public IActionResult AddNew([FromBody] CreateNumberFomularDto dto)
         {
-            if (numberFomular == null)
-            {
-                return BadRequest("Dữ liệu không hợp lệ");
+            if (!ModelState.IsValid)
+                return BadRequest(ModelState);
 
-            }
-            if (numberFomular.startNumber < 0 || numberFomular.endNumber < numberFomular.startNumber)
-            {
-                return BadRequest("Phạm vi không hợp lệ");
+            var result = _numberFomularSvc.AddNew(dto);
 
-            }
-            return Ok(new { NotificationStatus = _number.AddNew(numberFomular) });
+            if (result == "Tạo quy tắc cấp số thành công.")
+                return Ok(new { message = result });
+
+            return BadRequest(new { message = result });
         }
 
-        [HttpGet("All")]
-        public IActionResult GetNumberFomuilar()
+        // PUT: api/NumberFomular
+        [HttpPut("{id}")]
+        public async Task<IActionResult> Update(
+    int id,
+    [FromBody] UpdateNumberFomularDto dto)
         {
-            return Ok(_number.GetNumberFomular());
+            var result = await _numberFomularSvc.Update(id, dto);
+
+            if (result == "Không tìm thấy công thức.")
+                return NotFound(new { message = result });
+
+            if (result != "Cập nhật công thức thành công.")
+                return BadRequest(new { message = result });
+
+            return Ok(new { message = result });
         }
 
-        [HttpPut]
-        public IActionResult Update(int id, NumberFomular numberFomular)
-        {
-            if (id != numberFomular.id)
-                return BadRequest("ID không hợp lệ");
-            var result = _number.Update(numberFomular);
-            if (result == null)
-                return NotFound("Không tìm thấy quy tắc cấp số");
-            return Ok("Cập nhật thành công");
-        }
-
+        // GET: api/NumberFomular/Preview/4
         [HttpGet("Preview/{serviceId}")]
-        // 
-        public IActionResult Preview(int serviceId)
+        public async Task<IActionResult> Preview(int serviceId)
         {
-            // kiem tra dich vu, tao mau
-            var result = _number.Preview(serviceId);
-            // kiem tra qts
-            if(result == null)
+            try
             {
-                return NotFound("Dịch vụ chưa có quy tắc cấp số.");
+                var result = await _numberFomularSvc.Preview(serviceId);
+
+                return Ok(new
+                {
+                    success = true,
+                    preview = result
+                });
             }
-            return Ok(new
+            catch (Exception ex)
             {
-                ServiceId = serviceId,
-                PreviewNumber = result
-            });
+                return BadRequest(new
+                {
+                    success = false,
+                    message = ex.Message
+                });
+            }
         }
+        // POST: api/NumberFomular/ConvertToShared
+        //[HttpPost("ConvertToShared")]
+        //public async Task<IActionResult> ConvertToShared([FromBody] List<int> serviceIds)
+        //{
+        //    if (serviceIds == null || serviceIds.Count == 0)
+        //        return BadRequest(new { message = "Vui lòng chọn dịch vụ." });
 
-        [HttpPost("covert-to-shared")]
-        public async Task<IActionResult> ConvertToShared([FromBody] List<int> serviceIds)
+        //    var result = await _numberFomularSvc.ConvertToShared(serviceIds);
+
+        //    if (!result)
+        //        return BadRequest(new { message = "Chuyển sang Shared thất bại." });
+
+        //    return Ok(new { message = "Chuyển sang Shared thành công." });
+        //}
+
+        // POST: api/NumberFomular/Reset/1
+        //[HttpPost("Reset/{formulaId}")]
+        //public IActionResult ReSet(int formulaId)
+        //{
+        //    var result = _numberFomularSvc.ReSet(formulaId);
+
+        //    return Ok(new { message = result });
+        //}
+
+
+        [HttpDelete("{id}")]
+        public async Task<IActionResult> Delete(int id)
         {
-            if (serviceIds == null || serviceIds.Count == 0)
-                return BadRequest("Danh sách dịch vụ không được rỗng .");
-            var result = await _number.ConvertToShared(serviceIds);
-            if (!result)
-                return BadRequest("Không thể chuyển đổi.Hãy kiểm tra quy tắc cấp số và chế độ hiện tại.");
-            return Ok("Chuyển sang chế độ thành công");
+            var result = await _numberFomularSvc.Delete(id);
 
+            if (result == "Không tìm thấy công thức.")
+                return NotFound(new { message = result });
+
+            if (result != "Xóa công thức thành công.")
+                return BadRequest(new { message = result });
+
+            return Ok(new { message = result });
         }
-
-
-        [HttpPost("reset")]
-        public IActionResult Reset(int id)
-        {
-            var result = _number.ReSet(id);
-            if (result == null)
-                return BadRequest("Reset thất bại");
-            return Ok("Reset thành công");
-        }
-
-
     }
 }

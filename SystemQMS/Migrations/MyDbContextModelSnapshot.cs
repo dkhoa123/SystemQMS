@@ -629,6 +629,11 @@ namespace SystemQMS.Migrations
                         .HasMaxLength(20)
                         .HasColumnType("character varying(20)");
 
+                    b.Property<string>("formatSource")
+                        .IsRequired()
+                        .HasMaxLength(20)
+                        .HasColumnType("character varying(20)");
+
                     b.Property<bool>("isDailyLimitEnabled")
                         .HasColumnType("boolean");
 
@@ -651,6 +656,9 @@ namespace SystemQMS.Migrations
                         .HasColumnType("character varying(20)");
 
                     b.Property<int>("serviceId")
+                        .HasColumnType("integer");
+
+                    b.Property<int?>("sharedNextNumber")
                         .HasColumnType("integer");
 
                     b.Property<int>("startNumber")
@@ -867,6 +875,10 @@ namespace SystemQMS.Migrations
             modelBuilder.Entity("SystemQMS.Models.Sticker", b =>
                 {
                     b.Property<string>("sttId")
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)");
+
+                    b.Property<string>("cancelReason")
                         .HasMaxLength(100)
                         .HasColumnType("character varying(100)");
 
