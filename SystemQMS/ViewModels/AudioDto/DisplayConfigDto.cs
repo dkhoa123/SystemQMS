@@ -7,10 +7,10 @@ namespace SystemQMS.ViewModels.AudioDto
         public string UnitName { get; set; }
         public string BannerText { get; set; }
         public string ToneColorHex { get; set; } 
-        public int? EvaluationTemplateId { get; set; }
+        public int EvaluationTemplateId { get; set; }
 
-        public IFormFile BackgroundFile { get; set; } 
-        public IFormFile LogoFile { get; set; }
+        public IFormFile? BackgroundFile { get; set; } 
+        public IFormFile? LogoFile { get; set; }
     }
 
     public class DisplayConfigResponseDto

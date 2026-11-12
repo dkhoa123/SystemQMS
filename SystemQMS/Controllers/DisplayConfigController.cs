@@ -4,7 +4,7 @@ using SystemQMS.Services.Interface;
 using SystemQMS.ViewModels.AudioDto;
 
 [ApiController]
-[Route("api/v1/configs/display")]
+[Route("alta-api/api/configs/display")]
 public class DisplayConfigController : ControllerBase
 {
     private readonly IConfigSvc _configService;

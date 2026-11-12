@@ -59,6 +59,10 @@ namespace SystemQMS.Services
                 _context.unitConfigs.Add(unit.UnitConfig);
             }
 
+            if (!string.IsNullOrEmpty(dto.UnitName))
+            {
+                unit.unitName = dto.UnitName;
+            }
             if (dto.BannerText != null) unit.UnitConfig.BannerText = dto.BannerText;
             if (dto.ToneColorHex != null) unit.UnitConfig.ToneColorHex = dto.ToneColorHex;
 

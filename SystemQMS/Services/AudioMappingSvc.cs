@@ -2,7 +2,7 @@
 
 namespace SystemQMS.Services
 {
-    public class AudioMappingService : IAudioMappingSvc
+    public class AudioMappingSvc : IAudioMappingSvc
     {
         private readonly string _audioBaseUrl = "/AudioConfigs/";
 
