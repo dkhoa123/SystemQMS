@@ -34,9 +34,16 @@ builder.Services.AddScoped<ICounterSvc, CounterSvc>();
 builder.Services.AddScoped<IQueueSvc, QueueSvc>();
 builder.Services.AddScoped<ITransferSvc, TransferSvc>();
 
+builder.Services.AddScoped<IEvaluationSvc, EvaluationSvc>();
+builder.Services.AddScoped<IEvaluationTemplateSvc, EvaluationTemplateSvc>();
+
+
+
 
 // Job nền: tự nhận chuyển quầy quá hạn + mở lại quầy qua ngày mới
 builder.Services.AddHostedService<OprBackgroundSvc>();
+
+builder.Services.AddHostedService<RatingScreenWatcherSvc>();
 
 
 // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
@@ -57,5 +64,8 @@ app.UseHttpsRedirection();
 app.UseAuthorization();
 
 app.MapControllers();
+
+app.MapHub<SystemQMS.Hubs.QmsHub>("/qmsHub");
+
 
 app.Run();
