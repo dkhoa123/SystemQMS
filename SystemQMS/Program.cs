@@ -1,3 +1,4 @@
+using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using MQTTnet;
 using SystemQMS.Models;
@@ -48,6 +49,11 @@ builder.Services.AddScoped<IDspSvc, DspSvc>();
 builder.Services.AddScoped<IMqttPublisherSvc, MqttPublisherSvc>();
 builder.Services.AddScoped<MqttClientFactory, MqttClientFactory>();
 
+builder.Services.AddScoped<IPasswordHasher<Users>, PasswordHasher<Users>>();
+builder.Services.AddScoped<IUserSvc, UserSvc>();
+
+builder.Services.AddMemoryCache();
+builder.Services.AddScoped<IEmailSvc, EmailSvc>();
 
 // Job nền: tự nhận chuyển quầy quá hạn + mở lại quầy qua ngày mới
 builder.Services.AddHostedService<OprBackgroundSvc>();
