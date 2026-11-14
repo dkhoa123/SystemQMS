@@ -12,12 +12,14 @@ namespace SystemQMS.Services
         private readonly MyDbContext _context;
         private readonly IScheduleSvc _scheduleSvc;
         private readonly IConfiguration _configuration;
+        private readonly IAudioMappingSvc _audioMappingSvc;
 
-        public CounterTicketSvc(MyDbContext context, IScheduleSvc scheduleSvc, IConfiguration configuration)
+        public CounterTicketSvc(MyDbContext context, IScheduleSvc scheduleSvc, IConfiguration configuration, IAudioMappingSvc audioMappingSvc)
         {
             _context = context;
             _scheduleSvc = scheduleSvc;
             _configuration = configuration;
+            _audioMappingSvc = audioMappingSvc;
         }
 
         // OPR-02: GỌI 1 SỐ KẾ TIẾP (Ưu tiên isPriority, né TransferPending, check giờ)
@@ -51,7 +53,12 @@ namespace SystemQMS.Services
             counter.Status = CounterStatus.Serving;
             await _context.SaveChangesAsync();
 
-            return (true, $"Đang gọi số phiếu {ticket.SttId}.", MapToDto(ticket, counter.CounterName, null));
+            var (templateId, audioSequence) = await BuildAudioSequenceAsync(counter, ticket.SttId);
+            var response = MapToDto(ticket, counter.CounterName, null);
+            response.audioTemplateId = templateId;
+            response.audioSequence = audioSequence;
+
+            return (true, $"Đang gọi số phiếu {ticket.SttId}.", response);
         }
 
         // OPR-03 & OPR-08: GỌI NHIỀU SỐ CÙNG LÚC (Lấy batch từ cấu hình, mặc định 6)
@@ -91,7 +98,17 @@ namespace SystemQMS.Services
                 await _context.SaveChangesAsync();
                 await transaction.CommitAsync();
 
-                return (true, $"Đã gọi thành công {tickets.Count} số tiếp theo.", tickets.Select(t => MapToDto(t, counter.CounterName, null)).ToList());
+                var response = new List<TicketOperationResponseDto>();
+                foreach (var t in tickets)
+                {
+                    var mapped = MapToDto(t, counter.CounterName, null);
+                    var (templateId, audioSequence) = await BuildAudioSequenceAsync(counter, t.SttId);
+                    mapped.audioTemplateId = templateId;
+                    mapped.audioSequence = audioSequence;
+                    response.Add(mapped);
+                }
+
+                return (true, $"Đã gọi thành công {tickets.Count} số tiếp theo.", response);
             }
             catch (Exception ex)
             {
@@ -178,11 +195,33 @@ namespace SystemQMS.Services
             if (counter != null) counter.Status = CounterStatus.Serving;
 
             await _context.SaveChangesAsync();
-            return (true, $"Đang gọi lại số phiếu {ticket.SttId}.", MapToDto(ticket, counter?.CounterName, null));
+
+            var response = MapToDto(ticket, counter?.CounterName, null);
+            if (counter != null)
+            {
+                var (templateId, audioSequence) = await BuildAudioSequenceAsync(counter, ticket.SttId);
+                response.audioTemplateId = templateId;
+                response.audioSequence = audioSequence;
+            }
+
+            return (true, $"Đang gọi lại số phiếu {ticket.SttId}.", response);
+        }
+
+        private async Task<(int templateId, List<string> audioSequence)> BuildAudioSequenceAsync(Counter counter, string sttId)
+        {
+            var configuredTemplateId = await _context.UnitConfigs
+                .AsNoTracking()
+                .Where(x => x.UnitId == counter.UnitId)
+                .Select(x => x.ActiveAudioTemplateId)
+                .FirstOrDefaultAsync();
+
+            var templateId = configuredTemplateId ?? 1;
+            var sequence = _audioMappingSvc.BuildAudioSequence(sttId, counter.CounterName ?? counter.CounterId, templateId);
+            return (templateId, sequence);
         }
 
         // Helper Map Entity sang DTO
-        private static TicketOperationResponseDto MapToDto(Ticket ticket, string? counterName, string? staffName)
+        private static TicketOperationResponseDto MapToDto(Tickets ticket, string? counterName, string? staffName)
         {
             return new TicketOperationResponseDto
             {

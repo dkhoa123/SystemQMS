@@ -6,7 +6,7 @@ using System.Text;
 using System.Threading.Tasks;
 using System.ComponentModel.DataAnnotations;
 
-namespace SystemQMS.ViewModels.CountersDto
+namespace SystemQMS.ViewModels.DspDto
 {
     public class ServiceInCounterDto
     {

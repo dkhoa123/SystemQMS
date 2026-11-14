@@ -26,14 +26,14 @@ namespace SystemQMS.Models
 
         public ICollection<Diary> Diaries { get; set; } = new List<Diary>();
         public ICollection<Counter> Counters { get; set; } = new List<Counter>();
-        public ICollection<Ticket > Tickets { get; set; } = new List<Ticket>();
+        public ICollection<Tickets > Tickets { get; set; } = new List<Tickets>();
         public ICollection<Notification> Notifications { get; set; } = new List<Notification>();
         public ICollection<Evaluation> Evaluations { get; set; } = new List<Evaluation>();
         public ICollection<EvaluationTemplate> EvaluationTemplates { get; set; } = new List<EvaluationTemplate>();
 
         public ICollection<Device> Devices { get; set; } = new List<Device>();
         public virtual UnitConfig UnitConfig { get; set; }
-
+        public virtual ICollection<News> News { get; set; } = new List<News>();
 
 
 

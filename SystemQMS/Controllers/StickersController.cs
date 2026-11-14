@@ -20,7 +20,7 @@ namespace SystemQMS.Controllers
         }
 
         [HttpPost]
-        public IActionResult AddNew([FromBody] Ticket sticker)
+        public IActionResult AddNew([FromBody] Tickets sticker)
         {
             if (sticker == null)
                 return BadRequest("Dữ liệu phiếu không hợp lệ");

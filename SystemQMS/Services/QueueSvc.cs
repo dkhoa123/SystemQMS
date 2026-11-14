@@ -21,7 +21,7 @@ namespace SystemQMS.Services
         }
 
         // Dùng chung cho mọi truy vấn danh sách phiếu, giữ projection dịch được sang SQL
-        private static readonly Expression<Func<Ticket, QueueTicketDto>> TicketProjection = s => new QueueTicketDto
+        private static readonly Expression<Func<Tickets, QueueTicketDto>> TicketProjection = s => new QueueTicketDto
         {
             sttId = s.SttId,
             status = s.Status,

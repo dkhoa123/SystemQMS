@@ -1,7 +1,9 @@
 using Microsoft.EntityFrameworkCore;
+using MQTTnet;
 using SystemQMS.Models;
 using SystemQMS.Services;
 using SystemQMS.Services.Interface;
+using SystemQMS.Services.Interfaces;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -29,16 +31,26 @@ builder.Services.AddScoped<IServiceSvc, ServiceSvc>();
 builder.Services.AddScoped<ICounterSessionSvc, CounterSessionSvc>();
 builder.Services.AddScoped<IScheduleSvc, ScheduleSvc>();
 builder.Services.AddScoped<ICounterTicketSvc, CounterTicketSvc>();
-builder.Services.AddScoped<ICounterSvc, CounterSvc>();
 
 builder.Services.AddScoped<IQueueSvc, QueueSvc>();
 builder.Services.AddScoped<ITransferSvc, TransferSvc>();
 
+
 builder.Services.AddScoped<IAuthSvc, AuthSvc>();
+
+builder.Services.AddScoped<IWebConfigSvc, WebConfigSvc>();
+builder.Services.AddScoped<INewsSvc, NewsSvc>();
+builder.Services.AddScoped<INotificationSvc, NotificationSvc>();
+builder.Services.AddScoped<IIntegrationSvc, IntegrationSvc>();
+builder.Services.AddScoped<ISlotSvc, SlotSvc>();
+
+builder.Services.AddScoped<IDspSvc, DspSvc>();
+builder.Services.AddScoped<IMqttPublisherSvc, MqttPublisherSvc>();
+builder.Services.AddScoped<MqttClientFactory, MqttClientFactory>();
+
 
 // Job nền: tự nhận chuyển quầy quá hạn + mở lại quầy qua ngày mới
 builder.Services.AddHostedService<OprBackgroundSvc>();
-
 builder.Services.AddScoped<IDashboardSvc, DashboardSvc>();
 
 builder.Services.AddCors(opt =>
@@ -51,7 +63,6 @@ builder.Services.AddCors(opt =>
         .AllowAnyMethod();
     });
 });
-
 
 // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
 builder.Services.AddEndpointsApiExplorer();

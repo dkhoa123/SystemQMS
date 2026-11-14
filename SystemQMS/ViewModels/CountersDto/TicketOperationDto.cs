@@ -14,5 +14,7 @@ namespace SystemQMS.ViewModels.CountersDto
         public bool isPriority { get; set; }
         public DateTimeOffset issuanceTime { get; set; }
         public DateTimeOffset? useTime { get; set; }
+        public int audioTemplateId { get; set; }
+        public List<string> audioSequence { get; set; } = new();
     }
 }

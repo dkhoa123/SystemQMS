@@ -28,7 +28,7 @@ namespace SystemQMS.Models
         [ForeignKey("UnitId")]
         public virtual Unit? Unit { get; set; }
         [ForeignKey("SttId")]
-        public virtual Ticket? Tickets { get; set; }
+        public virtual Tickets? Tickets { get; set; }
         [ForeignKey("ServiceId")]
         public virtual Service? Service { get; set; }
         [ForeignKey("CounterId")]

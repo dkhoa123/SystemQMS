@@ -21,10 +21,12 @@ namespace SystemQMS.Models
         public DbSet<Booking> Bookings { get; set; }
         public DbSet<Guest> Guests { get; set; }
         public DbSet<Diary> Diaries { get; set; }
-        public DbSet<Ticket> Tickets { get; set; }
+        public DbSet<Tickets> Tickets { get; set; }
+        public DbSet<Ticket> Ticket { get; set; } 
         public DbSet<History> Histories { get; set; }
         public DbSet<Notification> Notifications { get; set; }
         public DbSet<UnitConfig> UnitConfigs { get; set; }
+        public DbSet<News> News { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
@@ -184,33 +186,33 @@ namespace SystemQMS.Models
                 .HasIndex(d => d.DeviceId)
                 .IsUnique();
 
-            modelBuilder.Entity<Ticket>()
+            modelBuilder.Entity<Tickets>()
                 .HasMany(st => st.CounterChanges)
                 .WithOne(cc => cc.Tickets)
                 .HasForeignKey(cc => cc.SttId);
-            modelBuilder.Entity<Ticket>()
+            modelBuilder.Entity<Tickets>()
                 .HasMany(e =>e.Evaluations)
                 .WithOne(e => e.Tickets)
                 .HasForeignKey(st => st.SttId);
-            modelBuilder.Entity<Ticket>()
+            modelBuilder.Entity<Tickets>()
                 .HasMany(b => b.Bookings)
                 .WithOne(b => b.Ticket)
                 .HasForeignKey(st => st.SttId);
-            modelBuilder.Entity<Ticket>()
+            modelBuilder.Entity<Tickets>()
                 .HasOne(u => u.Unit)
                 .WithMany(c => c.Tickets)
                 .HasForeignKey(st => st.UnitId);
-            modelBuilder.Entity<Ticket>()
+            modelBuilder.Entity<Tickets>()
                 .HasOne(c => c.Counter)
                 .WithMany(s => s.Tickets)
                 .HasForeignKey(st => st.CounterId)
                 .OnDelete(DeleteBehavior.Restrict);
 
-            modelBuilder.Entity<Ticket>()
+            modelBuilder.Entity<Tickets>()
                 .HasOne(s => s.Service)
                 .WithMany(st => st.Tickets)
                 .HasForeignKey(st => st.ServiceId);
-            modelBuilder.Entity<Ticket>()
+            modelBuilder.Entity<Tickets>()
                 .HasOne(u => u.Users)
                 .WithMany(s => s.Tickets)
                 .HasForeignKey(st => st.UserId);
@@ -304,6 +306,28 @@ namespace SystemQMS.Models
                 .HasForeignKey(uc => uc.ActiveEvaluationTemplateId)
                 .OnDelete(DeleteBehavior.SetNull);
 
+            modelBuilder.Entity<Tickets>()
+                .HasOne(t => t.Counter)
+                .WithMany()
+                .HasForeignKey(t => t.CounterId)
+                .OnDelete(DeleteBehavior.SetNull);
+            modelBuilder.Entity<News>(entity =>
+            {
+                entity.HasOne(n => n.Unit)
+                      .WithMany(u => u.News)
+                      .HasForeignKey(n => n.UnitId)
+                      .OnDelete(DeleteBehavior.Cascade);
+
+                entity.HasOne(n => n.CreatedBy)
+                      .WithMany(u => u.CreatedNews)
+                      .HasForeignKey(n => n.CreatedById)
+                      .OnDelete(DeleteBehavior.Restrict);
+
+                entity.HasOne(n => n.UpdatedBy)
+                      .WithMany(u => u.UpdatedNews)
+                      .HasForeignKey(n => n.UpdatedById)
+                      .OnDelete(DeleteBehavior.Restrict);
+            });
         }
     }
 }

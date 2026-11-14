@@ -23,1277 +23,1277 @@ namespace SystemQMS.Migrations
             NpgsqlModelBuilderExtensions.UseIdentityByDefaultColumns(modelBuilder);
 
             modelBuilder.Entity("CounterDevice", b =>
-                {
-                    b.Property<int>("CountersId")
-                        .HasColumnType("integer");
+            {
+                b.Property<int>("CountersId")
+                    .HasColumnType("integer");
 
-                    b.Property<int>("DevicesId")
-                        .HasColumnType("integer");
+                b.Property<int>("DevicesId")
+                    .HasColumnType("integer");
 
-                    b.HasKey("CountersId", "DevicesId");
+                b.HasKey("CountersId", "DevicesId");
 
-                    b.HasIndex("DevicesId");
+                b.HasIndex("DevicesId");
 
-                    b.ToTable("CounterDevice");
-                });
+                b.ToTable("CounterDevice");
+            });
 
             modelBuilder.Entity("CounterService", b =>
-                {
-                    b.Property<int>("CountersId")
-                        .HasColumnType("integer");
+            {
+                b.Property<int>("CountersId")
+                    .HasColumnType("integer");
 
-                    b.Property<int>("ServicesId")
-                        .HasColumnType("integer");
+                b.Property<int>("ServicesId")
+                    .HasColumnType("integer");
 
-                    b.HasKey("CountersId", "ServicesId");
+                b.HasKey("CountersId", "ServicesId");
 
-                    b.HasIndex("ServicesId");
+                b.HasIndex("ServicesId");
 
-                    b.ToTable("CounterService");
-                });
+                b.ToTable("CounterService");
+            });
 
             modelBuilder.Entity("DeviceService", b =>
-                {
-                    b.Property<int>("DevicesId")
-                        .HasColumnType("integer");
+            {
+                b.Property<int>("DevicesId")
+                    .HasColumnType("integer");
 
-                    b.Property<int>("ServicesId")
-                        .HasColumnType("integer");
+                b.Property<int>("ServicesId")
+                    .HasColumnType("integer");
 
-                    b.HasKey("DevicesId", "ServicesId");
+                b.HasKey("DevicesId", "ServicesId");
 
-                    b.HasIndex("ServicesId");
+                b.HasIndex("ServicesId");
 
-                    b.ToTable("DeviceService");
-                });
+                b.ToTable("DeviceService");
+            });
 
             modelBuilder.Entity("SystemQMS.Models.Booking", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("integer");
+            {
+                b.Property<int>("Id")
+                    .ValueGeneratedOnAdd()
+                    .HasColumnType("integer");
 
-                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+                NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
 
-                    b.Property<DateTimeOffset>("Date")
-                        .HasColumnType("timestamp with time zone");
+                b.Property<DateTimeOffset>("Date")
+                    .HasColumnType("timestamp with time zone");
 
-                    b.Property<int>("GuestId")
-                        .HasColumnType("integer");
+                b.Property<int>("GuestId")
+                    .HasColumnType("integer");
 
-                    b.Property<int>("ServiceId")
-                        .HasColumnType("integer");
+                b.Property<int>("ServiceId")
+                    .HasColumnType("integer");
 
-                    b.Property<string>("Status")
-                        .HasMaxLength(100)
-                        .HasColumnType("character varying(100)");
+                b.Property<string>("Status")
+                    .HasMaxLength(100)
+                    .HasColumnType("character varying(100)");
 
-                    b.Property<string>("SttId")
-                        .IsRequired()
-                        .HasMaxLength(100)
-                        .HasColumnType("character varying(100)");
+                b.Property<string>("SttId")
+                    .IsRequired()
+                    .HasMaxLength(100)
+                    .HasColumnType("character varying(100)");
 
-                    b.Property<DateTimeOffset>("TimeDate")
-                        .HasColumnType("timestamp with time zone");
+                b.Property<DateTimeOffset>("TimeDate")
+                    .HasColumnType("timestamp with time zone");
 
-                    b.HasKey("Id");
+                b.HasKey("Id");
 
-                    b.HasIndex("GuestId");
+                b.HasIndex("GuestId");
 
-                    b.HasIndex("ServiceId");
+                b.HasIndex("ServiceId");
 
-                    b.HasIndex("SttId");
+                b.HasIndex("SttId");
 
-                    b.ToTable("Bookings");
-                });
+                b.ToTable("Bookings");
+            });
 
             modelBuilder.Entity("SystemQMS.Models.Counter", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("integer");
+            {
+                b.Property<int>("Id")
+                    .ValueGeneratedOnAdd()
+                    .HasColumnType("integer");
 
-                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+                NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
 
-                    b.Property<string>("CounterId")
-                        .IsRequired()
-                        .HasMaxLength(100)
-                        .HasColumnType("character varying(100)");
+                b.Property<string>("CounterId")
+                    .IsRequired()
+                    .HasMaxLength(100)
+                    .HasColumnType("character varying(100)");
 
-                    b.Property<string>("CounterName")
-                        .HasMaxLength(100)
-                        .HasColumnType("character varying(100)");
+                b.Property<string>("CounterName")
+                    .HasMaxLength(100)
+                    .HasColumnType("character varying(100)");
 
-                    b.Property<string>("Description")
-                        .HasMaxLength(255)
-                        .HasColumnType("character varying(255)");
+                b.Property<string>("Description")
+                    .HasMaxLength(255)
+                    .HasColumnType("character varying(255)");
 
-                    b.Property<bool>("IsActive")
-                        .HasColumnType("boolean");
+                b.Property<bool>("IsActive")
+                    .HasColumnType("boolean");
 
-                    b.Property<string>("Status")
-                        .IsRequired()
-                        .HasMaxLength(100)
-                        .HasColumnType("character varying(100)");
+                b.Property<string>("Status")
+                    .IsRequired()
+                    .HasMaxLength(100)
+                    .HasColumnType("character varying(100)");
 
-                    b.Property<int>("UnitId")
-                        .HasColumnType("integer");
+                b.Property<int>("UnitId")
+                    .HasColumnType("integer");
 
-                    b.HasKey("Id");
+                b.HasKey("Id");
 
-                    b.HasIndex("CounterId")
-                        .IsUnique();
+                b.HasIndex("CounterId")
+                    .IsUnique();
 
-                    b.HasIndex("UnitId");
+                b.HasIndex("UnitId");
 
-                    b.ToTable("Counters");
-                });
+                b.ToTable("Counters");
+            });
 
             modelBuilder.Entity("SystemQMS.Models.CounterChange", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("integer");
+            {
+                b.Property<int>("Id")
+                    .ValueGeneratedOnAdd()
+                    .HasColumnType("integer");
 
-                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+                NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
 
-                    b.Property<int>("CounterIdReceive")
-                        .HasColumnType("integer");
+                b.Property<int>("CounterIdReceive")
+                    .HasColumnType("integer");
 
-                    b.Property<int>("CounterIdSender")
-                        .HasColumnType("integer");
+                b.Property<int>("CounterIdSender")
+                    .HasColumnType("integer");
 
-                    b.Property<DateTimeOffset>("CreateTime")
-                        .HasColumnType("timestamp with time zone");
+                b.Property<DateTimeOffset>("CreateTime")
+                    .HasColumnType("timestamp with time zone");
 
-                    b.Property<string>("Status")
-                        .IsRequired()
-                        .HasMaxLength(100)
-                        .HasColumnType("character varying(100)");
+                b.Property<string>("Status")
+                    .IsRequired()
+                    .HasMaxLength(100)
+                    .HasColumnType("character varying(100)");
 
-                    b.Property<string>("SttId")
-                        .IsRequired()
-                        .HasColumnType("character varying(100)");
+                b.Property<string>("SttId")
+                    .IsRequired()
+                    .HasColumnType("character varying(100)");
 
-                    b.HasKey("Id");
+                b.HasKey("Id");
 
-                    b.HasIndex("CounterIdReceive");
+                b.HasIndex("CounterIdReceive");
 
-                    b.HasIndex("CounterIdSender");
+                b.HasIndex("CounterIdSender");
 
-                    b.HasIndex("SttId");
+                b.HasIndex("SttId");
 
-                    b.ToTable("CounterChanges");
-                });
+                b.ToTable("CounterChanges");
+            });
 
             modelBuilder.Entity("SystemQMS.Models.Device", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("integer");
+            {
+                b.Property<int>("Id")
+                    .ValueGeneratedOnAdd()
+                    .HasColumnType("integer");
 
-                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+                NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
 
-                    b.Property<string>("Description")
-                        .HasMaxLength(255)
-                        .HasColumnType("character varying(255)");
+                b.Property<string>("Description")
+                    .HasMaxLength(255)
+                    .HasColumnType("character varying(255)");
 
-                    b.Property<string>("DeviceId")
-                        .IsRequired()
-                        .HasMaxLength(100)
-                        .HasColumnType("character varying(100)");
+                b.Property<string>("DeviceId")
+                    .IsRequired()
+                    .HasMaxLength(100)
+                    .HasColumnType("character varying(100)");
 
-                    b.Property<string>("DeviceName")
-                        .IsRequired()
-                        .HasMaxLength(100)
-                        .HasColumnType("character varying(100)");
+                b.Property<string>("DeviceName")
+                    .IsRequired()
+                    .HasMaxLength(100)
+                    .HasColumnType("character varying(100)");
 
-                    b.Property<string>("DeviceType")
-                        .IsRequired()
-                        .HasMaxLength(100)
-                        .HasColumnType("character varying(100)");
+                b.Property<string>("DeviceType")
+                    .IsRequired()
+                    .HasMaxLength(100)
+                    .HasColumnType("character varying(100)");
 
-                    b.Property<string>("IpAddress")
-                        .HasMaxLength(100)
-                        .HasColumnType("character varying(100)");
+                b.Property<string>("IpAddress")
+                    .HasMaxLength(100)
+                    .HasColumnType("character varying(100)");
 
-                    b.Property<DateTime?>("LoginCodeExpiresAt")
-                        .HasColumnType("timestamp with time zone");
+                b.Property<DateTime?>("LoginCodeExpiresAt")
+                    .HasColumnType("timestamp with time zone");
 
-                    b.Property<string>("LoginCodeHash")
-                        .HasColumnType("text");
+                b.Property<string>("LoginCodeHash")
+                    .HasColumnType("text");
 
-                    b.Property<DateTime?>("SessionExpiresAt")
-                        .HasColumnType("timestamp with time zone");
+                b.Property<DateTime?>("SessionExpiresAt")
+                    .HasColumnType("timestamp with time zone");
 
-                    b.Property<string>("SessionTokenHash")
-                        .HasColumnType("text");
+                b.Property<string>("SessionTokenHash")
+                    .HasColumnType("text");
 
-                    b.Property<bool>("Show")
-                        .HasColumnType("boolean");
+                b.Property<bool>("Show")
+                    .HasColumnType("boolean");
 
-                    b.Property<string>("StatusActive")
-                        .IsRequired()
-                        .HasMaxLength(100)
-                        .HasColumnType("character varying(100)");
+                b.Property<string>("StatusActive")
+                    .IsRequired()
+                    .HasMaxLength(100)
+                    .HasColumnType("character varying(100)");
 
-                    b.Property<string>("StatusConnect")
-                        .IsRequired()
-                        .HasMaxLength(100)
-                        .HasColumnType("character varying(100)");
+                b.Property<string>("StatusConnect")
+                    .IsRequired()
+                    .HasMaxLength(100)
+                    .HasColumnType("character varying(100)");
 
-                    b.Property<string>("TemplateId")
-                        .IsRequired()
-                        .HasMaxLength(100)
-                        .HasColumnType("character varying(100)");
+                b.Property<string>("TemplateId")
+                    .IsRequired()
+                    .HasMaxLength(100)
+                    .HasColumnType("character varying(100)");
 
-                    b.Property<int>("UnitId")
-                        .HasColumnType("integer");
+                b.Property<int>("UnitId")
+                    .HasColumnType("integer");
 
-                    b.Property<int>("Volume")
-                        .HasColumnType("integer");
+                b.Property<int>("Volume")
+                    .HasColumnType("integer");
 
-                    b.HasKey("Id");
+                b.HasKey("Id");
 
-                    b.HasIndex("DeviceId")
-                        .IsUnique();
+                b.HasIndex("DeviceId")
+                    .IsUnique();
 
-                    b.HasIndex("UnitId");
+                b.HasIndex("UnitId");
 
-                    b.ToTable("Devices");
-                });
+                b.ToTable("Devices");
+            });
 
             modelBuilder.Entity("SystemQMS.Models.Diary", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("integer");
+            {
+                b.Property<int>("Id")
+                    .ValueGeneratedOnAdd()
+                    .HasColumnType("integer");
 
-                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+                NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
 
-                    b.Property<int>("ChangeNumber")
-                        .HasColumnType("integer");
+                b.Property<int>("ChangeNumber")
+                    .HasColumnType("integer");
 
-                    b.Property<string>("ModuleActive")
-                        .IsRequired()
-                        .HasMaxLength(100)
-                        .HasColumnType("character varying(100)");
+                b.Property<string>("ModuleActive")
+                    .IsRequired()
+                    .HasMaxLength(100)
+                    .HasColumnType("character varying(100)");
 
-                    b.Property<DateTimeOffset>("Time")
-                        .HasColumnType("timestamp with time zone");
+                b.Property<DateTimeOffset>("Time")
+                    .HasColumnType("timestamp with time zone");
 
-                    b.Property<string>("TypeActive")
-                        .IsRequired()
-                        .HasMaxLength(100)
-                        .HasColumnType("character varying(100)");
+                b.Property<string>("TypeActive")
+                    .IsRequired()
+                    .HasMaxLength(100)
+                    .HasColumnType("character varying(100)");
 
-                    b.Property<int>("UnitId")
-                        .HasColumnType("integer");
+                b.Property<int>("UnitId")
+                    .HasColumnType("integer");
 
-                    b.Property<int>("UserId")
-                        .HasColumnType("integer");
+                b.Property<int>("UserId")
+                    .HasColumnType("integer");
 
-                    b.HasKey("Id");
+                b.HasKey("Id");
 
-                    b.HasIndex("UnitId");
+                b.HasIndex("UnitId");
 
-                    b.HasIndex("UserId");
+                b.HasIndex("UserId");
 
-                    b.ToTable("Diaries");
-                });
+                b.ToTable("Diaries");
+            });
 
             modelBuilder.Entity("SystemQMS.Models.Evaluation", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("integer");
+            {
+                b.Property<int>("Id")
+                    .ValueGeneratedOnAdd()
+                    .HasColumnType("integer");
 
-                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+                NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
 
-                    b.Property<int>("AttitudeMark")
-                        .HasColumnType("integer");
+                b.Property<int>("AttitudeMark")
+                    .HasColumnType("integer");
 
-                    b.Property<int>("CounterId")
-                        .HasColumnType("integer");
+                b.Property<int>("CounterId")
+                    .HasColumnType("integer");
 
-                    b.Property<DateTimeOffset>("EvaluationTime")
-                        .HasColumnType("timestamp with time zone");
+                b.Property<DateTimeOffset>("EvaluationTime")
+                    .HasColumnType("timestamp with time zone");
 
-                    b.Property<string>("GuestName")
-                        .IsRequired()
-                        .HasMaxLength(100)
-                        .HasColumnType("character varying(100)");
+                b.Property<string>("GuestName")
+                    .IsRequired()
+                    .HasMaxLength(100)
+                    .HasColumnType("character varying(100)");
 
-                    b.Property<string>("GuestPhone")
-                        .IsRequired()
-                        .HasMaxLength(20)
-                        .HasColumnType("character varying(20)");
+                b.Property<string>("GuestPhone")
+                    .IsRequired()
+                    .HasMaxLength(20)
+                    .HasColumnType("character varying(20)");
 
-                    b.Property<int>("MaterialMark")
-                        .HasColumnType("integer");
+                b.Property<int>("MaterialMark")
+                    .HasColumnType("integer");
 
-                    b.Property<string>("Orther")
-                        .IsRequired()
-                        .HasMaxLength(100)
-                        .HasColumnType("character varying(100)");
+                b.Property<string>("Orther")
+                    .IsRequired()
+                    .HasMaxLength(100)
+                    .HasColumnType("character varying(100)");
 
-                    b.Property<int>("SatisfedMark")
-                        .HasColumnType("integer");
+                b.Property<int>("SatisfedMark")
+                    .HasColumnType("integer");
 
-                    b.Property<int>("ServiceId")
-                        .HasColumnType("integer");
+                b.Property<int>("ServiceId")
+                    .HasColumnType("integer");
 
-                    b.Property<string>("SttId")
-                        .IsRequired()
-                        .HasMaxLength(100)
-                        .HasColumnType("character varying(100)");
+                b.Property<string>("SttId")
+                    .IsRequired()
+                    .HasMaxLength(100)
+                    .HasColumnType("character varying(100)");
 
-                    b.Property<string>("TemplateId")
-                        .IsRequired()
-                        .HasMaxLength(100)
-                        .HasColumnType("character varying(100)");
+                b.Property<string>("TemplateId")
+                    .IsRequired()
+                    .HasMaxLength(100)
+                    .HasColumnType("character varying(100)");
 
-                    b.Property<int>("TimeMark")
-                        .HasColumnType("integer");
+                b.Property<int>("TimeMark")
+                    .HasColumnType("integer");
 
-                    b.Property<int>("UnitId")
-                        .HasColumnType("integer");
+                b.Property<int>("UnitId")
+                    .HasColumnType("integer");
 
-                    b.HasKey("Id");
+                b.HasKey("Id");
 
-                    b.HasIndex("CounterId");
+                b.HasIndex("CounterId");
 
-                    b.HasIndex("ServiceId");
+                b.HasIndex("ServiceId");
 
-                    b.HasIndex("SttId");
+                b.HasIndex("SttId");
 
-                    b.HasIndex("UnitId");
+                b.HasIndex("UnitId");
 
-                    b.ToTable("Evaluations");
-                });
+                b.ToTable("Evaluations");
+            });
 
             modelBuilder.Entity("SystemQMS.Models.EvaluationTemplate", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("integer");
+            {
+                b.Property<int>("Id")
+                    .ValueGeneratedOnAdd()
+                    .HasColumnType("integer");
 
-                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+                NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
 
-                    b.Property<string>("ContentQuestion")
-                        .IsRequired()
-                        .HasMaxLength(255)
-                        .HasColumnType("character varying(255)");
+                b.Property<string>("ContentQuestion")
+                    .IsRequired()
+                    .HasMaxLength(255)
+                    .HasColumnType("character varying(255)");
 
-                    b.Property<string>("TemplateId")
-                        .IsRequired()
-                        .HasMaxLength(100)
-                        .HasColumnType("character varying(100)");
+                b.Property<string>("TemplateId")
+                    .IsRequired()
+                    .HasMaxLength(100)
+                    .HasColumnType("character varying(100)");
 
-                    b.Property<string>("TemplateName")
-                        .IsRequired()
-                        .HasMaxLength(100)
-                        .HasColumnType("character varying(100)");
+                b.Property<string>("TemplateName")
+                    .IsRequired()
+                    .HasMaxLength(100)
+                    .HasColumnType("character varying(100)");
 
-                    b.Property<int>("UnitId")
-                        .HasColumnType("integer");
+                b.Property<int>("UnitId")
+                    .HasColumnType("integer");
 
-                    b.HasKey("Id");
+                b.HasKey("Id");
 
-                    b.HasIndex("UnitId");
+                b.HasIndex("UnitId");
 
-                    b.ToTable("EvaluationTemplates");
-                });
+                b.ToTable("EvaluationTemplates");
+            });
 
             modelBuilder.Entity("SystemQMS.Models.Guest", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("integer");
+            {
+                b.Property<int>("Id")
+                    .ValueGeneratedOnAdd()
+                    .HasColumnType("integer");
 
-                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+                NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
 
-                    b.Property<string>("CCCD")
-                        .IsRequired()
-                        .HasMaxLength(100)
-                        .HasColumnType("character varying(100)");
+                b.Property<string>("CCCD")
+                    .IsRequired()
+                    .HasMaxLength(100)
+                    .HasColumnType("character varying(100)");
 
-                    b.Property<string>("Email")
-                        .HasMaxLength(100)
-                        .HasColumnType("character varying(100)");
+                b.Property<string>("Email")
+                    .HasMaxLength(100)
+                    .HasColumnType("character varying(100)");
 
-                    b.Property<string>("GuestId")
-                        .IsRequired()
-                        .HasMaxLength(100)
-                        .HasColumnType("character varying(100)");
+                b.Property<string>("GuestId")
+                    .IsRequired()
+                    .HasMaxLength(100)
+                    .HasColumnType("character varying(100)");
 
-                    b.Property<string>("GuestName")
-                        .HasMaxLength(100)
-                        .HasColumnType("character varying(100)");
+                b.Property<string>("GuestName")
+                    .HasMaxLength(100)
+                    .HasColumnType("character varying(100)");
 
-                    b.Property<string>("Password")
-                        .IsRequired()
-                        .HasMaxLength(100)
-                        .HasColumnType("character varying(100)");
+                b.Property<string>("Password")
+                    .IsRequired()
+                    .HasMaxLength(100)
+                    .HasColumnType("character varying(100)");
 
-                    b.Property<string>("PhoneNumber")
-                        .HasMaxLength(100)
-                        .HasColumnType("character varying(100)");
+                b.Property<string>("PhoneNumber")
+                    .HasMaxLength(100)
+                    .HasColumnType("character varying(100)");
 
-                    b.Property<DateTimeOffset>("RegisterTime")
-                        .HasColumnType("timestamp with time zone");
+                b.Property<DateTimeOffset>("RegisterTime")
+                    .HasColumnType("timestamp with time zone");
 
-                    b.Property<string>("Status")
-                        .HasMaxLength(100)
-                        .HasColumnType("character varying(100)");
+                b.Property<string>("Status")
+                    .HasMaxLength(100)
+                    .HasColumnType("character varying(100)");
 
-                    b.Property<int>("UnitId")
-                        .HasColumnType("integer");
+                b.Property<int>("UnitId")
+                    .HasColumnType("integer");
 
-                    b.HasKey("Id");
+                b.HasKey("Id");
 
-                    b.HasIndex("UnitId");
+                b.HasIndex("UnitId");
 
-                    b.ToTable("Guests");
-                });
+                b.ToTable("Guests");
+            });
 
             modelBuilder.Entity("SystemQMS.Models.History", b =>
-                {
-                    b.Property<int>("NotiId")
-                        .HasColumnType("integer");
+            {
+                b.Property<int>("NotiId")
+                    .HasColumnType("integer");
 
-                    b.Property<int>("GuestId")
-                        .HasColumnType("integer");
+                b.Property<int>("GuestId")
+                    .HasColumnType("integer");
 
-                    b.Property<string>("Status")
-                        .IsRequired()
-                        .HasMaxLength(100)
-                        .HasColumnType("character varying(100)");
+                b.Property<string>("Status")
+                    .IsRequired()
+                    .HasMaxLength(100)
+                    .HasColumnType("character varying(100)");
 
-                    b.HasKey("NotiId", "GuestId");
+                b.HasKey("NotiId", "GuestId");
 
-                    b.HasIndex("GuestId");
+                b.HasIndex("GuestId");
 
-                    b.ToTable("Histories");
-                });
+                b.ToTable("Histories");
+            });
 
             modelBuilder.Entity("SystemQMS.Models.Notification", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("integer");
+            {
+                b.Property<int>("Id")
+                    .ValueGeneratedOnAdd()
+                    .HasColumnType("integer");
 
-                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+                NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
 
-                    b.Property<string>("Content")
-                        .IsRequired()
-                        .HasMaxLength(255)
-                        .HasColumnType("character varying(255)");
+                b.Property<string>("Content")
+                    .IsRequired()
+                    .HasMaxLength(255)
+                    .HasColumnType("character varying(255)");
 
-                    b.Property<string>("Form")
-                        .IsRequired()
-                        .HasMaxLength(100)
-                        .HasColumnType("character varying(100)");
+                b.Property<string>("Form")
+                    .IsRequired()
+                    .HasMaxLength(100)
+                    .HasColumnType("character varying(100)");
 
-                    b.Property<string>("Status")
-                        .IsRequired()
-                        .HasMaxLength(100)
-                        .HasColumnType("character varying(100)");
+                b.Property<string>("Status")
+                    .IsRequired()
+                    .HasMaxLength(100)
+                    .HasColumnType("character varying(100)");
 
-                    b.Property<DateTimeOffset>("TimeSend")
-                        .HasColumnType("timestamp with time zone");
+                b.Property<DateTimeOffset>("TimeSend")
+                    .HasColumnType("timestamp with time zone");
 
-                    b.Property<string>("Title")
-                        .IsRequired()
-                        .HasMaxLength(100)
-                        .HasColumnType("character varying(100)");
+                b.Property<string>("Title")
+                    .IsRequired()
+                    .HasMaxLength(100)
+                    .HasColumnType("character varying(100)");
 
-                    b.Property<string>("Type")
-                        .IsRequired()
-                        .HasMaxLength(100)
-                        .HasColumnType("character varying(100)");
+                b.Property<string>("Type")
+                    .IsRequired()
+                    .HasMaxLength(100)
+                    .HasColumnType("character varying(100)");
 
-                    b.Property<int>("UnitId")
-                        .HasColumnType("integer");
+                b.Property<int>("UnitId")
+                    .HasColumnType("integer");
 
-                    b.HasKey("Id");
+                b.HasKey("Id");
 
-                    b.HasIndex("UnitId");
+                b.HasIndex("UnitId");
 
-                    b.ToTable("Notifications");
-                });
+                b.ToTable("Notifications");
+            });
 
             modelBuilder.Entity("SystemQMS.Models.NumberFomular", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("integer");
+            {
+                b.Property<int>("Id")
+                    .ValueGeneratedOnAdd()
+                    .HasColumnType("integer");
 
-                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+                NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
 
-                    b.Property<int?>("DailyEndNumber")
-                        .HasColumnType("integer");
+                b.Property<int?>("DailyEndNumber")
+                    .HasColumnType("integer");
 
-                    b.Property<int>("EndNumber")
-                        .HasColumnType("integer");
+                b.Property<int>("EndNumber")
+                    .HasColumnType("integer");
 
-                    b.Property<string>("FirstName")
-                        .IsRequired()
-                        .HasMaxLength(20)
-                        .HasColumnType("character varying(20)");
+                b.Property<string>("FirstName")
+                    .IsRequired()
+                    .HasMaxLength(20)
+                    .HasColumnType("character varying(20)");
 
-                    b.Property<bool>("IsDailyLimitEnabled")
-                        .HasColumnType("boolean");
+                b.Property<bool>("IsDailyLimitEnabled")
+                    .HasColumnType("boolean");
 
-                    b.Property<string>("LastName")
-                        .IsRequired()
-                        .HasMaxLength(20)
-                        .HasColumnType("character varying(20)");
+                b.Property<string>("LastName")
+                    .IsRequired()
+                    .HasMaxLength(20)
+                    .HasColumnType("character varying(20)");
 
-                    b.Property<DateTimeOffset>("LimitDay")
-                        .HasColumnType("timestamp with time zone");
+                b.Property<DateTimeOffset>("LimitDay")
+                    .HasColumnType("timestamp with time zone");
 
-                    b.Property<string>("NumberType")
-                        .IsRequired()
-                        .HasMaxLength(100)
-                        .HasColumnType("character varying(100)");
+                b.Property<string>("NumberType")
+                    .IsRequired()
+                    .HasMaxLength(100)
+                    .HasColumnType("character varying(100)");
 
-                    b.Property<string>("SequenceMode")
-                        .IsRequired()
-                        .HasMaxLength(20)
-                        .HasColumnType("character varying(20)");
+                b.Property<string>("SequenceMode")
+                    .IsRequired()
+                    .HasMaxLength(20)
+                    .HasColumnType("character varying(20)");
 
-                    b.Property<int>("ServiceId")
-                        .HasColumnType("integer");
+                b.Property<int>("ServiceId")
+                    .HasColumnType("integer");
 
-                    b.Property<int>("StartNumber")
-                        .HasColumnType("integer");
+                b.Property<int>("StartNumber")
+                    .HasColumnType("integer");
 
-                    b.HasKey("Id");
+                b.HasKey("Id");
 
-                    b.HasIndex("ServiceId");
+                b.HasIndex("ServiceId");
 
-                    b.ToTable("NumberFomulars");
-                });
+                b.ToTable("NumberFomulars");
+            });
 
             modelBuilder.Entity("SystemQMS.Models.Roles", b =>
-                {
-                    b.Property<int>("RoleId")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("integer");
+            {
+                b.Property<int>("RoleId")
+                    .ValueGeneratedOnAdd()
+                    .HasColumnType("integer");
 
-                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("RoleId"));
+                NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("RoleId"));
 
-                    b.Property<string>("Description")
-                        .HasMaxLength(255)
-                        .HasColumnType("character varying(255)");
+                b.Property<string>("Description")
+                    .HasMaxLength(255)
+                    .HasColumnType("character varying(255)");
 
-                    b.Property<string>("RoleName")
-                        .HasMaxLength(100)
-                        .HasColumnType("character varying(100)");
+                b.Property<string>("RoleName")
+                    .HasMaxLength(100)
+                    .HasColumnType("character varying(100)");
 
-                    b.HasKey("RoleId");
+                b.HasKey("RoleId");
 
-                    b.ToTable("Roles");
-                });
+                b.ToTable("Roles");
+            });
 
             modelBuilder.Entity("SystemQMS.Models.Service", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("integer");
+            {
+                b.Property<int>("Id")
+                    .ValueGeneratedOnAdd()
+                    .HasColumnType("integer");
 
-                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+                NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
 
-                    b.Property<int>("AverageTime")
-                        .HasColumnType("integer");
+                b.Property<int>("AverageTime")
+                    .HasColumnType("integer");
 
-                    b.Property<string>("Description")
-                        .HasMaxLength(255)
-                        .HasColumnType("character varying(255)");
+                b.Property<string>("Description")
+                    .HasMaxLength(255)
+                    .HasColumnType("character varying(255)");
 
-                    b.Property<byte[]>("Image")
-                        .HasColumnType("bytea");
+                b.Property<byte[]>("Image")
+                    .HasColumnType("bytea");
 
-                    b.Property<bool>("IsActive")
-                        .HasColumnType("boolean");
+                b.Property<bool>("IsActive")
+                    .HasColumnType("boolean");
 
-                    b.Property<string>("ServiceId")
-                        .IsRequired()
-                        .HasMaxLength(100)
-                        .HasColumnType("character varying(100)");
+                b.Property<string>("ServiceId")
+                    .IsRequired()
+                    .HasMaxLength(100)
+                    .HasColumnType("character varying(100)");
 
-                    b.Property<string>("ServiceName")
-                        .IsRequired()
-                        .HasMaxLength(100)
-                        .HasColumnType("character varying(100)");
+                b.Property<string>("ServiceName")
+                    .IsRequired()
+                    .HasMaxLength(100)
+                    .HasColumnType("character varying(100)");
 
-                    b.Property<string>("SharingLink")
-                        .IsRequired()
-                        .HasColumnType("text");
+                b.Property<string>("SharingLink")
+                    .IsRequired()
+                    .HasColumnType("text");
 
-                    b.Property<int>("UnitId")
-                        .HasColumnType("integer");
+                b.Property<int>("UnitId")
+                    .HasColumnType("integer");
 
-                    b.HasKey("Id");
+                b.HasKey("Id");
 
-                    b.HasIndex("ServiceId")
-                        .IsUnique();
+                b.HasIndex("ServiceId")
+                    .IsUnique();
 
-                    b.HasIndex("UnitId");
+                b.HasIndex("UnitId");
 
-                    b.ToTable("Services");
-                });
+                b.ToTable("Services");
+            });
 
             modelBuilder.Entity("SystemQMS.Models.SheduleActive", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("integer");
+            {
+                b.Property<int>("Id")
+                    .ValueGeneratedOnAdd()
+                    .HasColumnType("integer");
 
-                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+                NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
 
-                    b.Property<TimeSpan>("EndTime")
-                        .HasColumnType("interval");
+                b.Property<TimeSpan>("EndTime")
+                    .HasColumnType("interval");
 
-                    b.Property<int>("ServiceId")
-                        .HasColumnType("integer");
+                b.Property<int>("ServiceId")
+                    .HasColumnType("integer");
 
-                    b.Property<TimeSpan>("StartTime")
-                        .HasColumnType("interval");
+                b.Property<TimeSpan>("StartTime")
+                    .HasColumnType("interval");
 
-                    b.Property<string>("WordShift")
-                        .IsRequired()
-                        .HasMaxLength(20)
-                        .HasColumnType("character varying(20)");
+                b.Property<string>("WordShift")
+                    .IsRequired()
+                    .HasMaxLength(20)
+                    .HasColumnType("character varying(20)");
 
-                    b.HasKey("Id");
+                b.HasKey("Id");
 
-                    b.HasIndex("ServiceId");
+                b.HasIndex("ServiceId");
 
-                    b.ToTable("Shedules");
-                });
+                b.ToTable("Shedules");
+            });
 
             modelBuilder.Entity("SystemQMS.Models.Ticket", b =>
-                {
-                    b.Property<string>("SttId")
-                        .HasMaxLength(100)
-                        .HasColumnType("character varying(100)");
+            {
+                b.Property<string>("SttId")
+                    .HasMaxLength(100)
+                    .HasColumnType("character varying(100)");
 
-                    b.Property<DateTimeOffset?>("CallTime")
-                        .HasColumnType("timestamp with time zone");
+                b.Property<DateTimeOffset?>("CallTime")
+                    .HasColumnType("timestamp with time zone");
 
-                    b.Property<int>("CounterId")
-                        .HasColumnType("integer");
+                b.Property<int>("CounterId")
+                    .HasColumnType("integer");
 
-                    b.Property<bool>("IsPriority")
-                        .HasColumnType("boolean");
+                b.Property<bool>("IsPriority")
+                    .HasColumnType("boolean");
 
-                    b.Property<DateTimeOffset>("IssuanceTime")
-                        .HasColumnType("timestamp with time zone");
+                b.Property<DateTimeOffset>("IssuanceTime")
+                    .HasColumnType("timestamp with time zone");
 
-                    b.Property<int>("RecallCount")
-                        .HasColumnType("integer");
+                b.Property<int>("RecallCount")
+                    .HasColumnType("integer");
 
-                    b.Property<int>("ServiceId")
-                        .HasColumnType("integer");
+                b.Property<int>("ServiceId")
+                    .HasColumnType("integer");
 
-                    b.Property<string>("Stage")
-                        .IsRequired()
-                        .HasMaxLength(100)
-                        .HasColumnType("character varying(100)");
+                b.Property<string>("Stage")
+                    .IsRequired()
+                    .HasMaxLength(100)
+                    .HasColumnType("character varying(100)");
 
-                    b.Property<string>("Status")
-                        .IsRequired()
-                        .HasMaxLength(100)
-                        .HasColumnType("character varying(100)");
+                b.Property<string>("Status")
+                    .IsRequired()
+                    .HasMaxLength(100)
+                    .HasColumnType("character varying(100)");
 
-                    b.Property<int>("TicketNumber")
-                        .HasColumnType("integer");
+                b.Property<int>("TicketNumber")
+                    .HasColumnType("integer");
 
-                    b.Property<int>("UnitId")
-                        .HasColumnType("integer");
+                b.Property<int>("UnitId")
+                    .HasColumnType("integer");
 
-                    b.Property<DateTimeOffset>("UseTime")
-                        .HasColumnType("timestamp with time zone");
+                b.Property<DateTimeOffset>("UseTime")
+                    .HasColumnType("timestamp with time zone");
 
-                    b.Property<int>("UserId")
-                        .HasColumnType("integer");
+                b.Property<int>("UserId")
+                    .HasColumnType("integer");
 
-                    b.HasKey("SttId");
+                b.HasKey("SttId");
 
-                    b.HasIndex("CounterId");
+                b.HasIndex("CounterId");
 
-                    b.HasIndex("ServiceId");
+                b.HasIndex("ServiceId");
 
-                    b.HasIndex("UnitId");
+                b.HasIndex("UnitId");
 
-                    b.HasIndex("UserId");
+                b.HasIndex("UserId");
 
-                    b.ToTable("Tickets");
-                });
+                b.ToTable("Tickets");
+            });
 
             modelBuilder.Entity("SystemQMS.Models.Unit", b =>
-                {
-                    b.Property<int>("UnitId")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("integer");
+            {
+                b.Property<int>("UnitId")
+                    .ValueGeneratedOnAdd()
+                    .HasColumnType("integer");
 
-                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("UnitId"));
+                NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("UnitId"));
 
-                    b.Property<string>("Address")
-                        .IsRequired()
-                        .HasMaxLength(255)
-                        .HasColumnType("character varying(255)");
+                b.Property<string>("Address")
+                    .IsRequired()
+                    .HasMaxLength(255)
+                    .HasColumnType("character varying(255)");
 
-                    b.Property<string>("EmailHelp")
-                        .IsRequired()
-                        .HasMaxLength(100)
-                        .HasColumnType("character varying(100)");
+                b.Property<string>("EmailHelp")
+                    .IsRequired()
+                    .HasMaxLength(100)
+                    .HasColumnType("character varying(100)");
 
-                    b.Property<bool>("IsBan")
-                        .HasColumnType("boolean");
+                b.Property<bool>("IsBan")
+                    .HasColumnType("boolean");
 
-                    b.Property<byte[]>("Logo")
-                        .HasColumnType("bytea");
+                b.Property<byte[]>("Logo")
+                    .HasColumnType("bytea");
 
-                    b.Property<string>("PhoneHelp")
-                        .IsRequired()
-                        .HasMaxLength(10)
-                        .HasColumnType("character varying(10)");
+                b.Property<string>("PhoneHelp")
+                    .IsRequired()
+                    .HasMaxLength(10)
+                    .HasColumnType("character varying(10)");
 
-                    b.Property<string>("ShowName")
-                        .IsRequired()
-                        .HasMaxLength(100)
-                        .HasColumnType("character varying(100)");
+                b.Property<string>("ShowName")
+                    .IsRequired()
+                    .HasMaxLength(100)
+                    .HasColumnType("character varying(100)");
 
-                    b.Property<string>("UnitName")
-                        .IsRequired()
-                        .HasMaxLength(100)
-                        .HasColumnType("character varying(100)");
+                b.Property<string>("UnitName")
+                    .IsRequired()
+                    .HasMaxLength(100)
+                    .HasColumnType("character varying(100)");
 
-                    b.HasKey("UnitId");
+                b.HasKey("UnitId");
 
-                    b.ToTable("Units");
-                });
+                b.ToTable("Units");
+            });
 
             modelBuilder.Entity("SystemQMS.Models.UnitConfig", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("integer");
+            {
+                b.Property<int>("Id")
+                    .ValueGeneratedOnAdd()
+                    .HasColumnType("integer");
 
-                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+                NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
 
-                    b.Property<int?>("ActiveAudioTemplateId")
-                        .HasColumnType("integer");
+                b.Property<int?>("ActiveAudioTemplateId")
+                    .HasColumnType("integer");
 
-                    b.Property<int?>("ActiveEvaluationTemplateId")
-                        .HasColumnType("integer");
+                b.Property<int?>("ActiveEvaluationTemplateId")
+                    .HasColumnType("integer");
 
-                    b.Property<string>("BackgroundImage")
-                        .IsRequired()
-                        .HasColumnType("text");
+                b.Property<string>("BackgroundImage")
+                    .IsRequired()
+                    .HasColumnType("text");
 
-                    b.Property<string>("BannerText")
-                        .IsRequired()
-                        .HasColumnType("text");
+                b.Property<string>("BannerText")
+                    .IsRequired()
+                    .HasColumnType("text");
 
-                    b.Property<string>("ToneColorHex")
-                        .IsRequired()
-                        .HasColumnType("text");
+                b.Property<string>("ToneColorHex")
+                    .IsRequired()
+                    .HasColumnType("text");
 
-                    b.Property<int>("UnitId")
-                        .HasColumnType("integer");
+                b.Property<int>("UnitId")
+                    .HasColumnType("integer");
 
-                    b.HasKey("Id");
+                b.HasKey("Id");
 
-                    b.HasIndex("ActiveEvaluationTemplateId");
+                b.HasIndex("ActiveEvaluationTemplateId");
 
-                    b.HasIndex("UnitId")
-                        .IsUnique();
+                b.HasIndex("UnitId")
+                    .IsUnique();
 
-                    b.ToTable("UnitConfigs");
-                });
+                b.ToTable("UnitConfigs");
+            });
 
             modelBuilder.Entity("SystemQMS.Models.Users", b =>
-                {
-                    b.Property<int>("UserId")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("integer");
+            {
+                b.Property<int>("UserId")
+                    .ValueGeneratedOnAdd()
+                    .HasColumnType("integer");
 
-                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("UserId"));
+                NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("UserId"));
 
-                    b.Property<byte[]>("Avatar")
-                        .HasColumnType("bytea");
+                b.Property<byte[]>("Avatar")
+                    .HasColumnType("bytea");
 
-                    b.Property<int>("CounterId")
-                        .HasColumnType("integer");
+                b.Property<int>("CounterId")
+                    .HasColumnType("integer");
 
-                    b.Property<string>("Email")
-                        .HasMaxLength(100)
-                        .HasColumnType("character varying(100)");
+                b.Property<string>("Email")
+                    .HasMaxLength(100)
+                    .HasColumnType("character varying(100)");
 
-                    b.Property<bool>("IsActive")
-                        .HasColumnType("boolean");
+                b.Property<bool>("IsActive")
+                    .HasColumnType("boolean");
 
-                    b.Property<string>("Name")
-                        .HasMaxLength(100)
-                        .HasColumnType("character varying(100)");
+                b.Property<string>("Name")
+                    .HasMaxLength(100)
+                    .HasColumnType("character varying(100)");
 
-                    b.Property<string>("NumberPhone")
-                        .HasMaxLength(10)
-                        .HasColumnType("character varying(10)");
+                b.Property<string>("NumberPhone")
+                    .HasMaxLength(10)
+                    .HasColumnType("character varying(10)");
 
-                    b.Property<string>("Password")
-                        .HasMaxLength(100)
-                        .HasColumnType("character varying(100)");
+                b.Property<string>("Password")
+                    .HasMaxLength(100)
+                    .HasColumnType("character varying(100)");
 
-                    b.Property<int>("RoleId")
-                        .HasColumnType("integer");
+                b.Property<int>("RoleId")
+                    .HasColumnType("integer");
 
-                    b.Property<int>("UnitId")
-                        .HasColumnType("integer");
+                b.Property<int>("UnitId")
+                    .HasColumnType("integer");
 
-                    b.Property<string>("Username")
-                        .HasMaxLength(100)
-                        .HasColumnType("character varying(100)");
+                b.Property<string>("Username")
+                    .HasMaxLength(100)
+                    .HasColumnType("character varying(100)");
 
-                    b.HasKey("UserId");
+                b.HasKey("UserId");
 
-                    b.HasIndex("CounterId");
+                b.HasIndex("CounterId");
 
-                    b.HasIndex("RoleId");
+                b.HasIndex("RoleId");
 
-                    b.HasIndex("UnitId");
+                b.HasIndex("UnitId");
 
-                    b.ToTable("Users");
-                });
+                b.ToTable("Users");
+            });
 
             modelBuilder.Entity("CounterDevice", b =>
-                {
-                    b.HasOne("SystemQMS.Models.Counter", null)
-                        .WithMany()
-                        .HasForeignKey("CountersId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
+            {
+                b.HasOne("SystemQMS.Models.Counter", null)
+                    .WithMany()
+                    .HasForeignKey("CountersId")
+                    .OnDelete(DeleteBehavior.Cascade)
+                    .IsRequired();
 
-                    b.HasOne("SystemQMS.Models.Device", null)
-                        .WithMany()
-                        .HasForeignKey("DevicesId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-                });
+                b.HasOne("SystemQMS.Models.Device", null)
+                    .WithMany()
+                    .HasForeignKey("DevicesId")
+                    .OnDelete(DeleteBehavior.Cascade)
+                    .IsRequired();
+            });
 
             modelBuilder.Entity("CounterService", b =>
-                {
-                    b.HasOne("SystemQMS.Models.Counter", null)
-                        .WithMany()
-                        .HasForeignKey("CountersId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
+            {
+                b.HasOne("SystemQMS.Models.Counter", null)
+                    .WithMany()
+                    .HasForeignKey("CountersId")
+                    .OnDelete(DeleteBehavior.Cascade)
+                    .IsRequired();
 
-                    b.HasOne("SystemQMS.Models.Service", null)
-                        .WithMany()
-                        .HasForeignKey("ServicesId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-                });
+                b.HasOne("SystemQMS.Models.Service", null)
+                    .WithMany()
+                    .HasForeignKey("ServicesId")
+                    .OnDelete(DeleteBehavior.Cascade)
+                    .IsRequired();
+            });
 
             modelBuilder.Entity("DeviceService", b =>
-                {
-                    b.HasOne("SystemQMS.Models.Device", null)
-                        .WithMany()
-                        .HasForeignKey("DevicesId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
+            {
+                b.HasOne("SystemQMS.Models.Device", null)
+                    .WithMany()
+                    .HasForeignKey("DevicesId")
+                    .OnDelete(DeleteBehavior.Cascade)
+                    .IsRequired();
 
-                    b.HasOne("SystemQMS.Models.Service", null)
-                        .WithMany()
-                        .HasForeignKey("ServicesId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-                });
+                b.HasOne("SystemQMS.Models.Service", null)
+                    .WithMany()
+                    .HasForeignKey("ServicesId")
+                    .OnDelete(DeleteBehavior.Cascade)
+                    .IsRequired();
+            });
 
             modelBuilder.Entity("SystemQMS.Models.Booking", b =>
-                {
-                    b.HasOne("SystemQMS.Models.Guest", "Guest")
-                        .WithMany("Bookings")
-                        .HasForeignKey("GuestId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
+            {
+                b.HasOne("SystemQMS.Models.Guest", "Guest")
+                    .WithMany("Bookings")
+                    .HasForeignKey("GuestId")
+                    .OnDelete(DeleteBehavior.Cascade)
+                    .IsRequired();
 
-                    b.HasOne("SystemQMS.Models.Service", "Service")
-                        .WithMany("Bookings")
-                        .HasForeignKey("ServiceId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
+                b.HasOne("SystemQMS.Models.Service", "Service")
+                    .WithMany("Bookings")
+                    .HasForeignKey("ServiceId")
+                    .OnDelete(DeleteBehavior.Cascade)
+                    .IsRequired();
 
-                    b.HasOne("SystemQMS.Models.Ticket", "Ticket")
-                        .WithMany("Bookings")
-                        .HasForeignKey("SttId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
+                b.HasOne("SystemQMS.Models.Ticket", "Ticket")
+                    .WithMany("Bookings")
+                    .HasForeignKey("SttId")
+                    .OnDelete(DeleteBehavior.Cascade)
+                    .IsRequired();
 
-                    b.Navigation("Guest");
+                b.Navigation("Guest");
 
-                    b.Navigation("Service");
+                b.Navigation("Service");
 
-                    b.Navigation("Ticket");
-                });
+                b.Navigation("Ticket");
+            });
 
             modelBuilder.Entity("SystemQMS.Models.Counter", b =>
-                {
-                    b.HasOne("SystemQMS.Models.Unit", "Unit")
-                        .WithMany("Counters")
-                        .HasForeignKey("UnitId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
+            {
+                b.HasOne("SystemQMS.Models.Unit", "Unit")
+                    .WithMany("Counters")
+                    .HasForeignKey("UnitId")
+                    .OnDelete(DeleteBehavior.Cascade)
+                    .IsRequired();
 
-                    b.Navigation("Unit");
-                });
+                b.Navigation("Unit");
+            });
 
             modelBuilder.Entity("SystemQMS.Models.CounterChange", b =>
-                {
-                    b.HasOne("SystemQMS.Models.Counter", "CounterReceiver")
-                        .WithMany("CounterReceive")
-                        .HasForeignKey("CounterIdReceive")
-                        .OnDelete(DeleteBehavior.Restrict)
-                        .IsRequired();
+            {
+                b.HasOne("SystemQMS.Models.Counter", "CounterReceiver")
+                    .WithMany("CounterReceive")
+                    .HasForeignKey("CounterIdReceive")
+                    .OnDelete(DeleteBehavior.Restrict)
+                    .IsRequired();
 
-                    b.HasOne("SystemQMS.Models.Counter", "CounterSender")
-                        .WithMany("CounterSend")
-                        .HasForeignKey("CounterIdSender")
-                        .OnDelete(DeleteBehavior.Restrict)
-                        .IsRequired();
+                b.HasOne("SystemQMS.Models.Counter", "CounterSender")
+                    .WithMany("CounterSend")
+                    .HasForeignKey("CounterIdSender")
+                    .OnDelete(DeleteBehavior.Restrict)
+                    .IsRequired();
 
-                    b.HasOne("SystemQMS.Models.Ticket", "Tickets")
-                        .WithMany("CounterChanges")
-                        .HasForeignKey("SttId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
+                b.HasOne("SystemQMS.Models.Ticket", "Tickets")
+                    .WithMany("CounterChanges")
+                    .HasForeignKey("SttId")
+                    .OnDelete(DeleteBehavior.Cascade)
+                    .IsRequired();
 
-                    b.Navigation("CounterReceiver");
+                b.Navigation("CounterReceiver");
 
-                    b.Navigation("CounterSender");
+                b.Navigation("CounterSender");
 
-                    b.Navigation("Tickets");
-                });
+                b.Navigation("Tickets");
+            });
 
             modelBuilder.Entity("SystemQMS.Models.Device", b =>
-                {
-                    b.HasOne("SystemQMS.Models.Unit", "Unit")
-                        .WithMany("Devices")
-                        .HasForeignKey("UnitId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
+            {
+                b.HasOne("SystemQMS.Models.Unit", "Unit")
+                    .WithMany("Devices")
+                    .HasForeignKey("UnitId")
+                    .OnDelete(DeleteBehavior.Cascade)
+                    .IsRequired();
 
-                    b.Navigation("Unit");
-                });
+                b.Navigation("Unit");
+            });
 
             modelBuilder.Entity("SystemQMS.Models.Diary", b =>
-                {
-                    b.HasOne("SystemQMS.Models.Unit", "Unit")
-                        .WithMany("Diaries")
-                        .HasForeignKey("UnitId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
+            {
+                b.HasOne("SystemQMS.Models.Unit", "Unit")
+                    .WithMany("Diaries")
+                    .HasForeignKey("UnitId")
+                    .OnDelete(DeleteBehavior.Cascade)
+                    .IsRequired();
 
-                    b.HasOne("SystemQMS.Models.Users", "User")
-                        .WithMany("Diaries")
-                        .HasForeignKey("UserId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
+                b.HasOne("SystemQMS.Models.Users", "User")
+                    .WithMany("Diaries")
+                    .HasForeignKey("UserId")
+                    .OnDelete(DeleteBehavior.Cascade)
+                    .IsRequired();
 
-                    b.Navigation("Unit");
+                b.Navigation("Unit");
 
-                    b.Navigation("User");
-                });
+                b.Navigation("User");
+            });
 
             modelBuilder.Entity("SystemQMS.Models.Evaluation", b =>
-                {
-                    b.HasOne("SystemQMS.Models.Counter", "Counter")
-                        .WithMany("Evaluations")
-                        .HasForeignKey("CounterId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
+            {
+                b.HasOne("SystemQMS.Models.Counter", "Counter")
+                    .WithMany("Evaluations")
+                    .HasForeignKey("CounterId")
+                    .OnDelete(DeleteBehavior.Cascade)
+                    .IsRequired();
 
-                    b.HasOne("SystemQMS.Models.Service", "Service")
-                        .WithMany("Evaluations")
-                        .HasForeignKey("ServiceId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
+                b.HasOne("SystemQMS.Models.Service", "Service")
+                    .WithMany("Evaluations")
+                    .HasForeignKey("ServiceId")
+                    .OnDelete(DeleteBehavior.Cascade)
+                    .IsRequired();
 
-                    b.HasOne("SystemQMS.Models.Ticket", "Tickets")
-                        .WithMany("Evaluations")
-                        .HasForeignKey("SttId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
+                b.HasOne("SystemQMS.Models.Ticket", "Tickets")
+                    .WithMany("Evaluations")
+                    .HasForeignKey("SttId")
+                    .OnDelete(DeleteBehavior.Cascade)
+                    .IsRequired();
 
-                    b.HasOne("SystemQMS.Models.Unit", "Unit")
-                        .WithMany("Evaluations")
-                        .HasForeignKey("UnitId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
+                b.HasOne("SystemQMS.Models.Unit", "Unit")
+                    .WithMany("Evaluations")
+                    .HasForeignKey("UnitId")
+                    .OnDelete(DeleteBehavior.Cascade)
+                    .IsRequired();
 
-                    b.Navigation("Counter");
+                b.Navigation("Counter");
 
-                    b.Navigation("Service");
+                b.Navigation("Service");
 
-                    b.Navigation("Tickets");
+                b.Navigation("Tickets");
 
-                    b.Navigation("Unit");
-                });
+                b.Navigation("Unit");
+            });
 
             modelBuilder.Entity("SystemQMS.Models.EvaluationTemplate", b =>
-                {
-                    b.HasOne("SystemQMS.Models.Unit", "Unit")
-                        .WithMany("EvaluationTemplates")
-                        .HasForeignKey("UnitId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
+            {
+                b.HasOne("SystemQMS.Models.Unit", "Unit")
+                    .WithMany("EvaluationTemplates")
+                    .HasForeignKey("UnitId")
+                    .OnDelete(DeleteBehavior.Cascade)
+                    .IsRequired();
 
-                    b.Navigation("Unit");
-                });
+                b.Navigation("Unit");
+            });
 
             modelBuilder.Entity("SystemQMS.Models.Guest", b =>
-                {
-                    b.HasOne("SystemQMS.Models.Unit", "Unit")
-                        .WithMany("Guests")
-                        .HasForeignKey("UnitId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
+            {
+                b.HasOne("SystemQMS.Models.Unit", "Unit")
+                    .WithMany("Guests")
+                    .HasForeignKey("UnitId")
+                    .OnDelete(DeleteBehavior.Cascade)
+                    .IsRequired();
 
-                    b.Navigation("Unit");
-                });
+                b.Navigation("Unit");
+            });
 
             modelBuilder.Entity("SystemQMS.Models.History", b =>
-                {
-                    b.HasOne("SystemQMS.Models.Guest", "Guest")
-                        .WithMany("Histories")
-                        .HasForeignKey("GuestId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
+            {
+                b.HasOne("SystemQMS.Models.Guest", "Guest")
+                    .WithMany("Histories")
+                    .HasForeignKey("GuestId")
+                    .OnDelete(DeleteBehavior.Cascade)
+                    .IsRequired();
 
-                    b.HasOne("SystemQMS.Models.Notification", "Notification")
-                        .WithMany("Histories")
-                        .HasForeignKey("NotiId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
+                b.HasOne("SystemQMS.Models.Notification", "Notification")
+                    .WithMany("Histories")
+                    .HasForeignKey("NotiId")
+                    .OnDelete(DeleteBehavior.Cascade)
+                    .IsRequired();
 
-                    b.Navigation("Guest");
+                b.Navigation("Guest");
 
-                    b.Navigation("Notification");
-                });
+                b.Navigation("Notification");
+            });
 
             modelBuilder.Entity("SystemQMS.Models.Notification", b =>
-                {
-                    b.HasOne("SystemQMS.Models.Unit", "Unit")
-                        .WithMany("Notifications")
-                        .HasForeignKey("UnitId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
+            {
+                b.HasOne("SystemQMS.Models.Unit", "Unit")
+                    .WithMany("Notifications")
+                    .HasForeignKey("UnitId")
+                    .OnDelete(DeleteBehavior.Cascade)
+                    .IsRequired();
 
-                    b.Navigation("Unit");
-                });
+                b.Navigation("Unit");
+            });
 
             modelBuilder.Entity("SystemQMS.Models.NumberFomular", b =>
-                {
-                    b.HasOne("SystemQMS.Models.Service", "Service")
-                        .WithMany("NumberFomulars")
-                        .HasForeignKey("ServiceId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
+            {
+                b.HasOne("SystemQMS.Models.Service", "Service")
+                    .WithMany("NumberFomulars")
+                    .HasForeignKey("ServiceId")
+                    .OnDelete(DeleteBehavior.Cascade)
+                    .IsRequired();
 
-                    b.Navigation("Service");
-                });
+                b.Navigation("Service");
+            });
 
             modelBuilder.Entity("SystemQMS.Models.Service", b =>
-                {
-                    b.HasOne("SystemQMS.Models.Unit", "Unit")
-                        .WithMany("Services")
-                        .HasForeignKey("UnitId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
+            {
+                b.HasOne("SystemQMS.Models.Unit", "Unit")
+                    .WithMany("Services")
+                    .HasForeignKey("UnitId")
+                    .OnDelete(DeleteBehavior.Cascade)
+                    .IsRequired();
 
-                    b.Navigation("Unit");
-                });
+                b.Navigation("Unit");
+            });
 
             modelBuilder.Entity("SystemQMS.Models.SheduleActive", b =>
-                {
-                    b.HasOne("SystemQMS.Models.Service", "Service")
-                        .WithMany("SheduleActives")
-                        .HasForeignKey("ServiceId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
+            {
+                b.HasOne("SystemQMS.Models.Service", "Service")
+                    .WithMany("SheduleActives")
+                    .HasForeignKey("ServiceId")
+                    .OnDelete(DeleteBehavior.Cascade)
+                    .IsRequired();
 
-                    b.Navigation("Service");
-                });
+                b.Navigation("Service");
+            });
 
             modelBuilder.Entity("SystemQMS.Models.Ticket", b =>
-                {
-                    b.HasOne("SystemQMS.Models.Counter", "Counter")
-                        .WithMany("Tickets")
-                        .HasForeignKey("CounterId")
-                        .OnDelete(DeleteBehavior.Restrict)
-                        .IsRequired();
+            {
+                b.HasOne("SystemQMS.Models.Counter", "Counter")
+                    .WithMany("Tickets")
+                    .HasForeignKey("CounterId")
+                    .OnDelete(DeleteBehavior.Restrict)
+                    .IsRequired();
 
-                    b.HasOne("SystemQMS.Models.Service", "Service")
-                        .WithMany("Tickets")
-                        .HasForeignKey("ServiceId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
+                b.HasOne("SystemQMS.Models.Service", "Service")
+                    .WithMany("Tickets")
+                    .HasForeignKey("ServiceId")
+                    .OnDelete(DeleteBehavior.Cascade)
+                    .IsRequired();
 
-                    b.HasOne("SystemQMS.Models.Unit", "Unit")
-                        .WithMany("Tickets")
-                        .HasForeignKey("UnitId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
+                b.HasOne("SystemQMS.Models.Unit", "Unit")
+                    .WithMany("Tickets")
+                    .HasForeignKey("UnitId")
+                    .OnDelete(DeleteBehavior.Cascade)
+                    .IsRequired();
 
-                    b.HasOne("SystemQMS.Models.Users", "Users")
-                        .WithMany("Tickets")
-                        .HasForeignKey("UserId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
+                b.HasOne("SystemQMS.Models.Users", "Users")
+                    .WithMany("Tickets")
+                    .HasForeignKey("UserId")
+                    .OnDelete(DeleteBehavior.Cascade)
+                    .IsRequired();
 
-                    b.Navigation("Counter");
+                b.Navigation("Counter");
 
-                    b.Navigation("Service");
+                b.Navigation("Service");
 
-                    b.Navigation("Unit");
+                b.Navigation("Unit");
 
-                    b.Navigation("Users");
-                });
+                b.Navigation("Users");
+            });
 
             modelBuilder.Entity("SystemQMS.Models.UnitConfig", b =>
-                {
-                    b.HasOne("SystemQMS.Models.EvaluationTemplate", "EvaluationTemplate")
-                        .WithMany()
-                        .HasForeignKey("ActiveEvaluationTemplateId")
-                        .OnDelete(DeleteBehavior.SetNull);
+            {
+                b.HasOne("SystemQMS.Models.EvaluationTemplate", "EvaluationTemplate")
+                    .WithMany()
+                    .HasForeignKey("ActiveEvaluationTemplateId")
+                    .OnDelete(DeleteBehavior.SetNull);
 
-                    b.HasOne("SystemQMS.Models.Unit", "Unit")
-                        .WithOne("UnitConfig")
-                        .HasForeignKey("SystemQMS.Models.UnitConfig", "UnitId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
+                b.HasOne("SystemQMS.Models.Unit", "Unit")
+                    .WithOne("UnitConfig")
+                    .HasForeignKey("SystemQMS.Models.UnitConfig", "UnitId")
+                    .OnDelete(DeleteBehavior.Cascade)
+                    .IsRequired();
 
-                    b.Navigation("EvaluationTemplate");
+                b.Navigation("EvaluationTemplate");
 
-                    b.Navigation("Unit");
-                });
+                b.Navigation("Unit");
+            });
 
             modelBuilder.Entity("SystemQMS.Models.Users", b =>
-                {
-                    b.HasOne("SystemQMS.Models.Counter", "Counter")
-                        .WithMany("Users")
-                        .HasForeignKey("CounterId")
-                        .OnDelete(DeleteBehavior.Restrict)
-                        .IsRequired();
+            {
+                b.HasOne("SystemQMS.Models.Counter", "Counter")
+                    .WithMany("Users")
+                    .HasForeignKey("CounterId")
+                    .OnDelete(DeleteBehavior.Restrict)
+                    .IsRequired();
 
-                    b.HasOne("SystemQMS.Models.Roles", "Role")
-                        .WithMany("Users")
-                        .HasForeignKey("RoleId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
+                b.HasOne("SystemQMS.Models.Roles", "Role")
+                    .WithMany("Users")
+                    .HasForeignKey("RoleId")
+                    .OnDelete(DeleteBehavior.Cascade)
+                    .IsRequired();
 
-                    b.HasOne("SystemQMS.Models.Unit", "Unit")
-                        .WithMany("Users")
-                        .HasForeignKey("UnitId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
+                b.HasOne("SystemQMS.Models.Unit", "Unit")
+                    .WithMany("Users")
+                    .HasForeignKey("UnitId")
+                    .OnDelete(DeleteBehavior.Cascade)
+                    .IsRequired();
 
-                    b.Navigation("Counter");
+                b.Navigation("Counter");
 
-                    b.Navigation("Role");
+                b.Navigation("Role");
 
-                    b.Navigation("Unit");
-                });
+                b.Navigation("Unit");
+            });
 
             modelBuilder.Entity("SystemQMS.Models.Counter", b =>
-                {
-                    b.Navigation("CounterReceive");
+            {
+                b.Navigation("CounterReceive");
 
-                    b.Navigation("CounterSend");
+                b.Navigation("CounterSend");
 
-                    b.Navigation("Evaluations");
+                b.Navigation("Evaluations");
 
-                    b.Navigation("Tickets");
+                b.Navigation("Tickets");
 
-                    b.Navigation("Users");
-                });
+                b.Navigation("Users");
+            });
 
             modelBuilder.Entity("SystemQMS.Models.Guest", b =>
-                {
-                    b.Navigation("Bookings");
+            {
+                b.Navigation("Bookings");
 
-                    b.Navigation("Histories");
-                });
+                b.Navigation("Histories");
+            });
 
             modelBuilder.Entity("SystemQMS.Models.Notification", b =>
-                {
-                    b.Navigation("Histories");
-                });
+            {
+                b.Navigation("Histories");
+            });
 
             modelBuilder.Entity("SystemQMS.Models.Roles", b =>
-                {
-                    b.Navigation("Users");
-                });
+            {
+                b.Navigation("Users");
+            });
 
             modelBuilder.Entity("SystemQMS.Models.Service", b =>
-                {
-                    b.Navigation("Bookings");
+            {
+                b.Navigation("Bookings");
 
-                    b.Navigation("Evaluations");
+                b.Navigation("Evaluations");
 
-                    b.Navigation("NumberFomulars");
+                b.Navigation("NumberFomulars");
 
-                    b.Navigation("SheduleActives");
+                b.Navigation("SheduleActives");
 
-                    b.Navigation("Tickets");
-                });
+                b.Navigation("Tickets");
+            });
 
             modelBuilder.Entity("SystemQMS.Models.Ticket", b =>
-                {
-                    b.Navigation("Bookings");
+            {
+                b.Navigation("Bookings");
 
-                    b.Navigation("CounterChanges");
+                b.Navigation("CounterChanges");
 
-                    b.Navigation("Evaluations");
-                });
+                b.Navigation("Evaluations");
+            });
 
             modelBuilder.Entity("SystemQMS.Models.Unit", b =>
-                {
-                    b.Navigation("Counters");
+            {
+                b.Navigation("Counters");
 
-                    b.Navigation("Devices");
+                b.Navigation("Devices");
 
-                    b.Navigation("Diaries");
+                b.Navigation("Diaries");
 
-                    b.Navigation("EvaluationTemplates");
+                b.Navigation("EvaluationTemplates");
 
-                    b.Navigation("Evaluations");
+                b.Navigation("Evaluations");
 
-                    b.Navigation("Guests");
+                b.Navigation("Guests");
 
-                    b.Navigation("Notifications");
+                b.Navigation("Notifications");
 
-                    b.Navigation("Services");
+                b.Navigation("Services");
 
-                    b.Navigation("Tickets");
+                b.Navigation("Tickets");
 
-                    b.Navigation("UnitConfig")
-                        .IsRequired();
+                b.Navigation("UnitConfig")
+                    .IsRequired();
 
-                    b.Navigation("Users");
-                });
+                b.Navigation("Users");
+            });
 
             modelBuilder.Entity("SystemQMS.Models.Users", b =>
-                {
-                    b.Navigation("Diaries");
+            {
+                b.Navigation("Diaries");
 
-                    b.Navigation("Tickets");
-                });
+                b.Navigation("Tickets");
+            });
 #pragma warning restore 612, 618
         }
     }

@@ -6,38 +6,26 @@ namespace SystemQMS.Models
     public class Ticket
     {
         [Key]
+        public int id { get; set; }
+
+        [MaxLength(50)]
+        public string ticketNumber { get; set; } = string.Empty;
+
+        [MaxLength(50)]
+        public string status { get; set; } = string.Empty;
+
+        public int serviceId { get; set; }
+
+        public int? CounterId { get; set; }
+
+        public DateTime createdAt { get; set; } = DateTime.UtcNow;
+
+        public DateTime? usedAt { get; set; }
+
         [MaxLength(100)]
-        public string SttId { get; set; }
-        public int UnitId { get; set; }
-        public int ServiceId { get; set; }
-        public int CounterId { get; set; }
-        public int UserId { get; set; }
+        public string? handledBy { get; set; }
 
-        public int TicketNumber { get; set; }
-        public DateTimeOffset IssuanceTime { get; set; }
-        public DateTimeOffset UseTime { get; set; }
-
-        public DateTimeOffset? CallTime { get; set; }
-
-        public int RecallCount { get; set; }
-        [MaxLength(100)]
-        public string Status { get; set; }
-        [MaxLength(100)]
-        public string Stage { get; set; }
-
-        // OPR-14: phiếu ưu tiên được xếp lên đầu hàng chờ
-        public bool IsPriority { get; set; }
-
-        public ICollection<Evaluation> Evaluations { get; set; } = new List<Evaluation>();
-        public ICollection<CounterChange> CounterChanges { get; set; } = new List<CounterChange>();
-        public ICollection<Booking> Bookings { get; set; } = new List<Booking>();
-        [ForeignKey("UnitId")]
-        public virtual Unit? Unit { get; set; }
-        [ForeignKey("ServiceId")]
-        public virtual Service? Service { get; set; }
         [ForeignKey("CounterId")]
         public virtual Counter? Counter { get; set; }
-        [ForeignKey("UserId")]
-        public virtual Users? Users { get; set; }
     }
 }

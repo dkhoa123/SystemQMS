@@ -32,7 +32,14 @@ namespace SystemQMS.Models
         [ForeignKey("UnitId")]
         public virtual Unit? Unit { get; set; }
         public ICollection<Diary>? Diaries { get; set; } = new List<Diary>();
-        public ICollection<Ticket>? Tickets { get; set; } = new List<Ticket>();
+
+        public ICollection<Tickets>? Tickets { get; set; } = new List<Tickets>();
+
+        [InverseProperty("CreatedBy")]
+        public virtual ICollection<News> CreatedNews { get; set; } = new List<News>();
+
+        [InverseProperty("UpdatedBy")]
+        public virtual ICollection<News> UpdatedNews { get; set; } = new List<News>();
 
     }
 }

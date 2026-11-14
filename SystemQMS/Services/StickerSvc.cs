@@ -12,7 +12,7 @@ namespace SystemQMS.Services
             _context = context;
         }
 
-        public string AddNew(Ticket sticker)
+        public string AddNew(Tickets sticker)
         {
             var service = _context.Services.FirstOrDefault(x => x.Id == sticker.ServiceId);
             if(service == null)
@@ -140,7 +140,7 @@ namespace SystemQMS.Services
 
             // tao phieu
 
-            var newSticker = new Ticket
+            var newSticker = new Tickets
             {
                 SttId = sttId,
                 UnitId = service.UnitId,

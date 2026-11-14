@@ -23,7 +23,7 @@ namespace SystemQMS.Models
         [ForeignKey("UnitId")]
         public virtual Unit? Unit { get; set; }
         public ICollection<Device> Devices { get; set; } = new List<Device>();
-        public ICollection<Ticket> Tickets { get; set; } = new List<Ticket>();
+        public ICollection<Tickets> Tickets { get; set; } = new List<Tickets>();
         public ICollection<Evaluation> Evaluations { get; set; } = new List<Evaluation>();
         public ICollection<SheduleActive> SheduleActives { get; set; } = new List<SheduleActive>();
 

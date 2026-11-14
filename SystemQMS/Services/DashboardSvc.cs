@@ -66,7 +66,7 @@ namespace SystemQMS.Services
             };
         }
 
-        private IQueryable<Ticket> StickerQuery(int unitId, DashboardFilterRequest f)
+        private IQueryable<Tickets> StickerQuery(int unitId, DashboardFilterRequest f)
         {
             var (from, to) = ResolveRange(f);
             var q = _context.Tickets.AsNoTracking()

@@ -24,7 +24,7 @@ namespace SystemQMS.Models
         public ICollection<CounterChange> CounterReceive { get; set; } = new List<CounterChange>();
         public ICollection<Device> Devices { get; set; } = new List<Device>();
         public ICollection<Service> Services { get; set; } = new List<Service>();
-        public ICollection<Ticket> Tickets { get; set; } = new List<Ticket>();
+        public ICollection<Tickets> Tickets { get; set; } = new List<Tickets>();
         public ICollection<Evaluation> Evaluations { get; set; } = new List<Evaluation>();
         public ICollection<Users> Users { get; set; } = new List<Users>();
 

@@ -22,6 +22,7 @@ namespace SystemQMS.Models
         [ForeignKey("ServiceId")]
         public virtual Service? Service { get; set; }
         [ForeignKey("SttId")]
-        public virtual Ticket? Ticket { get; set; }
+        public virtual Tickets? Ticket { get; set; }
+        public DateTimeOffset? ExpiresAt { get; set; }
     }
 }

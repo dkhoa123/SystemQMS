@@ -5,8 +5,6 @@ using SystemQMS.Models;
 using SystemQMS.Services.Interface;
 using SystemQMS.ViewModels.DevicesDto;
 using SystemQMS.ViewModels.PageResultDto;
-using SystemQMS.ViewModels.ServiceDto;
-
 namespace SystemQMS.Services
 {
     public class DevSvc : IDevSvc

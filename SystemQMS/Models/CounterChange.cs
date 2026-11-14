@@ -14,7 +14,7 @@ namespace SystemQMS.Models
         public DateTimeOffset CreateTime { get; set; }
 
         [ForeignKey("SttId")]
-        public virtual Ticket? Tickets { get; set; }
+        public virtual Tickets? Tickets { get; set; }
         [ForeignKey("CounterIdSender")]
         public virtual Counter? CounterSender { get; set; }
         [ForeignKey("CounterIdReceive")]
