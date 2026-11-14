@@ -6,24 +6,24 @@ namespace SystemQMS.Models
 {
     public class Service
     {
-        public int id { get; set; }
-        public int unitId { get; set; }
+        public int Id { get; set; }
+        public int UnitId { get; set; }
         [MaxLength(100)]
-        public string serviceId { get; set; }
+        public string ServiceId { get; set; }
         [MaxLength(100)]
-        public string serviceName { get; set; }
+        public string ServiceName { get; set; }
         [MaxLength(255)]
-        public string? description { get; set; }
-        public byte[]? image { get; set; }
-        public bool isActive { get; set; }
-        public string sharingLink { get; set; }
-        public int averageTime { get; set; }
+        public string? Description { get; set; }
+        public byte[]? Image { get; set; }
+        public bool IsActive { get; set; }
+        public string SharingLink { get; set; }
+        public int AverageTime { get; set; }
 
-        public ICollection<Counter> counters { get; set; } = new List<Counter>();
-        [ForeignKey("unitId")]
+        public ICollection<Counter> Counters { get; set; } = new List<Counter>();
+        [ForeignKey("UnitId")]
         public virtual Unit? Unit { get; set; }
         public ICollection<Device> Devices { get; set; } = new List<Device>();
-        public ICollection<Sticker> Stickers { get; set; } = new List<Sticker>();
+        public ICollection<Ticket> Tickets { get; set; } = new List<Ticket>();
         public ICollection<Evaluation> Evaluations { get; set; } = new List<Evaluation>();
         public ICollection<SheduleActive> SheduleActives { get; set; } = new List<SheduleActive>();
 

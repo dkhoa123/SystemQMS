@@ -5,25 +5,25 @@ namespace SystemQMS.Models
 {
     public class Guest
     {
-        public int id { get; set; }
-        public int unitId { get; set; }
+        public int Id { get; set; }
+        public int UnitId { get; set; }
         [MaxLength(100)]
-        public string guestId { get; set; }
+        public string GuestId { get; set; }
         [MaxLength(100)]
-        public string? guestName { get; set; }
+        public string? GuestName { get; set; }
         [MaxLength(100)]
-        public string? phoneNumber { get; set; }
+        public string? PhoneNumber { get; set; }
         [MaxLength(100)]
-        public string? email { get; set; }
+        public string? Email { get; set; }
         [MaxLength(100)]
         public string CCCD { get; set; }
         [MaxLength(100)]
-        public string password { get; set; }
-        public DateTimeOffset registerTime { get; set; }
+        public string Password { get; set; }
+        public DateTimeOffset RegisterTime { get; set; }
         [MaxLength(100)]
-        public string? status { get; set; }
+        public string? Status { get; set; }
 
-        [ForeignKey("unitId")]
+        [ForeignKey("UnitId")]
         public virtual Unit? Unit { get; set; }
 
 

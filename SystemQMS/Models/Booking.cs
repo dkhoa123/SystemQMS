@@ -5,23 +5,23 @@ namespace SystemQMS.Models
 {
     public class Booking
     {
-        public int id { get; set; }
+        public int Id { get; set; }
 
-        public int guestId { get; set; }
+        public int GuestId { get; set; }
         
-        public int serviceId { get; set; }
+        public int ServiceId { get; set; }
         public DateTimeOffset Date { get; set; }
-        public DateTimeOffset timeDate { get; set; }
+        public DateTimeOffset TimeDate { get; set; }
         [MaxLength(100)]
-        public string? status { get; set; }
+        public string? Status { get; set; }
         [MaxLength(100)]
-        public string sttId { get; set; }
+        public string SttId { get; set; }
 
-        [ForeignKey("guestId")]
+        [ForeignKey("GuestId")]
         public virtual Guest? Guest { get; set; }
-        [ForeignKey("serviceId")]
+        [ForeignKey("ServiceId")]
         public virtual Service? Service { get; set; }
-        [ForeignKey("sttId")]
-        public virtual Sticker? Sticker { get; set; }
+        [ForeignKey("SttId")]
+        public virtual Ticket? Ticket { get; set; }
     }
 }

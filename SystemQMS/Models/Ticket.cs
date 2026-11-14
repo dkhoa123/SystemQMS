@@ -3,41 +3,41 @@ using System.ComponentModel.DataAnnotations.Schema;
 
 namespace SystemQMS.Models
 {
-    public class Sticker
+    public class Ticket
     {
         [Key]
         [MaxLength(100)]
-        public string sttId { get; set; }
-        public int unitId { get; set; }
-        public int serviceId { get; set; }
-        public int counterId { get; set; }
-        public int userId { get; set; }
+        public string SttId { get; set; }
+        public int UnitId { get; set; }
+        public int ServiceId { get; set; }
+        public int CounterId { get; set; }
+        public int UserId { get; set; }
 
-        public int ticketNumber { get; set; }
-        public DateTimeOffset issuanceTime { get; set; }
-        public DateTimeOffset useTime { get; set; }
+        public int TicketNumber { get; set; }
+        public DateTimeOffset IssuanceTime { get; set; }
+        public DateTimeOffset UseTime { get; set; }
 
-        public DateTimeOffset? callTime { get; set; }
+        public DateTimeOffset? CallTime { get; set; }
 
-        public int recallCount { get; set; }
+        public int RecallCount { get; set; }
         [MaxLength(100)]
-        public string status { get; set; }
+        public string Status { get; set; }
         [MaxLength(100)]
-        public string stage { get; set; }
+        public string Stage { get; set; }
 
         // OPR-14: phiếu ưu tiên được xếp lên đầu hàng chờ
-        public bool isPriority { get; set; }
+        public bool IsPriority { get; set; }
 
         public ICollection<Evaluation> Evaluations { get; set; } = new List<Evaluation>();
         public ICollection<CounterChange> CounterChanges { get; set; } = new List<CounterChange>();
         public ICollection<Booking> Bookings { get; set; } = new List<Booking>();
-        [ForeignKey("unitId")]
+        [ForeignKey("UnitId")]
         public virtual Unit? Unit { get; set; }
-        [ForeignKey("serviceId")]
+        [ForeignKey("ServiceId")]
         public virtual Service? Service { get; set; }
-        [ForeignKey("counterId")]
+        [ForeignKey("CounterId")]
         public virtual Counter? Counter { get; set; }
-        [ForeignKey("userId")]
+        [ForeignKey("UserId")]
         public virtual Users? Users { get; set; }
     }
 }

@@ -4,12 +4,12 @@ namespace SystemQMS.Services.Interface
 {
     public interface IDashboardSvc
     {
-        public  Task<TicketSummaryDto> GetTicketSummaryAsync(int unitId, CancellationToken ct = default);                       // DSH-01
-        public Task<TicketStatusDonutDto> GetTicketStatusAsync(int unitId, DashboardFilterRequest f, CancellationToken ct = default); // DSH-02
+        public  Task<List<TicketSummaryDto>> GetTicketIssuedAsync(int unitId, StatisticsFilter filter, DateOnly fromDate, DateOnly toDate);                       // DSH-01
+        public Task<TicketStatusDonutDto> GetTicketStatusAsync(); // DSH-02
         public Task<ChartSeriesDto> GetTicketTrendAsync(int unitId, DashboardFilterRequest f, CancellationToken ct = default);        // DSH-03
-        public Task<CounterServiceSummaryDto> GetCounterServiceSummaryAsync(int unitId, CancellationToken ct = default);       // DSH-04
+        public Task<CounterServiceSummaryDto> GetCounterServiceSummaryAsync(); // DSH-04
         public Task<ServiceRatingDashboardDto> GetServiceRatingsAsync(int unitId, DashboardFilterRequest f, CancellationToken ct = default); // DSH-05
-        public Task<ChartSeriesDto> GetTicketsByServiceAsync(int unitId, DashboardFilterRequest f, CancellationToken ct = default);   // DSH-06
+        Task<List<ServiceBarPointDto>> GetTicketsByServiceAsync(int unitId, StatisticsFilter filter, DateTime fromDate);
         public Task<ChartSeriesDto> GetTicketsByCounterAsync(int unitId, DashboardFilterRequest f, CancellationToken ct = default);   // DSH-06
         public Task<ChartSeriesDto> GetWaitTimeByServiceAsync(int unitId, DashboardFilterRequest f, CancellationToken ct = default);  // DSH-07
         public Task<ChartSeriesDto> GetProcessTimeByCounterAsync(int unitId, DashboardFilterRequest f, CancellationToken ct = default); // DSH-08

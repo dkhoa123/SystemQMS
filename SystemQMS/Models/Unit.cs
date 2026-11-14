@@ -5,19 +5,19 @@ namespace SystemQMS.Models
     public class Unit
     {
         [Key]
-        public int unitId { get; set; }
+        public int UnitId { get; set; }
         [MaxLength(100)]
-        public string unitName { get; set; }
+        public string UnitName { get; set; }
         [MaxLength(100)]
-        public string showName { get; set; }
+        public string ShowName { get; set; }
         [MaxLength(10)]
-        public string phoneHelp { get; set; }
+        public string PhoneHelp { get; set; }
         [MaxLength(100)]
-        public string emailHelp { get; set; }
+        public string EmailHelp { get; set; }
         [MaxLength(255)]
-        public string address { get; set; }
-        public byte[]? logo { get; set; }
-        public bool isBan { get; set; }
+        public string Address { get; set; }
+        public byte[]? Logo { get; set; }
+        public bool IsBan { get; set; }
 
         public ICollection<Users> Users { get; set; } = new List<Users>();
         public ICollection<Service> Services { get; set; } = new List<Service>();
@@ -26,7 +26,7 @@ namespace SystemQMS.Models
 
         public ICollection<Diary> Diaries { get; set; } = new List<Diary>();
         public ICollection<Counter> Counters { get; set; } = new List<Counter>();
-        public ICollection<Sticker > Stickers { get; set; } = new List<Sticker>();
+        public ICollection<Ticket > Tickets { get; set; } = new List<Ticket>();
         public ICollection<Notification> Notifications { get; set; } = new List<Notification>();
         public ICollection<Evaluation> Evaluations { get; set; } = new List<Evaluation>();
         public ICollection<EvaluationTemplate> EvaluationTemplates { get; set; } = new List<EvaluationTemplate>();

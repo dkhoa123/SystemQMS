@@ -38,21 +38,62 @@ namespace SystemQMS.Controllers
         }
 
         // ---------------- DSH-01 ----------------
-        [HttpGet("tickets/summary")]
-        public async Task<ActionResult<TicketSummaryDto>> TicketSummary(CancellationToken ct)
+        [HttpGet("tickets/issued")]
+        public async Task<ActionResult<TicketSummaryDto>> TicketSummary(
+            [FromQuery] string filter,
+            [FromQuery] DateOnly fromDate,
+            [FromQuery] DateOnly toDate
+            )
         {
-            if (!TryGetUnitId(out var unitId)) return Unauthorized();
-            return Ok(await dashboardSvc.GetTicketSummaryAsync(unitId, ct));
+            try
+            {
+                // Lấy unitId từ tài khoản đang đăng nhập
+                if (!TryGetUnitId(out var unitId))
+                {
+                    return Unauthorized(
+                        "Không xác định được đơn vị của tài khoản."
+                    );
+                }
+
+                // Chuyển string thành enum
+                if (!Enum.TryParse<StatisticsFilter>(
+                    filter,
+                    true,
+                    out var parsedFilter))
+                {
+                    return BadRequest(
+                        "Filter phải là Gio, Ngay, Tuan hoặc Thang."
+                    );
+                }
+
+                var result =
+                    await dashboardSvc.GetTicketIssuedAsync(
+                        unitId,
+                        parsedFilter,
+                        fromDate,
+                        toDate
+                    );
+
+                return Ok(result);
+            }
+            catch (ArgumentException ex)
+            {
+                return BadRequest(ex.Message);
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(
+                    500,
+                    "Lỗi thống kê: " + ex.Message
+                );
+            }
         }
 
         // ---------------- DSH-02 ----------------
         [HttpGet("tickets/status")]
-        public async Task<ActionResult<TicketStatusDonutDto>> TicketStatus(
-            [FromQuery] DashboardFilterRequest f, CancellationToken ct)
+        public async Task<ActionResult<TicketStatusDonutDto>> TicketStatus()
         {
-            if (!TryGetUnitId(out var unitId)) return Unauthorized();
-            if (ValidateFilter(f) is { } err) return BadRequest(new { message = err });
-            return Ok(await dashboardSvc.GetTicketStatusAsync(unitId, f, ct));
+            return Ok(await dashboardSvc.GetTicketStatusAsync());
         }
 
         // ---------------- DSH-03 ----------------
@@ -67,10 +108,10 @@ namespace SystemQMS.Controllers
 
         // ---------------- DSH-04 ----------------
         [HttpGet("counters-services/summary")]
-        public async Task<ActionResult<CounterServiceSummaryDto>> CounterServiceSummary(CancellationToken ct)
+        public async Task<ActionResult<CounterServiceSummaryDto>> CounterServiceSummary()
         {
-            if (!TryGetUnitId(out var unitId)) return Unauthorized();
-            return Ok(await dashboardSvc.GetCounterServiceSummaryAsync(unitId, ct));
+            
+            return Ok(await dashboardSvc.GetCounterServiceSummaryAsync());
         }
 
         // ---------------- DSH-05 ----------------
@@ -85,12 +126,37 @@ namespace SystemQMS.Controllers
 
         // ---------------- DSH-06 ----------------
         [HttpGet("tickets/by-service")]
-        public async Task<ActionResult<ChartSeriesDto>> TicketsByService(
-            [FromQuery] DashboardFilterRequest f, CancellationToken ct)
+        public async Task<IActionResult> GetTicketsByService(
+                [FromQuery] string filter,
+                [FromQuery] DateTime fromDate)
         {
-            if (!TryGetUnitId(out var unitId)) return Unauthorized();
-            if (ValidateFilter(f) is { } err) return BadRequest(new { message = err });
-            return Ok(await dashboardSvc.GetTicketsByServiceAsync(unitId, f, ct));
+            try
+            {
+                int unitId = 1;
+
+                // Chuyển string thành enum
+                if (!Enum.TryParse<StatisticsFilter>(
+                    filter,
+                    true,
+                    out var parsedFilter))
+                {
+                    return BadRequest(
+                        "Filter phải là Gio, Ngay, Tuan hoặc Thang."
+                    );
+                }
+
+                var result = await dashboardSvc.GetTicketsByServiceAsync(
+                    unitId,
+                    parsedFilter,
+                    fromDate
+                );
+
+                return Ok(result);
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ex.Message);
+            }
         }
 
         [HttpGet("tickets/by-counter")]

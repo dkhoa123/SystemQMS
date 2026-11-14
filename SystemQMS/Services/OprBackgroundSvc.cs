@@ -77,8 +77,8 @@ namespace SystemQMS.Services
             // Npgsql không dịch được DateTimeOffset.Now trong mệnh đề so sánh -> dùng UtcNow.
             // createTime lưu dạng DateTimeOffset nên so sánh vẫn đúng theo mốc tuyệt đối.
             var deadline = DateTimeOffset.UtcNow.AddSeconds(-_transferTimeoutSeconds);
-            var expired = await context.counterChanges
-                .Where(cc => cc.status == CounterChangeStatus.Pending && cc.createTime <= deadline)
+            var expired = await context.CounterChanges
+                .Where(cc => cc.Status == CounterChangeStatus.Pending && cc.CreateTime <= deadline)
                 .ToListAsync(ct);
 
             if (expired.Count == 0)
@@ -91,15 +91,15 @@ namespace SystemQMS.Services
                     await TransferSvc.ApplyAcceptAsync(context, change, isAuto: true, ct);
                     _logger.LogInformation(
                         "Tự động nhận chuyển quầy sau {Timeout}s: TransferId={TransferId}, SttId={SttId}, To={To}",
-                        _transferTimeoutSeconds, change.id, change.sttId, change.counterIdReceive);
+                        _transferTimeoutSeconds, change.Id, change.SttId, change.CounterIdReceive);
                 }
                 catch (KeyNotFoundException ex)
                 {
                     // Phiếu không còn tồn tại: đóng yêu cầu để không quét lại mãi
                     _logger.LogWarning(ex,
                         "Không tự nhận được chuyển quầy: TransferId={TransferId}, SttId={SttId}",
-                        change.id, change.sttId);
-                    change.status = CounterChangeStatus.Rejected;
+                        change.Id, change.SttId);
+                    change.Status = CounterChangeStatus.Rejected;
                     await context.SaveChangesAsync(ct);
                 }
             }
@@ -114,17 +114,17 @@ namespace SystemQMS.Services
 
             _lastDay = today;
 
-            var paused = await context.counters
-                .Where(c => c.status == CounterStatus.PausedAccepting)
+            var paused = await context.Counters
+                .Where(c => c.Status == CounterStatus.PausedAccepting)
                 .ToListAsync(ct);
             if (paused.Count == 0)
                 return;
 
             foreach (var counter in paused)
             {
-                bool hasProcessing = await context.stickers.AnyAsync(
-                    s => s.counterId == counter.id && s.status == StickerStatus.Processing, ct);
-                counter.status = hasProcessing ? CounterStatus.Serving : CounterStatus.Idle;
+                bool hasProcessing = await context.Tickets.AnyAsync(
+                    s => s.CounterId == counter.Id && s.Status == StickerStatus.Processing, ct);
+                counter.Status = hasProcessing ? CounterStatus.Serving : CounterStatus.Idle;
             }
 
             await context.SaveChangesAsync(ct);

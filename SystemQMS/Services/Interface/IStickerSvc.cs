@@ -4,7 +4,7 @@ namespace SystemQMS.Services.Interface
 {
     public interface IStickerSvc
     {
-        public string AddNew(Sticker sticker);
+        public string AddNew(Ticket sticker);
         byte[] ExportExcel();
 
     }

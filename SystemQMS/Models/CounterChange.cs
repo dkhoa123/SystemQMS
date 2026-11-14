@@ -5,19 +5,19 @@ namespace SystemQMS.Models
 {
     public class CounterChange
     {
-        public int id { get; set; }
-        public string sttId { get; set; }
-        public int counterIdSender { get; set; }
-        public int counterIdReceive { get; set; }
+        public int Id { get; set; }
+        public string SttId { get; set; }
+        public int CounterIdSender { get; set; }
+        public int CounterIdReceive { get; set; }
         [MaxLength(100)]
-        public string status { get; set; }
-        public DateTimeOffset createTime { get; set; }
+        public string Status { get; set; }
+        public DateTimeOffset CreateTime { get; set; }
 
-        [ForeignKey("sttId")]
-        public virtual Sticker? Sticker { get; set; }
-        [ForeignKey("counterIdSender")]
+        [ForeignKey("SttId")]
+        public virtual Ticket? Tickets { get; set; }
+        [ForeignKey("CounterIdSender")]
         public virtual Counter? CounterSender { get; set; }
-        [ForeignKey("counterIdReceive")]
+        [ForeignKey("CounterIdReceive")]
         public virtual Counter? CounterReceiver { get; set; }
     }
 }

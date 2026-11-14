@@ -22,47 +22,47 @@ namespace SystemQMS.Services
             var currentTime = now.TimeOfDay;
 
             // Truy xuất trực tiếp từ bảng services và map luôn ra DTO trong 1 câu Query duy nhất
-            var serviceKiosks = _context.services
+            var serviceKiosks = _context.Services
                 // 1. Lọc các dịch vụ thuộc Kiosk này và đang hoạt động
-                .Where(s => s.Devices.Any(d => d.deviceId == kioskDeviceId) 
-                            && s.isActive == true)
+                .Where(s => s.Devices.Any(d => d.DeviceId == kioskDeviceId) 
+                            && s.IsActive == true)
                 .Select(s => new
                 {
                     Service = s,
                     // 1. KSK-07: Kiểm tra xem có lịch làm việc cho dịch vụ này không
-                    HashWorkingShedule = _context.shedules.Any(sh =>
-                    sh.serviceId == s.id && 
-                    sh.startTime <= currentTime && 
-                    sh.endTime >= currentTime),
+                    HashWorkingShedule = _context.Shedules.Any(sh =>
+                    sh.ServiceId == s.Id && 
+                    sh.StartTime <= currentTime && 
+                    sh.EndTime >= currentTime),
 
                     // 2. KSK-01: Kiểm tra xem có quầy nào đang mở cho dịch vụ này không
-                    HasOpenCounter = s.counters.Any(c => 
-                    c.isActive == true &&
-                    c.status == "Open"),
+                    HasOpenCounter = s.Counters.Any(c => 
+                    c.IsActive == true &&
+                    c.Status == "Open"),
 
                     // 3. KSK-01: STT cấp gần nhất trong ngày
-                    LatestStickerId = _context.stickers
-                        .Where(st => st.serviceId == s.id && st.issuanceTime.Date == today)
-                        .OrderByDescending(st => st.issuanceTime)
-                        .Select(st => st.sttId)
+                    LatestStickerId = _context.Tickets
+                        .Where(st => st.ServiceId == s.Id && st.IssuanceTime.Date == today)
+                        .OrderByDescending(st => st.IssuanceTime)
+                        .Select(st => st.SttId)
                         .FirstOrDefault(),
 
                     // 4. KSK-03: Tính số lượng vé đang chờ
-                    WaitingCount = _context.stickers
-                        .Count(st => st.serviceId == s.id && st.issuanceTime.Date == today && st.status == "Đang chờ")
+                    WaitingCount = _context.Tickets
+                        .Count(st => st.ServiceId == s.Id && st.IssuanceTime.Date == today && st.Status == "Đang chờ")
                 })
                 .ToList();
 
             // Map kết quả ra List<ServiceKioskDto>
             var resultList = serviceKiosks.Select(data => new ServiceKioskDto
             {
-                serviceId = data.Service.serviceId,
-                serviceName = data.Service.serviceName,
+                serviceId = data.Service.ServiceId,
+                serviceName = data.Service.ServiceName,
                 statusActive = "Hoạt động", // Đã lọc isActive == true ở trên
                 isDisabled = !data.HashWorkingShedule,
                 isBlurred = data.HashWorkingShedule && !data.HasOpenCounter,
                 LastSTT = data.LatestStickerId ?? "Chưa có",
-                lastMinutes = data.Service.averageTime * data.WaitingCount
+                lastMinutes = data.Service.AverageTime * data.WaitingCount
             }).ToList();
 
             return resultList;
@@ -80,74 +80,74 @@ namespace SystemQMS.Services
             {
                 var nay = DateTime.Now.TimeOfDay;
 
-                var hasWorkingSchedule = await _context.shedules.AnyAsync(sh =>
-                    sh.serviceId == serviceId &&
-                    sh.startTime <= nay &&
-                    sh.endTime > nay
+                var hasWorkingSchedule = await _context.Shedules.AnyAsync(sh =>
+                    sh.ServiceId == serviceId &&
+                    sh.StartTime <= nay &&
+                    sh.EndTime > nay
                 );
 
                 if (!hasWorkingSchedule)
                     throw new Exception("Dịch vụ hiện đang ngoài giờ hoạt động");
 
-                var hasOpenCounter = await _context.counters.AnyAsync(c =>
-                    c.Services.Any(s => s.id == serviceId) &&
-                    c.isActive &&
-                    c.status == "Open"
+                var hasOpenCounter = await _context.Counters.AnyAsync(c =>
+                    c.Services.Any(s => s.Id == serviceId) &&
+                    c.IsActive &&
+                    c.Status == "Open"
                 );
 
                 if (!hasOpenCounter)
                     throw new Exception("Hiện không có quầy tiếp nhận dịch vụ");
-                var service = await _context.services.FirstOrDefaultAsync(s => s.id == serviceId);
-                if (service == null || !service.isActive) throw new Exception("Dịch vụ không khả dụng");
+                var service = await _context.Services.FirstOrDefaultAsync(s => s.Id == serviceId);
+                if (service == null || !service.IsActive) throw new Exception("Dịch vụ không khả dụng");
 
                 // 1. Lấy cấu hình dãy số
-                var rule = await _context.numberFomulars.FirstOrDefaultAsync(r => r.serviceId == serviceId);
+                var rule = await _context.NumberFomulars.FirstOrDefaultAsync(r => r.ServiceId == serviceId);
                 if (rule == null) throw new Exception("Dịch vụ chưa thiết lập quy tắc cấp số"); // TKT-06
 
                 // 2. Lấy số thứ tự (STT) gần nhất trong ngày
-                // Tuỳ thuộc rule là dãy Chung hay Riêng mà điều kiện truy vấn stickers sẽ khác nhau. 
+                // Tuỳ thuộc rule là dãy Chung hay Riêng mà điều kiện truy vấn tickets sẽ khác nhau. 
                 // Giả sử lấy số cao nhất hiện tại của dịch vụ:
-                var lastNumber = await _context.stickers
-                    .Where(st => st.serviceId == serviceId &&
-                                 st.issuanceTime.Date == today)
-                    .MaxAsync(st => (int?)st.ticketNumber) ?? rule.startNumber - 1;
+                var lastNumber = await _context.Tickets
+                    .Where(st => st.ServiceId == serviceId &&
+                                 st.IssuanceTime.Date == today)
+                    .MaxAsync(st => (int?)st.TicketNumber) ?? rule.StartNumber - 1;
 
                 int nextNumber = lastNumber + 1;
 
                 // Kiểm tra hết số (TKT-05)
-                if (nextNumber > rule.endNumber)
+                if (nextNumber > rule.EndNumber)
                 {
-                    throw new Exception($"Dịch vụ {service.serviceName} đã cấp hết số thứ tự, vui lòng chọn dịch vụ khác hoặc quay lại sau");
+                    throw new Exception($"Dịch vụ {service.ServiceName} đã cấp hết số thứ tự, vui lòng chọn dịch vụ khác hoặc quay lại sau");
                 }
 
                 // Định dạng STT: Tiền tố (firstName) + Số + Hậu tố (lastName)
                 string formattedNumber = nextNumber.ToString("D3");
-                string fullTicketNumber = $"{rule.firstName}{formattedNumber}{rule.lastName}".Trim();
+                string fullTicketNumber = $"{rule.FirstName}{formattedNumber}{rule.LastName}".Trim();
 
                 // 3. KSK-03: Tính thời gian chờ dự kiến
                 int? estimatedWait = null;
-                if (service.averageTime > 0) // Kiểm tra nếu có cài thời gian xử lý
+                if (service.AverageTime > 0) // Kiểm tra nếu có cài thời gian xử lý
                 {
-                    var waitingCount = await _context.stickers
-                        .CountAsync(st => st.serviceId == serviceId && st.status == "Đang chờ" && st.issuanceTime.Date == today);
+                    var waitingCount = await _context.Tickets
+                        .CountAsync(st => st.ServiceId == serviceId && st.Status == "Đang chờ" && st.IssuanceTime.Date == today);
 
-                    estimatedWait = service.averageTime * waitingCount;
+                    estimatedWait = service.AverageTime * waitingCount;
                 }
 
-                var counter = await _context.counters
+                var counter = await _context.Counters
                          .FirstOrDefaultAsync(c =>
-                              c.id == counterId &&
-                              c.isActive &&
-                              c.status == "Open" &&
-                              c.Services.Any(s => s.id == serviceId)
+                              c.Id == counterId &&
+                              c.IsActive &&
+                              c.Status == "Open" &&
+                              c.Services.Any(s => s.Id == serviceId)
                           );
 
                 if (counter == null)
                 {
                     throw new Exception("Quầy không tồn tại hoặc hiện không thể tiếp nhận dịch vụ này");
                 }
-                var userExists = await _context.users
-                    .AnyAsync(u => u.userId == userId);
+                var userExists = await _context.Users
+                    .AnyAsync(u => u.UserId == userId);
 
                 if (!userExists)
                 {
@@ -155,32 +155,32 @@ namespace SystemQMS.Services
                 }
 
                 // 4. Lưu dữ liệu
-                var newSticker = new Sticker
+                var newSticker = new Ticket
                 {
-                    sttId = fullTicketNumber,
-                    unitId = service.unitId,
-                    serviceId = service.id,
-                    issuanceTime = now.ToUniversalTime(),
-                    useTime = endOfDay.ToUniversalTime(),
-                    counterId = counter.id,
-                    userId = userId,
-                    status = "Đang chờ", // Giai đoạn khởi tạo
-                    stage = "chỉ định quầy" // Hoặc Đã chỉ định quầy tùy chế độ chia
+                    SttId = fullTicketNumber,
+                    UnitId = service.UnitId,
+                    ServiceId = service.Id,
+                    IssuanceTime = now.ToUniversalTime(),
+                    UseTime = endOfDay.ToUniversalTime(),
+                    CounterId = counter.Id,
+                    UserId = userId,
+                    Status = "Đang chờ", // Giai đoạn khởi tạo
+                    Stage = "chỉ định quầy" // Hoặc Đã chỉ định quầy tùy chế độ chia
                 };
 
-                _context.stickers.Add(newSticker);
+                _context.Tickets.Add(newSticker);
                 await _context.SaveChangesAsync();
                 await transaction.CommitAsync();
 
                 return new TicketReceiptDto
                 {
                     ticketNumber = fullTicketNumber,
-                    serviceName = service.serviceName,
-                    issuanceTime = newSticker.issuanceTime,
-                    expiryTime = newSticker.useTime,
+                    serviceName = service.ServiceName,
+                    issuanceTime = newSticker.IssuanceTime,
+                    expiryTime = newSticker.UseTime,
                     waitMinute = estimatedWait,
                     // Link giả định truyền STT để làm màn hình đánh giá quét QR
-                    QrCodeData = $"https://yourdomain.com/evaluate?stt={fullTicketNumber}&unit={service.unitId}"
+                    QrCodeData = $"https://yourdomain.com/evaluate?stt={fullTicketNumber}&unit={service.UnitId}"
                 };
             }
             catch
@@ -192,11 +192,11 @@ namespace SystemQMS.Services
 
         public bool ReportDeviceStatus(string kioskDeviceId, string status)
         {
-            var device = _context.devices.FirstOrDefault(d => d.deviceId == kioskDeviceId);
+            var device = _context.Devices.FirstOrDefault(d => d.DeviceId == kioskDeviceId);
             if (device != null)
             {
 
-                device.statusConnect = status;
+                device.StatusConnect = status;
                 // Nếu lỗi in, theo tài liệu KSK-05, Kiosk tự chuyển sang màn hình bảo trì.
                 _context.SaveChanges();
                 return true;

@@ -5,14 +5,14 @@ namespace SystemQMS.Models
 {
     public class SheduleActive
     {
-        public int id { get; set; }
-        public int serviceId { get; set; }
+        public int Id { get; set; }
+        public int ServiceId { get; set; }
         [MaxLength(20)]
-        public string wordShift { get; set; }
-        public TimeSpan startTime { get; set; }
-        public TimeSpan endTime { get; set; }
+        public string WordShift { get; set; }
+        public TimeSpan StartTime { get; set; }
+        public TimeSpan EndTime { get; set; }
 
-        [ForeignKey("serviceId")]
+        [ForeignKey("ServiceId")]
         public virtual Service? Service { get; set; }
     }
 }

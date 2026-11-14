@@ -6,32 +6,37 @@ namespace SystemQMS.Models
 {
     public class Device
     {
-        public int id { get; set; }
-        public int unitId { get; set; }
+        public int Id { get; set; }
+        public int UnitId { get; set; }
         [MaxLength(100)]
-        public string deviceId { get; set; }
+        public string DeviceId { get; set; }
         [MaxLength(100)]
-        public string deviceName { get; set; }
+        public string DeviceName { get; set; }
         [MaxLength(100)]
-        public string deviceType { get; set; }
+        public string DeviceType { get; set; }
         [MaxLength(100)]
-        public string statusActive { get; set; }
+        public string StatusActive { get; set; }
         [MaxLength(100)]
-        public string statusConnect { get; set; }
+        public string StatusConnect { get; set; }
         [MaxLength(100)]
-        public string? ipAddress { get; set; }
-        public int volume { get; set; }
-        public bool show { get; set; }
+        public string? IpAddress { get; set; }
+        public int Volume { get; set; }
+        public bool Show { get; set; }
+
+        [MaxLength(100)]
+        public string TemplateId { get; set; }
+        [MaxLength(255)]
+        public string? Description { get; set; }
 
         // Mã đăng nhập 6 số
-        public string? loginCodeHash { get; set; }
-        public DateTime? loginCodeExpiresAt { get; set; }
+        public string? LoginCodeHash { get; set; }
+        public DateTime? LoginCodeExpiresAt { get; set; }
 
         // Phiên đăng nhập hiện tại
-        public string? sessionTokenHash { get; set; }
-        public DateTime? sessionExpiresAt { get; set; }
+        public string? SessionTokenHash { get; set; }
+        public DateTime? SessionExpiresAt { get; set; }
 
-        [ForeignKey("unitId")]
+        [ForeignKey("UnitId")]
         public virtual Unit? Unit { get; set; }
 
         public ICollection<Service> Services { get; set; } = new List<Service>();

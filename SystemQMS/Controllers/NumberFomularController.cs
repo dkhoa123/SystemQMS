@@ -23,7 +23,7 @@ namespace SystemQMS.Controllers
                 return BadRequest("Dữ liệu không hợp lệ");
 
             }
-            if (numberFomular.startNumber < 0 || numberFomular.endNumber < numberFomular.startNumber)
+            if (numberFomular.StartNumber < 0 || numberFomular.EndNumber < numberFomular.StartNumber)
             {
                 return BadRequest("Phạm vi không hợp lệ");
 
@@ -40,7 +40,7 @@ namespace SystemQMS.Controllers
         [HttpPut]
         public IActionResult Update(int id, NumberFomular numberFomular)
         {
-            if (id != numberFomular.id)
+            if (id != numberFomular.Id)
                 return BadRequest("ID không hợp lệ");
             var result = _number.Update(numberFomular);
             if (result == null)

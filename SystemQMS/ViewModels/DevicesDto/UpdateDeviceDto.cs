@@ -1,15 +1,14 @@
-﻿namespace SystemQMS.ViewModels.DevicesDto
+﻿using DocumentFormat.OpenXml.Math;
+
+namespace SystemQMS.ViewModels.DevicesDto
 {
     public class UpdateDeviceDto
     {
         public string deviceName { get; set; }
         public string deviceType { get; set; }
-        public string statusActive { get; set; }
-        public string statusConnect { get; set; }
-        public string ipAddress { get; set; }
-        public int volume { get; set; }
-        public bool show { get; set; }
-        public List<string>? serviceIdsRemove { get; set; } = new List<string>();
+        public string availability { get; set; }
+        public List<string>? serviceIds { get; set; } = new List<string>();
+        public string? description { get; set; }
         
     }
 }

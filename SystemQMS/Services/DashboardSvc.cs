@@ -1,4 +1,5 @@
 ﻿using Microsoft.EntityFrameworkCore;
+using System.Globalization;
 using SystemQMS.Constants;
 using SystemQMS.Models;
 using SystemQMS.Services.Interface;
@@ -10,9 +11,23 @@ namespace SystemQMS.Services
     public class DashboardSvc : IDashboardSvc
     {
         private MyDbContext _context;
+        private TimeZoneInfo _timeZone;
         public DashboardSvc(MyDbContext context)
         {
             _context = context;
+
+            try
+            {
+                _timeZone = TimeZoneInfo.FindSystemTimeZoneById(
+                    "SE Asia Standard Time"
+                );
+            }
+            catch (TimeZoneNotFoundException)
+            {
+                _timeZone = TimeZoneInfo.FindSystemTimeZoneById(
+                    "Asia/Ho_Chi_Minh"
+                );
+            }
         }
 
         // Mốc ngày/giờ tính theo múi giờ đơn vị (SRS 6.2). Mặc định UTC+7.
@@ -51,16 +66,16 @@ namespace SystemQMS.Services
             };
         }
 
-        private IQueryable<Sticker> StickerQuery(int unitId, DashboardFilterRequest f)
+        private IQueryable<Ticket> StickerQuery(int unitId, DashboardFilterRequest f)
         {
             var (from, to) = ResolveRange(f);
-            var q = _context.stickers.AsNoTracking()
-                .Where(s => s.unitId == unitId && s.issuanceTime >= from && s.issuanceTime <= to);
+            var q = _context.Tickets.AsNoTracking()
+                .Where(s => s.UnitId == unitId && s.IssuanceTime >= from && s.IssuanceTime <= to);
 
             if (f.ServiceIds is { Count: > 0 })
-                q = q.Where(s => f.ServiceIds.Contains(s.serviceId));
+                q = q.Where(s => f.ServiceIds.Contains(s.ServiceId));
             if (f.CounterIds is { Count: > 0 })
-                q = q.Where(s => s.counterId != null && f.CounterIds.Contains(s.counterId));
+                q = q.Where(s => s.CounterId != null && f.CounterIds.Contains(s.CounterId));
             return q;
         }
 
@@ -82,50 +97,202 @@ namespace SystemQMS.Services
         // ----------------------------------------------------------------
         // DSH-01
         // ----------------------------------------------------------------
-        public async Task<TicketSummaryDto> GetTicketSummaryAsync(
-    int unitId, CancellationToken ct = default)
+        public async Task<List<TicketSummaryDto>> GetTicketIssuedAsync(int unitId, StatisticsFilter filter, DateOnly fromDate, DateOnly toDate)
         {
-            var now = DateTimeOffset.UtcNow;
-            var l = now.ToOffset(Vn);
-
-            var dayStart = new DateTimeOffset(
-                l.Year, l.Month, l.Day, 0, 0, 0, Vn).ToUniversalTime();
-
-            var monthStart = new DateTimeOffset(
-                l.Year, l.Month, 1, 0, 0, 0, Vn).ToUniversalTime();
-
-            var yearStart = new DateTimeOffset(
-                l.Year, 1, 1, 0, 0, 0, Vn).ToUniversalTime();
-
-            var q = _context.stickers.AsNoTracking()
-                .Where(s => s.unitId == unitId);
-
-            return new TicketSummaryDto
+            if (fromDate > toDate)
             {
-                TotalIssued = await q.CountAsync(ct),
-                IssuedToday = await q.CountAsync(s => s.issuanceTime >= dayStart, ct),
-                IssuedThisMonth = await q.CountAsync(s => s.issuanceTime >= monthStart, ct),
-                IssuedThisYear = await q.CountAsync(s => s.issuanceTime >= yearStart, ct),
+                throw new ArgumentException(
+                    "Ngày bắt đầu không được lớn hơn ngày kết thúc."
+                );
+            }
+
+            // 1. Chuyển khoảng ngày Việt Nam sang UTC
+            DateTime localStart = fromDate.ToDateTime(
+                TimeOnly.MinValue
+            );
+
+            DateTime localEnd = toDate.AddDays(1).ToDateTime(
+                TimeOnly.MinValue
+            );
+
+            DateTimeOffset fromUtc = new DateTimeOffset(
+                TimeZoneInfo.ConvertTimeToUtc(localStart, _timeZone),
+                TimeSpan.Zero // <-- Ép cứng nhận diện là Offset +00:00
+            );
+
+            DateTimeOffset toUtc = new DateTimeOffset(
+                TimeZoneInfo.ConvertTimeToUtc(localEnd, _timeZone),
+                TimeSpan.Zero
+            );
+
+            // 2. Lấy thời điểm cấp STT từ database
+            // Không lọc status vì cần đếm tất cả STT đã cấp
+
+            var issuanceTimes = await _context.Tickets
+                .AsNoTracking()
+                .Where(s =>
+                    s.UnitId == unitId &&
+                    s.IssuanceTime >= fromUtc &&
+                    s.IssuanceTime < toUtc
+                )
+                .Select(s => s.IssuanceTime)
+                .ToListAsync();
+
+            // 3. Chuyển thời gian UTC sang giờ Việt Nam
+            var localTimes = issuanceTimes.Select(time =>
+                TimeZoneInfo.ConvertTime(
+                    time,
+                    _timeZone
+                ).DateTime
+            ).ToList();
+
+            // 4. Gom nhóm theo filter
+            var groupedData = localTimes
+                .GroupBy(time => GetBucketStart(time, filter))
+                .ToDictionary(
+                    group => group.Key,
+                    group => group.Count()
+                );
+
+            // 5. Xác định mốc bắt đầu và kết thúc
+            DateTime firstBucket = GetBucketStart(
+                localStart,
+                filter
+            );
+
+            DateTime lastBucket = GetBucketStart(
+                localEnd.AddTicks(-1),
+                filter
+            );
+
+            // 6. Tạo danh sách kết quả, bao gồm cả mốc bằng 0
+            var result = new List<TicketSummaryDto>();
+
+            DateTime current = firstBucket;
+
+            while (current <= lastBucket)
+            {
+                groupedData.TryGetValue(
+                    current,
+                    out int total
+                );
+
+                result.Add(new TicketSummaryDto
+                {
+                    time = FormatTime(current, filter, fromDate, toDate),
+                    value = total
+                });
+
+                current = NextBucket(current, filter);
+            }
+
+            return result;
+        }
+
+        // Xác định mốc thời gian bắt đầu của một nhóm
+        private DateTime GetBucketStart(
+            DateTime time,
+            StatisticsFilter filter)
+        {
+            switch (filter)
+            {
+                case StatisticsFilter.Gio:
+                    return new DateTime(
+                        time.Year,
+                        time.Month,
+                        time.Day,
+                        time.Hour,
+                        0,
+                        0
+                    );
+
+                case StatisticsFilter.Ngay:
+                    return time.Date;
+
+                case StatisticsFilter.Tuan:
+                    // Thứ 2 là ngày đầu tuần
+                    int daysFromMonday =
+                        ((int)time.DayOfWeek + 6) % 7;
+
+                    return time.Date.AddDays(-daysFromMonday);
+
+                case StatisticsFilter.Thang:
+                    return new DateTime(
+                        time.Year,
+                        time.Month,
+                        1
+                    );
+
+                default:
+                    throw new ArgumentException(
+                        "Bộ lọc thống kê không hợp lệ."
+                    );
+            }
+        }
+
+        // Xác định mốc tiếp theo
+        private DateTime NextBucket(
+            DateTime current,
+            StatisticsFilter filter)
+        {
+            return filter switch
+            {
+                StatisticsFilter.Gio => current.AddHours(1),
+
+                StatisticsFilter.Ngay => current.AddDays(1),
+
+                StatisticsFilter.Tuan => current.AddDays(7),
+
+                StatisticsFilter.Thang => current.AddMonths(1),
+
+                _ => throw new ArgumentException(
+                    "Bộ lọc thống kê không hợp lệ."
+                )
+            };
+        }
+
+        // Format nhãn hiển thị trên biểu đồ
+        private string FormatTime(
+            DateTime time,
+            StatisticsFilter filter,
+            DateOnly fromDate,
+            DateOnly toDate)
+        {
+            return filter switch
+            {
+                StatisticsFilter.Gio =>
+                    fromDate == toDate
+                        ? time.ToString("HH:mm")
+                        : time.ToString("dd/MM HH:mm"),
+
+                StatisticsFilter.Ngay =>
+                    time.ToString("dd/MM"),
+
+                StatisticsFilter.Tuan =>
+                    $"Tuần {ISOWeek.GetWeekOfYear(time)}/{ISOWeek.GetYear(time)}",
+
+                StatisticsFilter.Thang =>
+                    time.ToString("MM/yyyy"),
+
+                _ => time.ToString("dd/MM/yyyy")
             };
         }
 
         // ----------------------------------------------------------------
         // DSH-02
         // ----------------------------------------------------------------
-        public async Task<TicketStatusDonutDto> GetTicketStatusAsync(
-            int unitId, DashboardFilterRequest f, CancellationToken ct = default)
+        public async Task<TicketStatusDonutDto> GetTicketStatusAsync()
         {
-            var rows = await StickerQuery(unitId, f)
-                .GroupBy(s => s.status)
-                .Select(g => new { Status = g.Key, Count = g.Count(), Recall = g.Sum(x => x.recallCount) })
-                .ToListAsync(ct);
+            var rows = _context.Tickets.AsQueryable();
+                
 
             return new TicketStatusDonutDto
             {
-                Completed = rows.Where(r => r.Status == StickerStatus.Completed).Sum(r => r.Count),
-                Waiting = rows.Where(r => r.Status == StickerStatus.Waiting).Sum(r => r.Count),
-                Absent = rows.Where(r => r.Status == StickerStatus.Absent).Sum(r => r.Count),
-                Recalled = rows.Sum(r => r.Recall),
+                totalIssued = await rows.CountAsync(s => s.Stage == "Completed"),
+                totalWaiting = await rows.CountAsync(s => s.Stage == "Waiting"),
+                totalUsed = await rows.CountAsync(s => s.Stage == "Used"),
+                totalSkipped = await rows.CountAsync(s => s.Stage == "Skipped"),
+
             };
         }
 
@@ -135,7 +302,7 @@ namespace SystemQMS.Services
         public async Task<ChartSeriesDto> GetTicketTrendAsync(
             int unitId, DashboardFilterRequest f, CancellationToken ct = default)
         {
-            var times = await StickerQuery(unitId, f).Select(s => s.issuanceTime).ToListAsync(ct);
+            var times = await StickerQuery(unitId, f).Select(s => s.IssuanceTime).ToListAsync(ct);
 
             return new ChartSeriesDto
             {
@@ -153,20 +320,23 @@ namespace SystemQMS.Services
         // ----------------------------------------------------------------
         // DSH-04
         // ----------------------------------------------------------------
-        public async Task<CounterServiceSummaryDto> GetCounterServiceSummaryAsync(
-            int unitId, CancellationToken ct = default)
+        public async Task<CounterServiceSummaryDto> GetCounterServiceSummaryAsync()
         {
-            var counters = _context.counters.AsNoTracking().Where(c => c.unitId == unitId && c.isActive);
-
             return new CounterServiceSummaryDto
             {
-                TotalServices = await _context.services.AsNoTracking()
-                    .CountAsync(s => s.unitId == unitId && s.isActive, ct),
-                TotalCounters = await counters.CountAsync(ct),
-                ServingCounters = await counters.CountAsync(c => c.status == CounterStatus.Serving, ct),
-                ClosedCounters = await counters.CountAsync(c => c.status == CounterStatus.Closed, ct),
+                totalDevices = await _context.Devices.CountAsync(),
+                totalServices = await _context.Services.CountAsync(),
+                totalTickets = await _context.Tickets.CountAsync(),
+                statusDeviceActive = await _context.Devices.CountAsync(d => d.StatusActive == "AVAILABLE"),
+                statusDeviceInactive = await _context.Devices.CountAsync(d => d.StatusActive == "UNAVAILABLE"),
+                statusServiceActive = await _context.Services.CountAsync(s => s.IsActive == true),
+                statusServiceInactive = await _context.Services.CountAsync(s => s.IsActive == false),
+                statusTicketIssued = await _context.Tickets.CountAsync(s => s.Stage == "Completed"),
+                statusTicketUsed = await _context.Tickets.CountAsync(s => s.Stage == "Used"),
+                statusTicketSkipped = await _context.Tickets.CountAsync(s => s.Stage == "Skipped"),
             };
         }
+
 
         // ----------------------------------------------------------------
         // DSH-05
@@ -177,25 +347,25 @@ namespace SystemQMS.Services
         {
             var (from, to) = ResolveRange(f);
 
-            var q = _context.evaluations.AsNoTracking()
-                .Where(e => e.unitId == unitId && e.evaluationTime >= from && e.evaluationTime <= to);
+            var q = _context.Evaluations.AsNoTracking()
+                .Where(e => e.UnitId == unitId && e.EvaluationTime >= from && e.EvaluationTime <= to);
             if (f.ServiceIds is { Count: > 0 })
-                q = q.Where(e => f.ServiceIds.Contains(e.serviceId));
+                q = q.Where(e => f.ServiceIds.Contains(e.ServiceId));
             if (f.CounterIds is { Count: > 0 })
-                q = q.Where(e => f.CounterIds.Contains(e.counterId));
+                q = q.Where(e => f.CounterIds.Contains(e.CounterId));
 
             var evals = await q.Select(e => new
             {
-                e.serviceId,
-                e.timeMark,
-                e.attitudeMark,
-                e.materialMark,
-                e.satisfedMark
+                e.ServiceId,
+                e.TimeMark,
+                e.AttitudeMark,
+                e.MaterialMark,
+                e.SatisfedMark
             }).ToListAsync(ct);
 
-            var names = await _context.services.AsNoTracking()
-                .Where(s => s.unitId == unitId)
-                .ToDictionaryAsync(s => s.id, s => s.serviceName, ct);
+            var names = await _context.Services.AsNoTracking()
+                .Where(s => s.UnitId == unitId)
+                .ToDictionaryAsync(s => s.Id, s => s.ServiceName, ct);
 
             static double Avg(IEnumerable<int> marks)
             {
@@ -210,19 +380,19 @@ namespace SystemQMS.Services
             }
 
             var items = evals
-                .GroupBy(e => e.serviceId)
+                .GroupBy(e => e.ServiceId)
                 .Select(g =>
                 {
-                    var overalls = g.Select(e => OverallOf(e.timeMark, e.attitudeMark, e.materialMark, e.satisfedMark)).ToList();
+                    var overalls = g.Select(e => OverallOf(e.TimeMark, e.AttitudeMark, e.MaterialMark, e.SatisfedMark)).ToList();
                     return new ServiceRatingItemDto
                     {
                         ServiceId = g.Key,
                         ServiceName = names.GetValueOrDefault(g.Key, $"#{g.Key}"),
                         TotalEvaluations = g.Count(),
-                        AvgTime = Avg(g.Select(e => e.timeMark)),
-                        AvgAttitude = Avg(g.Select(e => e.attitudeMark)),
-                        AvgMaterial = Avg(g.Select(e => e.materialMark)),
-                        AvgSatisfied = Avg(g.Select(e => e.satisfedMark)),
+                        AvgTime = Avg(g.Select(e => e.TimeMark)),
+                        AvgAttitude = Avg(g.Select(e => e.AttitudeMark)),
+                        AvgMaterial = Avg(g.Select(e => e.MaterialMark)),
+                        AvgSatisfied = Avg(g.Select(e => e.SatisfedMark)),
                         AvgOverall = Math.Round(overalls.Where(o => o > 0).DefaultIfEmpty(0).Average(), 2),
                         HighRatingRate = Math.Round(
                             100.0 * overalls.Count(o => o >= HighRatingThreshold) / g.Count(), 2),
@@ -239,42 +409,96 @@ namespace SystemQMS.Services
         }
 
         // ----------------------------------------------------------------
-        // DSH-06
+        // DSH-06: Thống kê STT cấp theo dịch vụ
         // ----------------------------------------------------------------
-        public async Task<ChartSeriesDto> GetTicketsByServiceAsync(
-            int unitId, DashboardFilterRequest f, CancellationToken ct = default)
+        public async Task<List<ServiceBarPointDto>> GetTicketsByServiceAsync(
+            int unitId,
+            StatisticsFilter filter,
+            DateTime fromDate)
         {
-            var rows = await StickerQuery(unitId, f)
-                .Select(s => new { s.serviceId, s.issuanceTime })
-                .ToListAsync(ct);
+            DateTime startDate;
+            DateTime endDate;
 
-            var names = await _context.services.AsNoTracking()
-                .Where(s => s.unitId == unitId)
-                .ToDictionaryAsync(s => s.id, s => s.serviceName, ct);
-
-            return new ChartSeriesDto
+            // 1. Xác định khoảng thời gian theo giờ Việt Nam
+            switch (filter)
             {
-                Series = rows.GroupBy(r => r.serviceId)
-                    .Select(g => new SeriesDto
-                    {
-                        Id = g.Key,
-                        Name = names.GetValueOrDefault(g.Key, $"#{g.Key}"),
-                        Points = ToPoints(g.Select(x => (x.issuanceTime, 1d)), f.Granularity, false)
-                    }).ToList()
-            };
+                case StatisticsFilter.Gio:
+                    startDate = fromDate.Date;
+                    endDate = startDate.AddDays(1);
+                    break;
+
+                case StatisticsFilter.Ngay:
+                    startDate = fromDate.Date.AddDays(-6);
+                    endDate = fromDate.Date.AddDays(1);
+                    break;
+
+                case StatisticsFilter.Tuan:
+                    int diff = (7 + (fromDate.DayOfWeek - DayOfWeek.Monday)) % 7;
+
+                    startDate = fromDate.Date.AddDays(-diff);
+                    endDate = startDate.AddDays(7);
+                    break;
+
+                case StatisticsFilter.Thang:
+                    startDate = new DateTime(fromDate.Year, fromDate.Month, 1);
+                    endDate = startDate.AddMonths(1);
+                    break;
+
+                default:
+                    throw new ArgumentException("Bộ lọc thời gian không hợp lệ");
+            }
+
+            // 2. Chuyển thời gian Việt Nam sang UTC
+            DateTimeOffset startUtc = new DateTimeOffset(
+                TimeZoneInfo.ConvertTimeToUtc(
+                    DateTime.SpecifyKind(startDate, DateTimeKind.Unspecified),
+                    _timeZone
+                ),
+                TimeSpan.Zero
+            );
+
+            DateTimeOffset endUtc = new DateTimeOffset(
+                TimeZoneInfo.ConvertTimeToUtc(
+                    DateTime.SpecifyKind(endDate, DateTimeKind.Unspecified),
+                    _timeZone
+                ),
+                TimeSpan.Zero
+            );
+
+            // 3. Thống kê số STT theo dịch vụ
+            var result = await _context.Tickets
+                .AsNoTracking()
+                .Where(s =>
+                    s.UnitId == unitId &&
+                    s.IssuanceTime >= startUtc &&
+                    s.IssuanceTime < endUtc)
+                .GroupBy(s => new
+                {
+                    s.ServiceId,
+                    s.Service!.ServiceName
+                })
+                .Select(g => new ServiceBarPointDto
+                {
+                    serviceName = g.Key.ServiceName,
+                    count = g.Count()
+                })
+                .OrderByDescending(x => x.count)
+                .ToListAsync();
+
+            return result;
         }
 
         public async Task<ChartSeriesDto> GetTicketsByCounterAsync(
             int unitId, DashboardFilterRequest f, CancellationToken ct = default)
         {
             var rows = await StickerQuery(unitId, f)
-                .Where(s => s.counterId != null)
-                .Select(s => new { counterId = s.counterId!, s.issuanceTime })
+                .Where(s => s.CounterId != null)
+                .Select(s => new { counterId = s.CounterId!, s.IssuanceTime })
                 .ToListAsync(ct);
 
-            var names = await _context.counters.AsNoTracking()
-                .Where(c => c.unitId == unitId)
-                .ToDictionaryAsync(c => c.id, c => c.counterName ?? c.counterId, ct);
+            var names = await _context.Counters.AsNoTracking()
+                .Where(c => c.UnitId == unitId)
+                .ToDictionaryAsync(c => c.Id, c => c.CounterName ?? c.CounterId, ct);
 
             return new ChartSeriesDto
             {
@@ -283,7 +507,7 @@ namespace SystemQMS.Services
                     {
                         Id = g.Key,
                         Name = names.GetValueOrDefault(g.Key, $"#{g.Key}"),
-                        Points = ToPoints(g.Select(x => (x.issuanceTime, 1d)), f.Granularity, false)
+                        Points = ToPoints(g.Select(x => (x.IssuanceTime, 1d)), f.Granularity, false)
                     }).ToList()
             };
         }
@@ -295,23 +519,23 @@ namespace SystemQMS.Services
             int unitId, DashboardFilterRequest f, CancellationToken ct = default)
         {
             var rows = await StickerQuery(unitId, f)
-                .Where(s => s.callTime != null && s.callTime >= s.issuanceTime)
-                .Select(s => new { s.serviceId, s.issuanceTime, call = s.callTime!.Value })
+                .Where(s => s.CallTime != null && s.CallTime >= s.IssuanceTime)
+                .Select(s => new { s.ServiceId, s.IssuanceTime, call = s.CallTime!.Value })
                 .ToListAsync(ct);
 
-            var names = await _context.services.AsNoTracking()
-                .Where(s => s.unitId == unitId)
-                .ToDictionaryAsync(s => s.id, s => s.serviceName, ct);
+            var names = await _context.Services.AsNoTracking()
+                .Where(s => s.UnitId == unitId)
+                .ToDictionaryAsync(s => s.Id, s => s.ServiceName, ct);
 
             return new ChartSeriesDto
             {
-                Series = rows.GroupBy(r => r.serviceId)
+                Series = rows.GroupBy(r => r.ServiceId)
                     .Select(g => new SeriesDto
                     {
                         Id = g.Key,
                         Name = names.GetValueOrDefault(g.Key, $"#{g.Key}"),
                         Points = ToPoints(
-                            g.Select(x => (x.issuanceTime, (x.call - x.issuanceTime).TotalMinutes)),
+                            g.Select(x => (x.IssuanceTime, (x.call - x.IssuanceTime).TotalMinutes)),
                             f.Granularity, average: true)
                     }).ToList()
             };
@@ -325,21 +549,21 @@ namespace SystemQMS.Services
             int unitId, DashboardFilterRequest f, CancellationToken ct = default)
         {
             var rows = await StickerQuery(unitId, f)
-                .Where(s => s.status == StickerStatus.Completed
-                         && s.counterId != null
-                         && s.callTime != null && s.useTime != null
-                         && s.useTime >= s.callTime)
+                .Where(s => s.Status == StickerStatus.Completed
+                         && s.CounterId != null
+                         && s.CallTime != null && s.UseTime != null
+                         && s.UseTime >= s.CallTime)
                 .Select(s => new
                 {
-                    counterId = s.counterId!,
-                    call = s.callTime!.Value,
-                    use = s.useTime!
+                    counterId = s.CounterId!,
+                    call = s.CallTime!.Value,
+                    use = s.UseTime!
                 })
                 .ToListAsync(ct);
 
-            var names = await _context.counters.AsNoTracking()
-                .Where(c => c.unitId == unitId)
-                .ToDictionaryAsync(c => c.id, c => c.counterName ?? c.counterId, ct);
+            var names = await _context.Counters.AsNoTracking()
+                .Where(c => c.UnitId == unitId)
+                .ToDictionaryAsync(c => c.Id, c => c.CounterName ?? c.CounterId, ct);
 
             return new ChartSeriesDto
             {
@@ -380,12 +604,12 @@ namespace SystemQMS.Services
             from = from.ToUniversalTime();
             to = to.ToUniversalTime();
 
-            var q = _context.stickers.AsNoTracking()
-                .Where(s => s.unitId == unitId && s.issuanceTime >= from && s.issuanceTime < to);
+            var q = _context.Tickets.AsNoTracking()
+                .Where(s => s.UnitId == unitId && s.IssuanceTime >= from && s.IssuanceTime < to);
             if (r.ServiceIds is { Count: > 0 })
-                q = q.Where(s => r.ServiceIds.Contains(s.serviceId));
+                q = q.Where(s => r.ServiceIds.Contains(s.ServiceId));
 
-            var times = await q.Select(s => s.issuanceTime).ToListAsync(ct);
+            var times = await q.Select(s => s.IssuanceTime).ToListAsync(ct);
 
             var cells = times
                 .Select(t => t.ToOffset(Vn))
@@ -414,21 +638,21 @@ namespace SystemQMS.Services
         // ----------------------------------------------------------------
         public async Task<DeviceSummaryDto> GetDeviceSummaryAsync(int unitId, CancellationToken ct = default)
         {
-            var devices = await _context.devices.AsNoTracking()
-                .Where(d => d.unitId == unitId)
-                .Select(d => new { d.deviceType, d.statusActive, d.statusConnect })
+            var devices = await _context.Devices.AsNoTracking()
+                .Where(d => d.UnitId == unitId)
+                .Select(d => new { d.DeviceType, d.StatusActive, d.StatusConnect })
                 .ToListAsync(ct);
 
             return new DeviceSummaryDto
             {
                 Total = devices.Count,
-                ByType = devices.GroupBy(d => d.deviceType)
+                ByType = devices.GroupBy(d => d.DeviceType)
                     .Select(g => new DeviceTypeCountDto { DeviceType = g.Key, Count = g.Count() })
                     .ToList(),
-                Active = devices.Count(d => d.statusActive == DeviceStatus.Available),
-                Inactive = devices.Count(d => d.statusActive == DeviceStatus.Unavailable),
-                Connected = devices.Count(d => d.statusConnect == DeviceStatus.Connected),
-                Disconnected = devices.Count(d => d.statusConnect == DeviceStatus.Disconnected),
+                Active = devices.Count(d => d.StatusActive == DeviceStatus.Available),
+                Inactive = devices.Count(d => d.StatusActive == DeviceStatus.Unavailable),
+                Connected = devices.Count(d => d.StatusConnect == DeviceStatus.Connected),
+                Disconnected = devices.Count(d => d.StatusConnect == DeviceStatus.Disconnected),
             };
         }
 
@@ -437,26 +661,26 @@ namespace SystemQMS.Services
         public async Task<DeviceDeactivateCheckDto?> CheckDeviceDeactivateAsync(
             int unitId, int deviceId, CancellationToken ct = default)
         {
-            var device = await _context.devices.AsNoTracking()
+            var device = await _context.Devices.AsNoTracking()
                 .Include(d => d.Counters)
-                .FirstOrDefaultAsync(d => d.id == deviceId && d.unitId == unitId, ct);
+                .FirstOrDefaultAsync(d => d.Id == deviceId && d.UnitId == unitId, ct);
             if (device == null) return null;
 
-            var counterIds = device.Counters.Select(c => c.id).ToList();
+            var counterIds = device.Counters.Select(c => c.Id).ToList();
             var today = StartOfDay(DateTimeOffset.UtcNow).ToUniversalTime();
 
-            var pending = await _context.stickers.AsNoTracking()
-                .Where(s => s.unitId == unitId
-                         && s.counterId != null && counterIds.Contains(s.counterId)
-                         && s.issuanceTime >= today
-                         && (s.status == StickerStatus.Waiting || s.status == StickerStatus.Processing))
-                .GroupBy(s => s.counterId)
+            var pending = await _context.Tickets.AsNoTracking()
+                .Where(s => s.UnitId == unitId
+                         && s.CounterId != null && counterIds.Contains(s.CounterId)
+                         && s.IssuanceTime >= today
+                         && s.Status == StickerStatus.Waiting)
+                .GroupBy(s => s.CounterId)
                 .Select(g => new { CounterId = g.Key, Count = g.Count() })
                 .ToListAsync(ct);
 
             var names = device.Counters
-                .Where(c => pending.Any(p => p.CounterId == c.id))
-                .Select(c => c.counterName ?? c.counterId)
+                .Where(c => pending.Any(p => p.CounterId == c.Id))
+                .Select(c => c.CounterName ?? c.CounterId)
                 .ToList();
 
             return new DeviceDeactivateCheckDto
@@ -466,5 +690,7 @@ namespace SystemQMS.Services
                 CounterNames = names,
             };
         }
+
+        
     }
 }

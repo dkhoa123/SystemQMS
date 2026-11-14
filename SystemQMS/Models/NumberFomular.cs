@@ -5,24 +5,24 @@ namespace SystemQMS.Models
 {
     public class NumberFomular
     {
-        public int id { get; set; }
-        public int serviceId { get; set; }
+        public int Id { get; set; }
+        public int ServiceId { get; set; }
         [MaxLength(100)]
-        public string numberType { get; set; }
+        public string NumberType { get; set; }
         [MaxLength(20)]
-        public string firstName { get; set; }
+        public string FirstName { get; set; }
         [MaxLength(20)]
-        public string lastName { get; set; }
-        public int startNumber { get; set; }
-        public int endNumber { get; set; }
-        public bool isDailyLimitEnabled { get; set; } = false;
+        public string LastName { get; set; }
+        public int StartNumber { get; set; }
+        public int EndNumber { get; set; }
+        public bool IsDailyLimitEnabled { get; set; } = false;
 
-        public int? dailyEndNumber { get; set; }
-        public DateTimeOffset limitDay { get; set; }
+        public int? DailyEndNumber { get; set; }
+        public DateTimeOffset LimitDay { get; set; }
         [MaxLength(20)]
-        public string sequenceMode { get; set; } = "Independent";
+        public string SequenceMode { get; set; } = "Independent";
 
-        [ForeignKey("serviceId")]
+        [ForeignKey("ServiceId")]
         public virtual Service? Service { get; set; }
 
     }

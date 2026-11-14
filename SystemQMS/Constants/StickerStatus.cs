@@ -9,6 +9,7 @@ namespace SystemQMS.Constants
         public const string Completed = "Completed";   // đã hoàn thành
         public const string Absent = "Absent";         // đã gọi nhưng khách vắng
         public const string Cancelled = "Cancelled";   // đã hủy
+        public const string Skipped = "Skipped";       // đã gọi nhưng khách bỏ qua (không vắng, không hủy)
         public const string Expired = "Expired";       // hết hạn (quá hạn xử lý theo SRS)
     }
 

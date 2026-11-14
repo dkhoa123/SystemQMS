@@ -33,8 +33,8 @@ public class ScheduleSvc : IScheduleSvc
     {
         // Use the local wall-clock time because startTime/endTime are TimeSpan values.
         var t = now.TimeOfDay;
-        var start = shift.startTime;
-        var end = shift.endTime;
+        var start = shift.StartTime;
+        var end = shift.EndTime;
 
         return start <= end
             ? t >= start && t <= end
@@ -42,50 +42,48 @@ public class ScheduleSvc : IScheduleSvc
     }
     public async Task<bool> IsWithinOperatingHoursAsync(int serviceId, CancellationToken ct = default)
     {
-        var shifts = await _context.shedules
-            .Where(x => x.serviceId == serviceId)
+        var shifts = await _context.Shedules
+            .Where(x => x.ServiceId == serviceId)
             .ToListAsync(ct);
         if (shifts.Count == 0)
             return true;
         var now = DateTimeOffset.Now;
         return shifts.Any(x => IsInShift(now, x));
-
-        
     }
     public async Task<ServiceAvailabilityResponse> CheckServiceAvailabilityAsync(int serviceId, CancellationToken ct = default)
     {
-        var service = await _context.services.FirstOrDefaultAsync(s => s.id == serviceId, ct);
+        var service = await _context.Services.FirstOrDefaultAsync(s => s.Id == serviceId, ct);
         if (service == null)
             throw new KeyNotFoundException("Dịch vụ không tồn tại");
 
         var now = DateTimeOffset.Now;
-        var shifts = await _context.shedules
-            .Where(x => x.serviceId == serviceId)
-            .OrderBy(x => x.startTime)
+        var shifts = await _context.Shedules
+            .Where(x => x.ServiceId == serviceId)
+            .OrderBy(x => x.StartTime)
             .ToListAsync(ct);
 
         var current = shifts.FirstOrDefault(x => IsInShift(now, x));
         bool inHours = shifts.Count == 0 || current != null;
 
         // Còn ít nhất 1 quầy đang mở (Idle/Serving, isActive) phục vụ dịch vụ này không
-        bool hasOpenCounter = await _context.counters.AnyAsync(c =>
-            c.isActive
-            && (c.status == CounterStatus.Idle || c.status == CounterStatus.Serving)
-            && c.Services.Any(s => s.id == serviceId), ct);
+        bool hasOpenCounter = await _context.Counters.AnyAsync(c =>
+            c.IsActive
+            && (c.Status == CounterStatus.Idle || c.Status == CounterStatus.Serving)
+            && c.Services.Any(s => s.Id == serviceId), ct);
 
 
         var result = new ServiceAvailabilityResponse
         {
-            serviceId = service.id,
-            serviceName = service.serviceName,
+            serviceId = service.Id,
+            serviceName = service.ServiceName,
             inWorkingHours = inHours,
             hasOpenCounter = hasOpenCounter,
-            currentShift = current?.wordShift,
+            currentShift = current?.WordShift,
             shifts = shifts.Select(x => new ShiftDto
             {
-                wordShift = x.wordShift,
-                startTime = x.startTime.ToString(@"hh\:mm"),
-                endTime = x.endTime.ToString(@"hh\:mm")
+                wordShift = x.WordShift,
+                startTime = x.StartTime.ToString(@"hh\:mm"),
+                endTime = x.EndTime.ToString(@"hh\:mm")
             }).ToList()
         };
 

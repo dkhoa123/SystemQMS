@@ -22,16 +22,16 @@ namespace SystemQMS.Services
 
         public async Task<DisplayConfigResponseDto> GetDisplayConfigAsync(int unitId)
         {
-            var unit = await _context.units
+            var unit = await _context.Units
                 .Include(u => u.UnitConfig)
-                .FirstOrDefaultAsync(u => u.unitId == unitId);
+                .FirstOrDefaultAsync(u => u.UnitId == unitId);
 
             if (unit == null) return null;
 
             return new DisplayConfigResponseDto
             {
-                UnitName = unit.unitName,
-                LogoUrl = unit.logo != null ? $"data:image/jpeg;base64,{Convert.ToBase64String(unit.logo)}" : null,
+                UnitName = unit.UnitName,
+                LogoUrl = unit.Logo != null ? $"data:image/jpeg;base64,{Convert.ToBase64String(unit.Logo)}" : null,
                 BackgroundImageUrl = unit.UnitConfig?.BackgroundImage,
                 BannerText = unit.UnitConfig?.BannerText,
                 ToneColorHex = unit.UnitConfig?.ToneColorHex,
@@ -41,9 +41,9 @@ namespace SystemQMS.Services
 
         public async Task<DisplayConfigResponseDto> UpdateDisplayConfigAsync(int unitId, DisplayConfigUpdateDto dto)
         {
-            var unit = await _context.units
+            var unit = await _context.Units
                 .Include(u => u.UnitConfig)
-                .FirstOrDefaultAsync(u => u.unitId == unitId);
+                .FirstOrDefaultAsync(u => u.UnitId == unitId);
 
             if (unit == null) throw new Exception("Không tìm thấy đơn vị.");
 
@@ -56,7 +56,7 @@ namespace SystemQMS.Services
                     BannerText = "",
                     ToneColorHex = ""
                 };
-                _context.unitConfigs.Add(unit.UnitConfig);
+                _context.UnitConfigs.Add(unit.UnitConfig);
             }
 
             if (dto.BannerText != null) unit.UnitConfig.BannerText = dto.BannerText;
@@ -72,7 +72,7 @@ namespace SystemQMS.Services
                 using (var memoryStream = new MemoryStream())
                 {
                     await dto.LogoFile.CopyToAsync(memoryStream);
-                    unit.logo = memoryStream.ToArray();
+                    unit.Logo = memoryStream.ToArray();
                 }
             }
 
@@ -85,7 +85,7 @@ namespace SystemQMS.Services
 
         public async Task ResetDisplayFieldAsync(int unitId, string fieldName)
         {
-            var unit = await _context.units.Include(u => u.UnitConfig).FirstOrDefaultAsync(u => u.unitId == unitId);
+            var unit = await _context.Units.Include(u => u.UnitConfig).FirstOrDefaultAsync(u => u.UnitId == unitId);
             if (unit == null) return;
 
             switch (fieldName.ToLower())
@@ -94,7 +94,7 @@ namespace SystemQMS.Services
                     if (unit.UnitConfig != null) unit.UnitConfig.BackgroundImage = "";
                     break;
                 case "logo":
-                    unit.logo = null;
+                    unit.Logo = null;
                     break;
                 case "bannertext":
                     if (unit.UnitConfig != null) unit.UnitConfig.BannerText = "";
@@ -109,7 +109,7 @@ namespace SystemQMS.Services
 
         public async Task UpdateAudioConfigAsync(int unitId, int templateId)
         {
-            var config = await _context.unitConfigs.FirstOrDefaultAsync(c => c.UnitId == unitId);
+            var config = await _context.UnitConfigs.FirstOrDefaultAsync(c => c.UnitId == unitId);
             if (config == null)
             {
                 config = new UnitConfig
@@ -120,7 +120,7 @@ namespace SystemQMS.Services
                     BannerText = "",
                     ToneColorHex = ""
                 };
-                _context.unitConfigs.Add(config);
+                _context.UnitConfigs.Add(config);
             }
             else
             {

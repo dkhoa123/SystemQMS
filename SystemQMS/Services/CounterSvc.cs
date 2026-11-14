@@ -23,18 +23,18 @@ namespace SystemQMS.Services
         {
             return new CounterResponse
             {
-                id = counter.id,
-                counterId = counter.counterId,
-                unitId = counter.unitId,
-                counterName = counter.counterName,
-                description = counter.description,
-                isActive = counter.isActive,
-                Status = counter.status,
+                id = counter.Id,
+                counterId = counter.CounterId,
+                unitId = counter.UnitId,
+                counterName = counter.CounterName,
+                description = counter.Description,
+                isActive = counter.IsActive,
+                Status = counter.Status,
                 services = counter.Services.Select(s => new ServiceInCounterDto
                 {
-                    id = s.id,
-                    serviceId = s.serviceId,
-                    serviceName = s.serviceName
+                    id = s.Id,
+                    serviceId = s.ServiceId,
+                    serviceName = s.ServiceName
                 }).ToList()
             };
         }
@@ -43,35 +43,35 @@ namespace SystemQMS.Services
         public async Task<List<CounterResponse>> GetCountersAsync(
             int unitId, string? status = null, bool? isActive = null, string? search = null)
         {
-            var query = _context.counters.AsNoTracking().Where(c => c.unitId == unitId);
+            var query = _context.Counters.AsNoTracking().Where(c => c.UnitId == unitId);
             if (!string.IsNullOrWhiteSpace(status))
-                query = query.Where(c => c.status == status);
+                query = query.Where(c => c.Status == status);
             if (isActive.HasValue)
-                query = query.Where(c => c.isActive == isActive.Value);
+                query = query.Where(c => c.IsActive == isActive.Value);
             if (!string.IsNullOrWhiteSpace(search))
             {
                 // Postgres LIKE phân biệt hoa/thường -> dùng ILike để tìm không phân biệt
                 var term = $"%{search.Trim()}%";
-                query = query.Where(c => EF.Functions.ILike(c.counterId, term)
-                    || (c.counterName != null && EF.Functions.ILike(c.counterName, term)));
+                query = query.Where(c => EF.Functions.ILike(c.CounterId, term)
+                    || (c.CounterName != null && EF.Functions.ILike(c.CounterName, term)));
             }
 
             return await query
-                .OrderBy(c => c.id)
+                .OrderBy(c => c.Id)
                 .Select(c => new CounterResponse
                 {
-                    id = c.id,
-                    counterId = c.counterId,
-                    unitId = c.unitId,
-                    counterName = c.counterName,
-                    description = c.description,
-                    isActive = c.isActive,
-                    Status = c.status,
+                    id = c.Id,
+                    counterId = c.CounterId,
+                    unitId = c.UnitId,
+                    counterName = c.CounterName,
+                    description = c.Description,
+                    isActive = c.IsActive,
+                    Status = c.Status,
                     services = c.Services.Select(s => new ServiceInCounterDto
                     {
-                        id = s.id,
-                        serviceId = s.serviceId,
-                        serviceName = s.serviceName
+                        id = s.Id,
+                        serviceId = s.ServiceId,
+                        serviceName = s.ServiceName
                     }).ToList()
                 }).ToListAsync();
         }
@@ -85,17 +85,17 @@ namespace SystemQMS.Services
                 !Regex.IsMatch(request.counterName, @"^[\p{L}0-9 _-]+$"))
                 throw new ArgumentException("Tên quầy chứa kí tự không hợp lệ");
 
-            bool exists = await _context.counters.AnyAsync(c =>
-                c.unitId == request.unitId && c.counterId == request.counterId);
+            bool exists = await _context.Counters.AnyAsync(c =>
+                c.UnitId == request.unitId && c.CounterId == request.counterId);
             if (exists)
                 throw new ArgumentException("Mã quầy đã tồn tại trong đơn vị");
 
             var serviceIds = request.serviceIds ?? new List<int>();
-            var services = await _context.services
-                .Where(s => serviceIds.Contains(s.id) && s.unitId == request.unitId)
+            var services = await _context.Services
+                .Where(s => serviceIds.Contains(s.Id) && s.UnitId == request.unitId)
                 .ToListAsync();
 
-            if (!await _context.units.AnyAsync(u => u.unitId == request.unitId))
+            if (!await _context.Units.AnyAsync(u => u.UnitId == request.unitId))
                 throw new ArgumentException("Đơn vị không tồn tại");
 
             if (services.Count != serviceIds.Distinct().Count())
@@ -103,15 +103,15 @@ namespace SystemQMS.Services
 
             var counter = new Counter
             {
-                counterId = (request.counterId ?? "").Trim(),
-                unitId = request.unitId,
-                counterName = request.counterName?.Trim(),
-                description = request.description,
-                isActive = request.isActive,
-                status = CounterStatus.Idle,
+                CounterId = (request.counterId ?? "").Trim(),
+                UnitId = request.unitId,
+                CounterName = request.counterName?.Trim(),
+                Description = request.description,
+                IsActive = request.isActive,
+                Status = CounterStatus.Idle,
                 Services = services
             };
-            _context.counters.Add(counter);
+            _context.Counters.Add(counter);
 
             try
             {
@@ -127,24 +127,24 @@ namespace SystemQMS.Services
                 // Chống race: 2 request cùng mã vượt qua AnyAsync ở trên.
                 // Lọc theo tên constraint để lỗi unique khác (vd. PK) không bị báo nhầm thành trùng mã.
                 _logger.LogWarning(ex, "Tạo quầy trùng mã: UnitId={UnitId}, CounterId={CounterId}",
-                    request.unitId, counter.counterId);
+                    request.unitId, counter.CounterId);
                 throw new ArgumentException("Mã quầy đã tồn tại trong đơn vị");
             }
 
             return new CounterResponse
             {
-                id = counter.id,
-                counterId = counter.counterId,
-                unitId = counter.unitId,
-                counterName = counter.counterName,
-                description = counter.description,
-                isActive = counter.isActive,
-                Status = counter.status,
+                id = counter.Id,
+                counterId = counter.CounterId,
+                unitId = counter.UnitId,
+                counterName = counter.CounterName,
+                description = counter.Description,
+                isActive = counter.IsActive,
+                Status = counter.Status,
                 services = services.Select(s => new ServiceInCounterDto
                 {
-                    id = s.id,
-                    serviceId = s.serviceId,
-                    serviceName = s.serviceName
+                    id = s.Id,
+                    serviceId = s.ServiceId,
+                    serviceName = s.ServiceName
                 }).ToList()
             };
         }
@@ -152,30 +152,30 @@ namespace SystemQMS.Services
         // CNT-03: cập nhập quầy - sửa tất cả trừ mã quầy, chặn khi đang Serving
         public async Task<CounterResponse> UpdateCounterAsync(int id, UpdateCounterRequest request)
         {
-            var counter = await _context.counters
+            var counter = await _context.Counters
                 .Include(c => c.Services)
-                .FirstOrDefaultAsync(c => c.id == id);
+                .FirstOrDefaultAsync(c => c.Id == id);
 
             if (counter == null)
                 throw new KeyNotFoundException("Quầy không tồn tại");
 
-            if (counter.status == CounterStatus.Serving)
+            if (counter.Status == CounterStatus.Serving)
                 throw new ArgumentException("Quầy đang có người xử lý, không thể cập nhật");
 
             if (request.counterName != null && !Regex.IsMatch(request.counterName, @"^[\p{L}0-9 _-]+$"))
                 throw new ArgumentException("Tên quầy chứa kí tự không hợp lệ");
 
             var serviceIds = request.serviceIds ?? new List<int>();
-            var services = await _context.services
-                .Where(s => serviceIds.Contains(s.id) && s.unitId == counter.unitId)
+            var services = await _context.Services
+                .Where(s => serviceIds.Contains(s.Id) && s.UnitId == counter.UnitId)
                 .ToListAsync();
 
             if (services.Count != serviceIds.Distinct().Count())
                 throw new ArgumentException("Có dịch vụ không tồn tại hoặc không thuộc đơn vị");
 
-            counter.counterName = request.counterName?.Trim();
-            counter.description = request.description;
-            counter.isActive = request.isActive;
+            counter.CounterName = request.counterName?.Trim();
+            counter.Description = request.description;
+            counter.IsActive = request.isActive;
             counter.Services.Clear();
             foreach (var s in services) counter.Services.Add(s);
             await _context.SaveChangesAsync();
@@ -185,16 +185,16 @@ namespace SystemQMS.Services
         //CNT-04a: chi tiết quầy + người xử lý
         public async Task<CounterDetailResponse> GetCounterAsync(int id)
         {
-            var counter = await _context.counters
+            var counter = await _context.Counters
                 .AsNoTracking()
                 .Include(c => c.Services)
-                .FirstOrDefaultAsync(c => c.id == id);
+                .FirstOrDefaultAsync(c => c.Id == id);
             if (counter == null)
                 throw new KeyNotFoundException("Quầy không tồn tại");
 
-            var handlers = await _context.users.AsNoTracking()
-                .Where(u => u.counterId == id && u.isActive && u.username != null)
-                .Select(u => u.username!)
+            var handlers = await _context.Users.AsNoTracking()
+                .Where(u => u.CounterId == id && u.IsActive && u.Username != null)
+                .Select(u => u.Username!)
                 .ToListAsync();
 
             var baseDto = ToResponse(counter);
@@ -216,54 +216,54 @@ namespace SystemQMS.Services
         public async Task<List<CounterStickerResponse>> GetCounterStickersAsync(
             int id, string? status = null, DateTimeOffset? from = null, DateTimeOffset? to = null)
         {
-            if (!await _context.counters.AnyAsync(c => c.id == id))
+            if (!await _context.Counters.AnyAsync(c => c.Id == id))
                 throw new KeyNotFoundException("Quầy không tồn tại");
 
-            var query = _context.stickers.AsNoTracking().Where(s => s.counterId == id);
+            var query = _context.Tickets.AsNoTracking().Where(s => s.CounterId == id);
             if (!string.IsNullOrWhiteSpace(status))
-                query = query.Where(s => s.status == status);
-            if (from.HasValue) query = query.Where(s => s.issuanceTime >= from.Value);
-            if (to.HasValue) query = query.Where(s => s.issuanceTime <= to.Value);
+                query = query.Where(s => s.Status == status);
+            if (from.HasValue) query = query.Where(s => s.IssuanceTime >= from.Value);
+            if (to.HasValue) query = query.Where(s => s.IssuanceTime <= to.Value);
 
             return await query
-                .OrderByDescending(s => s.issuanceTime)
+                .OrderByDescending(s => s.IssuanceTime)
                 .Select(s => new CounterStickerResponse
                 {
-                    sttId = s.sttId,
-                    status = s.status,
-                    stage = s.stage,
-                    issuanceTime = s.issuanceTime,
-                    useTime = s.useTime,
-                    serviceName = s.Service != null ? s.Service.serviceName : null,
-                    handlerName = s.Users != null ? s.Users.username : null
+                    sttId = s.SttId,
+                    status = s.Status,
+                    stage = s.Stage,
+                    issuanceTime = s.IssuanceTime,
+                    useTime = s.UseTime,
+                    serviceName = s.Service != null ? s.Service.ServiceName : null,
+                    handlerName = s.Users != null ? s.Users.Username : null
                 }).ToListAsync();
         }
 
         // CNT-05 
         public async Task DeleteCounterAsync(int id, CancellationToken ct = default)
         {
-            var counter = await _context.counters
+            var counter = await _context.Counters
                 .Include(c => c.Services)
-                .FirstOrDefaultAsync(c => c.id == id, ct);
+                .FirstOrDefaultAsync(c => c.Id == id, ct);
             if (counter == null)
             {
                 _logger.LogWarning("Xóa quầy thất bại: không tìm thấy CounterId={CounterId}", id);
                 throw new KeyNotFoundException("Quầy không tồn tại");
             }
 
-            if (await _context.stickers.AnyAsync(s => s.counterId == id, ct))
+            if (await _context.Tickets.AnyAsync(s => s.CounterId == id, ct))
             {
                 _logger.LogWarning("Xóa quầy thất bại: CounterId={CounterId} đã có phiếu gọi số", id);
                 throw new ArgumentException("Quầy đã có phiếu gọi số, không thể xóa");
             }
 
-            if (await _context.users.AnyAsync(u => u.counterId == id, ct))
+            if (await _context.Users.AnyAsync(u => u.CounterId == id, ct))
             {
                 _logger.LogWarning("Xóa quầy thất bại: CounterId={CounterId} đã có cán bộ được gán", id);
                 throw new ArgumentException("Quầy đã có cán bộ được gán, không thể xóa");
             }
 
-            _context.counters.Remove(counter);
+            _context.Counters.Remove(counter);
             try
             {
                 await _context.SaveChangesAsync(ct);
@@ -276,7 +276,7 @@ namespace SystemQMS.Services
                 throw new ArgumentException("Quầy vừa phát sinh dữ liệu liên quan, không thể xóa");
             }
 
-            _logger.LogInformation("Đã xóa quầy: CounterId={CounterId}, UnitId={UnitId}", id, counter.unitId);
+            _logger.LogInformation("Đã xóa quầy: CounterId={CounterId}, UnitId={UnitId}", id, counter.UnitId);
         }
     }
 }

@@ -6,29 +6,33 @@ namespace SystemQMS.Models
     public class Users
     {
         [Key]
-        public int userId { get; set; }
-        public int unitId { get; set; }
-        [MaxLength(100)]
-        public string? username { get; set; }
-        [MaxLength(100)]
-        public string? password { get; set; }
-        [MaxLength(100)]
-        public string? email { get; set; }
-        [MaxLength(10)]
-        public string? numberPhone { get; set; }
-        public int roleId { get; set; }
-        public byte[]? avatar { get; set; }
-        public bool isActive { get; set; }
-        public int counterId { get; set; }
+        public int UserId { get; set; }
+        public int UnitId { get; set; }
 
-        [ForeignKey("roleId")]
+        [MaxLength(100)]
+        public string? Name { get; set; }
+
+        [MaxLength(100)]
+        public string? Username { get; set; }
+        [MaxLength(100)]
+        public string? Password { get; set; }
+        [MaxLength(100)]
+        public string? Email { get; set; }
+        [MaxLength(10)]
+        public string? NumberPhone { get; set; }
+        public int RoleId { get; set; }
+        public byte[]? Avatar { get; set; }
+        public bool IsActive { get; set; }
+        public int CounterId { get; set; }
+
+        [ForeignKey("RoleId")]
         public virtual Roles? Role { get; set; }
-        [ForeignKey("counterId")]
+        [ForeignKey("CounterId")]
         public virtual Counter? Counter { get; set; }
-        [ForeignKey("unitId")]
+        [ForeignKey("UnitId")]
         public virtual Unit? Unit { get; set; }
         public ICollection<Diary>? Diaries { get; set; } = new List<Diary>();
-        public ICollection<Sticker>? Stickers { get; set; } = new List<Sticker>();
+        public ICollection<Ticket>? Tickets { get; set; } = new List<Ticket>();
 
     }
 }

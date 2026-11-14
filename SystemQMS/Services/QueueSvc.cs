@@ -21,21 +21,21 @@ namespace SystemQMS.Services
         }
 
         // Dùng chung cho mọi truy vấn danh sách phiếu, giữ projection dịch được sang SQL
-        private static readonly Expression<Func<Sticker, QueueTicketDto>> TicketProjection = s => new QueueTicketDto
+        private static readonly Expression<Func<Ticket, QueueTicketDto>> TicketProjection = s => new QueueTicketDto
         {
-            sttId = s.sttId,
-            status = s.status,
-            stage = s.stage,
-            isPriority = s.isPriority,
-            issuanceTime = s.issuanceTime,
-            useTime = s.useTime,
-            serviceName = s.Service != null ? s.Service.serviceName : null,
-            handlerName = s.Users != null ? s.Users.username : null
+            sttId = s.SttId,
+            status = s.Status,
+            stage = s.Stage,
+            isPriority = s.IsPriority,
+            issuanceTime = s.IssuanceTime,
+            useTime = s.UseTime,
+            serviceName = s.Service != null ? s.Service.ServiceName : null,
+            handlerName = s.Users != null ? s.Users.Username : null
         };
 
         private async Task<Counter> GetCounterAsync(int counterId, CancellationToken ct)
         {
-            var counter = await _context.counters.FirstOrDefaultAsync(c => c.id == counterId, ct);
+            var counter = await _context.Counters.FirstOrDefaultAsync(c => c.Id == counterId, ct);
             if (counter == null)
                 throw new KeyNotFoundException("Quầy không tồn tại");
             return counter;
@@ -43,19 +43,19 @@ namespace SystemQMS.Services
 
         private async Task<CounterStateResponse> BuildStateAsync(Counter counter, CancellationToken ct)
         {
-            var waitingCount = await _context.stickers.CountAsync(
-                s => s.counterId == counter.id
-                     && s.status == StickerStatus.Waiting
-                     && s.stage != StickerStage.TransferPending, ct);
-            var processingCount = await _context.stickers.CountAsync(
-                s => s.counterId == counter.id && s.status == StickerStatus.Processing, ct);
+            var waitingCount = await _context.Tickets.CountAsync(
+                s => s.CounterId == counter.Id
+                     && s.Status == StickerStatus.Waiting
+                     && s.Stage != StickerStage.TransferPending, ct);
+            var processingCount = await _context.Tickets.CountAsync(
+                s => s.CounterId == counter.Id && s.Status == StickerStatus.Processing, ct);
 
             return new CounterStateResponse
             {
-                counterId = counter.id,
-                status = counter.status,
-                isAccepting = counter.status != CounterStatus.PausedAccepting
-                              && counter.status != CounterStatus.Closed,
+                counterId = counter.Id,
+                status = counter.Status,
+                isAccepting = counter.Status != CounterStatus.PausedAccepting
+                              && counter.Status != CounterStatus.Closed,
                 waitingCount = waitingCount,
                 processingCount = processingCount
             };
@@ -66,12 +66,12 @@ namespace SystemQMS.Services
         {
             var counter = await GetCounterAsync(counterId, ct);
 
-            if (counter.status == CounterStatus.Closed)
+            if (counter.Status == CounterStatus.Closed)
                 throw new ArgumentException("Quầy đã đóng, không thể ngưng nhận phiếu");
-            if (counter.status == CounterStatus.PausedAccepting)
+            if (counter.Status == CounterStatus.PausedAccepting)
                 throw new ArgumentException("Quầy đang ngưng nhận phiếu");
 
-            counter.status = CounterStatus.PausedAccepting;
+            counter.Status = CounterStatus.PausedAccepting;
             await _context.SaveChangesAsync(ct);
             _logger.LogInformation("Quầy ngưng nhận phiếu: CounterId={CounterId}", counterId);
             return await BuildStateAsync(counter, ct);
@@ -82,12 +82,12 @@ namespace SystemQMS.Services
         {
             var counter = await GetCounterAsync(counterId, ct);
 
-            if (counter.status != CounterStatus.PausedAccepting)
+            if (counter.Status != CounterStatus.PausedAccepting)
                 throw new ArgumentException("Quầy không ở trạng thái ngưng nhận phiếu");
 
             await ResumeCoreAsync(counter, ct);
             _logger.LogInformation("Quầy nhận phiếu lại: CounterId={CounterId}, Status={Status}",
-                counterId, counter.status);
+                counterId, counter.Status); 
             return await BuildStateAsync(counter, ct);
         }
 
@@ -96,98 +96,98 @@ namespace SystemQMS.Services
         {
             var counter = await GetCounterAsync(counterId, ct);
 
-            if (counter.status == CounterStatus.Closed)
+            if (counter.Status == CounterStatus.Closed)
                 throw new ArgumentException("Quầy đã đóng, không thể đổi trạng thái nhận phiếu");
 
-            if (counter.status == CounterStatus.PausedAccepting)
+            if (counter.Status == CounterStatus.PausedAccepting)
                 await ResumeCoreAsync(counter, ct);
             else
             {
-                counter.status = CounterStatus.PausedAccepting;
+                counter.Status = CounterStatus.PausedAccepting;
                 await _context.SaveChangesAsync(ct);
             }
 
             _logger.LogInformation("Đổi trạng thái nhận phiếu: CounterId={CounterId}, Status={Status}",
-                counterId, counter.status);
+                counterId, counter.Status);
             return await BuildStateAsync(counter, ct);
         }
 
         // Còn phiếu đang xử lý thì về Serving, hết thì về Idle
         private async Task ResumeCoreAsync(Counter counter, CancellationToken ct)
         {
-            bool hasProcessing = await _context.stickers.AnyAsync(
-                s => s.counterId == counter.id && s.status == StickerStatus.Processing, ct);
-            counter.status = hasProcessing ? CounterStatus.Serving : CounterStatus.Idle;
+            bool hasProcessing = await _context.Tickets.AnyAsync(
+                s => s.CounterId == counter.Id && s.Status == StickerStatus.Processing, ct);
+            counter.Status = hasProcessing ? CounterStatus.Serving : CounterStatus.Idle;
             await _context.SaveChangesAsync(ct);
         }
 
         // OPR-14: đặt ưu tiên, phiếu ưu tiên được xếp lên đầu hàng chờ (Quy tắc 2)
         public async Task<QueueTicketDto> SetPriorityAsync(string sttId, CancellationToken ct = default)
         {
-            var sticker = await _context.stickers
+            var sticker = await _context.Tickets
                 .Include(s => s.Service)
                 .Include(s => s.Users)
-                .FirstOrDefaultAsync(s => s.sttId == sttId, ct);
+                .FirstOrDefaultAsync(s => s.SttId == sttId, ct);
 
             if (sticker == null)
                 throw new KeyNotFoundException("Phiếu không tồn tại");
-            if (sticker.status != StickerStatus.Waiting)
+            if (sticker.Status != StickerStatus.Waiting)
                 throw new ArgumentException("Chỉ đặt ưu tiên cho phiếu đang chờ");
-            if (sticker.stage == StickerStage.TransferPending)
+            if (sticker.Stage == StickerStage.TransferPending)
                 throw new ArgumentException("Phiếu đang chờ quầy khác phản hồi, không thể đặt ưu tiên");
 
-            sticker.isPriority = true;
+            sticker.IsPriority = true;
             await _context.SaveChangesAsync(ct);
             _logger.LogInformation("Đặt ưu tiên phiếu: SttId={SttId}", sttId);
 
             return new QueueTicketDto
             {
-                sttId = sticker.sttId,
-                status = sticker.status,
-                stage = sticker.stage,
-                isPriority = sticker.isPriority,
-                issuanceTime = sticker.issuanceTime,
-                useTime = sticker.useTime,
-                serviceName = sticker.Service?.serviceName,
-                handlerName = sticker.Users?.username
+                sttId = sticker.SttId,
+                status = sticker.Status,
+                stage = sticker.Stage,
+                isPriority = sticker.IsPriority,
+                issuanceTime = sticker.IssuanceTime,
+                useTime = sticker.UseTime,
+                serviceName = sticker.Service?.ServiceName,
+                handlerName = sticker.Users?.Username
             };
         }
 
         // OPR-12: 3 nhóm phiếu của quầy
         public async Task<CounterTicketsResponse> GetCounterTicketsAsync(int counterId, CancellationToken ct = default)
         {
-            var counter = await _context.counters.AsNoTracking()
-                .FirstOrDefaultAsync(c => c.id == counterId, ct);
+            var counter = await _context.Counters.AsNoTracking()
+                .FirstOrDefaultAsync(c => c.Id == counterId, ct);
             if (counter == null)
                 throw new KeyNotFoundException("Quầy không tồn tại");
 
-            var baseQuery = _context.stickers.AsNoTracking().Where(s => s.counterId == counterId);
+            var baseQuery = _context.Tickets.AsNoTracking().Where(s => s.CounterId == counterId);
 
             // Quy tắc 2: phiếu ưu tiên lên đầu, cùng mức ưu tiên thì ai lấy số trước đứng trước.
             // Phiếu đang chờ quầy khác phản hồi (TransferPending) không nằm trong hàng chờ.
             var waiting = await baseQuery
-                .Where(s => s.status == StickerStatus.Waiting && s.stage != StickerStage.TransferPending)
-                .OrderByDescending(s => s.isPriority)
-                .ThenBy(s => s.issuanceTime)
+                .Where(s => s.Status == StickerStatus.Waiting && s.Stage != StickerStage.TransferPending)
+                .OrderByDescending(s => s.IsPriority)
+                .ThenBy(s => s.IssuanceTime)
                 .Select(TicketProjection)
                 .ToListAsync(ct);
 
             var processing = await baseQuery
-                .Where(s => s.status == StickerStatus.Processing)
-                .OrderBy(s => s.issuanceTime)
+                .Where(s => s.Status == StickerStatus.Processing)
+                .OrderBy(s => s.IssuanceTime)
                 .Select(TicketProjection)
                 .ToListAsync(ct);
 
             var absent = await baseQuery
-                .Where(s => s.status == StickerStatus.Absent)
-                .OrderByDescending(s => s.useTime)
+                .Where(s => s.Status == StickerStatus.Absent)
+                .OrderByDescending(s => s.UseTime)
                 .Select(TicketProjection)
                 .ToListAsync(ct);
 
             return new CounterTicketsResponse
             {
-                counterId = counter.id,
-                counterStatus = counter.status,
+                counterId = counter.Id,
+                counterStatus = counter.Status,
                 waiting = waiting,
                 processing = processing,
                 absent = absent
@@ -201,7 +201,7 @@ namespace SystemQMS.Services
             DateTimeOffset? from = null, DateTimeOffset? to = null,
             CancellationToken ct = default)
         {
-            if (!await _context.counters.AnyAsync(c => c.id == counterId, ct))
+            if (!await _context.Counters.AnyAsync(c => c.Id == counterId, ct))
                 throw new KeyNotFoundException("Quầy không tồn tại");
 
             if (page < 1) page = 1;
@@ -214,48 +214,48 @@ namespace SystemQMS.Services
             if (from.HasValue) from = from.Value.ToUniversalTime();
             if (to.HasValue) to = to.Value.ToUniversalTime();
 
-            var finishedQuery = _context.stickers.AsNoTracking()
-                .Where(s => s.counterId == counterId
-                            && (s.status == StickerStatus.Completed
-                                || s.status == StickerStatus.Absent
-                                || s.status == StickerStatus.Cancelled
-                                || s.status == StickerStatus.Expired));
-            if (from.HasValue) finishedQuery = finishedQuery.Where(s => s.useTime >= from.Value);
-            if (to.HasValue) finishedQuery = finishedQuery.Where(s => s.useTime <= to.Value);
+            var finishedQuery = _context.Tickets.AsNoTracking()
+                .Where(s => s.CounterId == counterId
+                            && (s.Status == StickerStatus.Completed
+                                || s.Status == StickerStatus.Absent
+                                || s.Status == StickerStatus.Cancelled
+                                || s.Status == StickerStatus.Expired));
+            if (from.HasValue) finishedQuery = finishedQuery.Where(s => s.UseTime >= from.Value);
+            if (to.HasValue) finishedQuery = finishedQuery.Where(s => s.UseTime <= to.Value);
 
             var finished = await finishedQuery
                 .Select(s => new HistoryItemResponse
                 {
-                    sttId = s.sttId,
-                    result = s.status,
-                    time = s.useTime,
-                    serviceName = s.Service != null ? s.Service.serviceName : null,
-                    handlerName = s.Users != null ? s.Users.username : null,
-                    isPriority = s.isPriority
+                    sttId = s.SttId,
+                    result = s.Status,
+                    time = s.UseTime,
+                    serviceName = s.Service != null ? s.Service.ServiceName : null,
+                    handlerName = s.Users != null ? s.Users.Username : null,
+                    isPriority = s.IsPriority
                 })
                 .ToListAsync(ct);
 
             // Quầy gửi nhìn thấy phiếu mình đã chuyển đi với kết quả "Transferred"
-            var transferredQuery = _context.counterChanges.AsNoTracking()
-                .Where(cc => cc.counterIdSender == counterId
-                             && (cc.status == CounterChangeStatus.Accepted
-                                 || cc.status == CounterChangeStatus.AutoAccepted));
-            if (from.HasValue) transferredQuery = transferredQuery.Where(cc => cc.createTime >= from.Value);
-            if (to.HasValue) transferredQuery = transferredQuery.Where(cc => cc.createTime <= to.Value);
+            var transferredQuery = _context.CounterChanges.AsNoTracking()
+                .Where(cc => cc.CounterIdSender == counterId
+                             && (cc.Status == CounterChangeStatus.Accepted
+                                 || cc.Status == CounterChangeStatus.AutoAccepted));
+            if (from.HasValue) transferredQuery = transferredQuery.Where(cc => cc.CreateTime >= from.Value);
+            if (to.HasValue) transferredQuery = transferredQuery.Where(cc => cc.CreateTime <= to.Value);
 
             var transferred = await transferredQuery
                 .Select(cc => new HistoryItemResponse
                 {
-                    sttId = cc.sttId,
+                    sttId = cc.SttId,
                     result = HistoryResult.Transferred,
-                    time = cc.createTime,
-                    serviceName = cc.Sticker != null && cc.Sticker.Service != null
-                        ? cc.Sticker.Service.serviceName
+                    time = cc.CreateTime,
+                    serviceName = cc.Tickets != null && cc.Tickets.Service != null
+                        ? cc.Tickets.Service.ServiceName
                         : null,
-                    handlerName = cc.Sticker != null && cc.Sticker.Users != null
-                        ? cc.Sticker.Users.username
+                    handlerName = cc.Tickets != null && cc.Tickets.Users != null
+                        ? cc.Tickets.Users.Username
                         : null,
-                    counterName = cc.CounterReceiver != null ? cc.CounterReceiver.counterName : null
+                    counterName = cc.CounterReceiver != null ? cc.CounterReceiver.CounterName : null
                 })
                 .ToListAsync(ct);
 

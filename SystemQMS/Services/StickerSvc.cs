@@ -12,24 +12,24 @@ namespace SystemQMS.Services
             _context = context;
         }
 
-        public string AddNew(Sticker sticker)
+        public string AddNew(Ticket sticker)
         {
-            var service = _context.services.FirstOrDefault(x => x.id == sticker.serviceId);
+            var service = _context.Services.FirstOrDefault(x => x.Id == sticker.ServiceId);
             if(service == null)
             {
                 return "Không tìm thấy dịch vụ";
             }
 
-             var counter = _context.counters
-            .FirstOrDefault(x => x.id == sticker.counterId);
+             var counter = _context.Counters
+            .FirstOrDefault(x => x.Id == sticker.CounterId);
 
             if (counter == null)
             {
                 return "Không tìm thấy quầy dịch vụ";
             }
-            if (!service.isActive)
+            if (!service.IsActive)
                 return "Dịch vụ hiện không hoạt động";
-            var fomular = _context.numberFomulars.FirstOrDefault(x => x.serviceId == service.id);
+            var fomular = _context.NumberFomulars.FirstOrDefault(x => x.ServiceId == service.Id);
             if(fomular== null)
             {
                 return "Dịch vụ chưa có quy tắc số";
@@ -37,26 +37,26 @@ namespace SystemQMS.Services
 
 
 
-            if (fomular.startNumber > fomular.endNumber)
+            if (fomular.StartNumber > fomular.EndNumber)
                 return "Dãy số không hợp lệ.";
 
             
 
 
             // tim so da cap thuoc day hien tai
-            var tickerId = _context.stickers.Where(x => x.serviceId == service.id)
-                .Select(x => x.sttId)
+            var tickerId = _context.Tickets.Where(x => x.ServiceId == service.Id)
+                .Select(x => x.SttId)
                 .ToList();
 
 
             int nextNumber;
 
-            if (fomular.sequenceMode == "Shared")
+            if (fomular.SequenceMode == "Shared")
             {
                 // lay tat ca ve da cap toan he thong
 
-                var issuedNumbers = _context.stickers
-                    .Select(x => x.sttId)
+                var issuedNumbers = _context.Tickets
+                    .Select(x => x.SttId)
                     .ToList()
 
                     .Select(sttId =>
@@ -66,8 +66,8 @@ namespace SystemQMS.Services
                     }
                     )
                     .Where(number => number.HasValue
-                && number.Value >= fomular.startNumber
-                && number.Value <= fomular.endNumber
+                && number.Value >= fomular.StartNumber
+                && number.Value <= fomular.EndNumber
                 )
                 .Select(number => number!.Value)
                 .ToList();
@@ -77,7 +77,7 @@ namespace SystemQMS.Services
 
 
                 int maxNumber = issuedNumbers.Any()
-                ? issuedNumbers.Max() : fomular.startNumber - 1;
+                ? issuedNumbers.Max() : fomular.StartNumber - 1;
 
 
                 // tinh tien 1
@@ -88,9 +88,9 @@ namespace SystemQMS.Services
             {
                 // che do doc lap
                 // chi lay so da cap thuoc dich vu hien tai
-                var issuedNumbers = _context.stickers
-                    .Where(x => x.serviceId == service.id)
-                    .Select(x => x.sttId)
+                var issuedNumbers = _context.Tickets
+                    .Where(x => x.ServiceId == service.Id)
+                    .Select(x => x.SttId)
                     .ToList()
                     .Select(sttId =>
                     {
@@ -102,29 +102,29 @@ namespace SystemQMS.Services
                     .Select(number => number!.Value)
                     .ToList();
                 nextNumber = issuedNumbers.Any()
-                    ? issuedNumbers.Max() + 1 : fomular.startNumber;
+                    ? issuedNumbers.Max() + 1 : fomular.StartNumber;
 
             }
 
             // kiem tra gioi han 
-            if (nextNumber > fomular.endNumber)
+            if (nextNumber > fomular.EndNumber)
                 return "Dãy số đã hết";
 
            
 
             //tao phieu
-            string nextStt = fomular.firstName + nextNumber;
+            string nextStt = fomular.FirstName + nextNumber;
             string numberText = nextNumber.ToString("D5");
 
             string sttId;
 
-            if (!string.IsNullOrEmpty(fomular.firstName))
+            if (!string.IsNullOrEmpty(fomular.FirstName))
             {
-                sttId = fomular.firstName + numberText;
+                sttId = fomular.FirstName + numberText;
             }
-            else if (!string.IsNullOrEmpty(fomular.lastName))
+            else if (!string.IsNullOrEmpty(fomular.LastName))
             {
-                sttId = numberText + fomular.lastName;
+                sttId = numberText + fomular.LastName;
             }
             else
             {
@@ -135,29 +135,29 @@ namespace SystemQMS.Services
 
             // kiem tra trung ma phieu
 
-            if (_context.stickers.Any(x => x.sttId == nextStt))
+            if (_context.Tickets.Any(x => x.SttId == nextStt))
                 return "Số thứ tự đã tồn tại ";
 
             // tao phieu
 
-            var newSticker = new Sticker
+            var newSticker = new Ticket
             {
-                sttId = sttId,
-                unitId = service.unitId,
-                serviceId = service.id,
-                counterId = counter.id,
-                userId = sticker.userId,
-                issuanceTime = DateTimeOffset.UtcNow,
-                useTime = DateTimeOffset.UtcNow,
-                status = "Waiting",
-                stage = "Waiting"
+                SttId = sttId,
+                UnitId = service.UnitId,
+                ServiceId = service.Id,
+                CounterId = counter.Id,
+                UserId = sticker.UserId,
+                IssuanceTime = DateTimeOffset.UtcNow,
+                UseTime = DateTimeOffset.UtcNow,
+                Status = "Waiting",
+                Stage = "Waiting"
 
 
             };
 
             // luu dl
 
-            _context.stickers.Add(newSticker);
+            _context.Tickets.Add(newSticker);
             _context.SaveChanges();
 
             return "Cấp số thành công: " + newSticker;
@@ -167,7 +167,7 @@ namespace SystemQMS.Services
 
         public byte[] ExportExcel()
         {
-            var data = _context.stickers.ToList();
+            var data = _context.Tickets.ToList();
 
             using var workbook = new XLWorkbook();
             var sheet = workbook.Worksheets.Add("Stickers");
@@ -178,8 +178,8 @@ namespace SystemQMS.Services
             int row = 2;
             foreach (var item in data)
             {
-                sheet.Cell(row, 1).Value = item.sttId;
-                sheet.Cell(row, 2).Value = item.status;
+                sheet.Cell(row, 1).Value = item.SttId;
+                sheet.Cell(row, 2).Value = item.Status;
                 row++;
             }
 

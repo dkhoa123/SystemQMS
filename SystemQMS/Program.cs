@@ -34,11 +34,23 @@ builder.Services.AddScoped<ICounterSvc, CounterSvc>();
 builder.Services.AddScoped<IQueueSvc, QueueSvc>();
 builder.Services.AddScoped<ITransferSvc, TransferSvc>();
 
+builder.Services.AddScoped<IAuthSvc, AuthSvc>();
 
 // Job nền: tự nhận chuyển quầy quá hạn + mở lại quầy qua ngày mới
 builder.Services.AddHostedService<OprBackgroundSvc>();
 
 builder.Services.AddScoped<IDashboardSvc, DashboardSvc>();
+
+builder.Services.AddCors(opt =>
+{
+    opt.AddPolicy("ReactPolicy", policy =>
+    {
+        policy
+        .WithOrigins("http://localhost:3000", "https://localhost:3000")
+        .AllowAnyHeader()
+        .AllowAnyMethod();
+    });
+});
 
 
 // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
@@ -46,6 +58,8 @@ builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 
 var app = builder.Build();
+
+app.UseCors("ReactPolicy");
 
 // Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment())

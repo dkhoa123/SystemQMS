@@ -7,6 +7,13 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <Compile Remove="wwwroot\logos\**" />
+    <Content Remove="wwwroot\logos\**" />
+    <EmbeddedResource Remove="wwwroot\logos\**" />
+    <None Remove="wwwroot\logos\**" />
+  </ItemGroup>
+
+  <ItemGroup>
     <PackageReference Include="ClosedXML" Version="0.105.1" />
     <PackageReference Include="Microsoft.AspNetCore.SignalR" Version="1.2.13" />
     <PackageReference Include="Microsoft.EntityFrameworkCore" Version="8.0.30" />
@@ -60,7 +67,6 @@
   </ItemGroup>
 
   <ItemGroup>
-    <Folder Include="wwwroot\logos\" />
     <Folder Include="wwwroot\backgrounds\" />
   </ItemGroup>
 

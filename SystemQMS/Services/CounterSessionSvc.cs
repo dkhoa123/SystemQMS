@@ -17,79 +17,80 @@ namespace SystemQMS.Services
 
         public async Task<(bool Success, string Message, CounterSessionResponseDto? Data)> OpenSessionAsync(int counterId, OpenSessionRequestDto dto)
         {
-            var counter = await _context.counters.FirstOrDefaultAsync(c => c.id == counterId);
+            var counter = await _context.Counters.FirstOrDefaultAsync(c => c.Id == counterId);
             if (counter == null) return (false, $"Không tìm thấy quầy có ID = {counterId}.", null);
 
-            var user = await _context.users.FirstOrDefaultAsync(u => u.userId == dto.userId && u.isActive);
+            var user = await _context.Users.FirstOrDefaultAsync(u => u.UserId == dto.userId && u.IsActive);
             if (user == null) return (false, "Tài khoản cán bộ không tồn tại hoặc đã bị khóa.", null);
 
-            if (counter.unitId != user.unitId) return (false, "Cán bộ không thuộc đơn vị quản lý của quầy này.", null);
+            if (counter.UnitId != user.UnitId) return (false, "Cán bộ không thuộc đơn vị quản lý của quầy này.", null);
 
-            var currentStaff = await _context.users.FirstOrDefaultAsync(u => u.counterId == counterId && u.userId != dto.userId);
-            if (currentStaff != null) return (false, $"Quầy hiện đang có cán bộ '{currentStaff.username}' trực.", null);
 
-            if (user.counterId > 0 && user.counterId != counterId)
-                return (false, $"Cán bộ đang mở phiên tại Quầy ID = {user.counterId}. Vui lòng đăng xuất quầy cũ trước.", null);
+            var currentStaff = await _context.Users.FirstOrDefaultAsync(u => u.CounterId == counterId && u.UserId != dto.userId);
+            if (currentStaff != null) return (false, $"Quầy hiện đang có cán bộ '{currentStaff.Username}' trực.", null);
 
-            user.counterId = counterId;
-            counter.status = CounterStatus.Idle;
+            if (user.CounterId > 0 && user.CounterId != counterId)
+                return (false, $"Cán bộ đang mở phiên tại Quầy ID = {user.CounterId}. Vui lòng đăng xuất quầy cũ trước.", null);
+
+            user.CounterId = counterId;
+            counter.Status = CounterStatus.Idle;
 
             await _context.SaveChangesAsync();
 
-            return (true, $"Mở phiên trực thành công cho cán bộ {user.username}.", new CounterSessionResponseDto
+            return (true, $"Mở phiên trực thành công cho cán bộ {user.Username}.", new CounterSessionResponseDto
             {
-                counterId = counter.id,
-                counterCode = counter.counterId,
-                counterName = counter.counterName ?? "Quầy giao dịch",
-                status = counter.status,
-                isActive = counter.isActive,
-                currentUserId = user.userId,
-                currentUserName = user.username,
+                counterId = counter.Id,
+                counterCode = counter.CounterId,
+                counterName = counter.CounterName ?? "Quầy giao dịch",
+                status = counter.Status,
+                isActive = counter.IsActive,
+                currentUserId = user.UserId,
+                currentUserName = user.Username,
                 sessionStartTime = DateTimeOffset.UtcNow
             });
         }
 
         public async Task<(bool Success, string Message)> CloseSessionAsync(int counterId, int userId)
         {
-            var counter = await _context.counters.FirstOrDefaultAsync(c => c.id == counterId);
+            var counter = await _context.Counters.FirstOrDefaultAsync(c => c.Id == counterId);
             if (counter == null) return (false, "Không tìm thấy quầy.");
 
-            var user = await _context.users.FirstOrDefaultAsync(u => u.userId == userId && u.counterId == counterId);
+            var user = await _context.Users.FirstOrDefaultAsync(u => u.UserId == userId && u.CounterId == counterId);
             if (user == null) return (false, "Cán bộ không trực tại quầy này.");
 
-            user.counterId = 0;
-            counter.status = CounterStatus.Closed;
+            user.CounterId = 0;
+            counter.Status = CounterStatus.Closed;
             await _context.SaveChangesAsync();
             return (true, "Đã đóng phiên trực và đăng xuất khỏi quầy.");
         }
 
         public async Task<CounterSessionResponseDto?> GetCurrentSessionAsync(int counterId)
         {
-            var counter = await _context.counters.AsNoTracking().FirstOrDefaultAsync(c => c.id == counterId);
+            var counter = await _context.Counters.AsNoTracking().FirstOrDefaultAsync(c => c.Id == counterId);
             if (counter == null) return null;
 
-            var user = await _context.users.AsNoTracking().FirstOrDefaultAsync(u => u.counterId == counterId);
+            var user = await _context.Users.AsNoTracking().FirstOrDefaultAsync(u => u.CounterId == counterId);
             return new CounterSessionResponseDto
             {
-                counterId = counter.id,
-                counterCode = counter.counterId,
-                counterName = counter.counterName ?? "Trống",
-                status = counter.status,
-                isActive = counter.isActive,
-                currentUserId = user?.userId,
-                currentUserName = user?.username,
+                counterId = counter.Id,
+                counterCode = counter.CounterId,
+                counterName = counter.CounterName ?? "Trống",
+                status = counter.Status,
+                isActive = counter.IsActive,
+                currentUserId = user?.UserId,
+                currentUserName = user?.Username,
                 sessionStartTime = DateTimeOffset.UtcNow
             };
         }
 
         public async Task<(bool Success, string Message)> CloseCounterAsync(int counterId)
         {
-            var counter = await _context.counters.FirstOrDefaultAsync(c => c.id == counterId);
+            var counter = await _context.Counters.FirstOrDefaultAsync(c => c.Id == counterId);
             if (counter == null) return (false, "Không tìm thấy quầy.");
 
             // 1. Chặn đóng quầy nếu có yêu cầu chuyển vé đang ở trạng thái Pending[cite: 3]
-            bool hasPendingTransfer = await _context.counterChanges
-                .AnyAsync(cc => cc.counterIdSender == counterId && cc.status == CounterChangeStatus.Pending);
+            bool hasPendingTransfer = await _context.CounterChanges
+                .AnyAsync(cc => cc.CounterIdSender == counterId && cc.Status == CounterChangeStatus.Pending);
 
             if (hasPendingTransfer)
             {
@@ -97,20 +98,20 @@ namespace SystemQMS.Services
             }
 
             // 2. Chỉ chuyển status runtime sang Closed, giữ nguyên cờ isActive
-            counter.status = CounterStatus.Closed;
+            counter.Status = CounterStatus.Closed;
             await _context.SaveChangesAsync();
             return (true, "Đã đóng quầy thành công.");
         }
 
         public async Task<(bool Success, string Message)> OpenCounterAsync(int counterId)
         {
-            var counter = await _context.counters.FirstOrDefaultAsync(c => c.id == counterId);
+            var counter = await _context.Counters.FirstOrDefaultAsync(c => c.Id == counterId);
             if (counter == null) return (false, "Không tìm thấy quầy.");
 
-            if (!counter.isActive)
+            if (!counter.IsActive)
                 return (false, "Quầy đã bị vô hiệu hóa cấu hình quản trị (isActive = false). Không thể mở quầy!");
 
-            counter.status = CounterStatus.Idle;
+            counter.Status = CounterStatus.Idle;
             await _context.SaveChangesAsync();
             return (true, "Mở quầy thành công, sẵn sàng nhận khách.");
         }

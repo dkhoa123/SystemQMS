@@ -5,33 +5,33 @@ namespace SystemQMS.Models
 {
     public class Evaluation
     {
-        public int id { get; set; }
-        public int unitId { get; set; }
+        public int Id { get; set; }
+        public int UnitId { get; set; }
         [MaxLength(100)]
-        public string sttId { get; set; }
-        public int serviceId { get; set; }
-        public int counterId { get; set; }
+        public string SttId { get; set; }
+        public int ServiceId { get; set; }
+        public int CounterId { get; set; }
         [MaxLength(100)]
-        public string templateId { get; set; }
-        public int timeMark { get; set; }
-        public int attitudeMark { get; set; }
-        public int materialMark { get; set; }
-        public int satisfedMark { get; set; }
+        public string TemplateId { get; set; }
+        public int TimeMark { get; set; }
+        public int AttitudeMark { get; set; }
+        public int MaterialMark { get; set; }
+        public int SatisfedMark { get; set; }
         [MaxLength(100)]
-        public string orther { get; set; }
+        public string Orther { get; set; }
         [MaxLength(20)]
-        public string guestPhone { get; set; }
+        public string GuestPhone { get; set; }
         [MaxLength(100)]
-        public string guestName { get; set; }
-        public DateTimeOffset evaluationTime { get; set; }
+        public string GuestName { get; set; }
+        public DateTimeOffset EvaluationTime { get; set; }
 
-        [ForeignKey("unitId")]
+        [ForeignKey("UnitId")]
         public virtual Unit? Unit { get; set; }
-        [ForeignKey("sttId")]
-        public virtual Sticker? Sticker { get; set; }
-        [ForeignKey("serviceId")]
+        [ForeignKey("SttId")]
+        public virtual Ticket? Tickets { get; set; }
+        [ForeignKey("ServiceId")]
         public virtual Service? Service { get; set; }
-        [ForeignKey("counterId")]
+        [ForeignKey("CounterId")]
         public virtual Counter? Counter { get; set; }
     }
 }

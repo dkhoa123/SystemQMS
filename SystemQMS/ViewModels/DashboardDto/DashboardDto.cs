@@ -29,28 +29,35 @@
         public class ChartSeriesDto { public List<SeriesDto> Series { get; set; } }   // DSH-03/06/07/08 (đường/cột)
 
         // ===== STT =====
+        public enum StatisticsFilter {
+            Gio, Ngay, Tuan, Thang
+        }
         public class TicketSummaryDto           // DSH-01
         {
-            public int TotalIssued { get; set; }
-            public int IssuedToday { get; set; }
-            public int IssuedThisMonth { get; set; }
-            public int IssuedThisYear { get; set; }
+            public string time { get; set; }   // "2023-01-01 00:00:00" (theo múi giờ của client)
+            public int value { get; set; }     // số lượng STT đã phát trong khoảng thời gian
         }
         public class TicketStatusDonutDto       // DSH-02
         {
-            public int Completed { get; set; }
-            public int Waiting { get; set; }
-            public int Absent { get; set; }
-            public int Recalled { get; set; }   // SUM(recallCount)
+            public int totalIssued { get; set; }
+            public int totalWaiting { get; set; }
+            public int totalUsed { get; set; }
+            public int totalSkipped { get; set; }
         }
 
         // ===== Quầy / dịch vụ =====
         public class CounterServiceSummaryDto   // DSH-04
         {
-            public int TotalServices { get; set; }
-            public int TotalCounters { get; set; }
-            public int ServingCounters { get; set; }
-            public int ClosedCounters { get; set; }
+            public int totalDevices { get; set; }
+            public int totalServices { get; set; }
+            public int totalTickets { get; set; }
+            public int statusDeviceActive { get; set; }
+            public int statusDeviceInactive { get; set; }
+            public int statusServiceActive { get; set; }
+            public int statusServiceInactive { get; set; }
+            public int statusTicketIssued { get; set; }
+            public int statusTicketUsed { get; set; }
+            public int statusTicketSkipped { get; set; }
         }
         public class ServiceRatingItemDto       // DSH-05
         {
@@ -63,6 +70,12 @@
             public double AvgSatisfied { get; set; }
             public double AvgOverall { get; set; }
             public double HighRatingRate { get; set; }   // % đánh giá >= ngưỡng "tốt"
+        }
+
+
+        public class ServiceBarPointDto {
+            public string serviceName { get; set; }
+            public int count { get; set; }
         }
         public class ServiceRatingDashboardDto
         {

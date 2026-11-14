@@ -19,12 +19,12 @@ namespace SystemQMS.Services
 
         private static TransferResponse ToResponse(CounterChange change) => new()
         {
-            id = change.id,
-            sttId = change.sttId,
-            counterIdSender = change.counterIdSender,
-            counterIdReceive = change.counterIdReceive,
-            status = change.status,
-            createTime = change.createTime
+            id = change.Id,
+            sttId = change.SttId,
+            counterIdSender = change.CounterIdSender,
+            counterIdReceive = change.CounterIdReceive,
+            status = change.Status,
+            createTime = change.CreateTime
         };
 
         // OPR-07: tạo yêu cầu chuyển phiếu.
@@ -32,20 +32,20 @@ namespace SystemQMS.Services
         public async Task<List<TransferResponse>> CreateTransferAsync(
             int counterId, TransferRequest request, CancellationToken ct = default)
         {
-            var sender = await _context.counters.FirstOrDefaultAsync(c => c.id == counterId, ct);
+            var sender = await _context.Counters.FirstOrDefaultAsync(c => c.Id == counterId, ct);
             if (sender == null)
                 throw new KeyNotFoundException("Quầy gửi không tồn tại");
-            if (!sender.isActive || sender.status == CounterStatus.Closed)
+            if (!sender.IsActive || sender.Status == CounterStatus.Closed)
                 throw new ArgumentException("Quầy gửi đang đóng, không thể chuyển phiếu");
 
             if (request.toCounterId == counterId)
                 throw new ArgumentException("Quầy nhận phải khác quầy gửi");
 
-            var receiver = await _context.counters.FirstOrDefaultAsync(c => c.id == request.toCounterId, ct);
+            var receiver = await _context.Counters.FirstOrDefaultAsync(c => c.Id == request.toCounterId, ct);
             if (receiver == null)
                 throw new ArgumentException("Quầy nhận không tồn tại");
-            if (!receiver.isActive || receiver.status == CounterStatus.Closed
-                || receiver.status == CounterStatus.PausedAccepting)
+            if (!receiver.IsActive || receiver.Status == CounterStatus.Closed
+                || receiver.Status == CounterStatus.PausedAccepting)
                 throw new ArgumentException("Quầy nhận không hoạt động");
 
             var sttIds = (request.sttIds ?? new List<string>())
@@ -56,8 +56,8 @@ namespace SystemQMS.Services
             if (sttIds.Count == 0)
                 throw new ArgumentException("Chưa chọn phiếu để chuyển");
 
-            var stickers = await _context.stickers
-                .Where(s => sttIds.Contains(s.sttId) && s.counterId == counterId)
+            var stickers = await _context.Tickets
+                .Where(s => sttIds.Contains(s.SttId) && s.CounterId == counterId)
                 .ToListAsync(ct);
             if (stickers.Count != sttIds.Count)
                 throw new ArgumentException("Có phiếu không tồn tại hoặc không thuộc quầy gửi");
@@ -65,11 +65,11 @@ namespace SystemQMS.Services
             foreach (var sticker in stickers)
             {
                 // SRS: chuyển được cả phiếu đang chờ lẫn phiếu đang xử lý
-                if (sticker.status != StickerStatus.Waiting
-                    && sticker.status != StickerStatus.Processing)
-                    throw new ArgumentException($"Phiếu {sticker.sttId} không ở trạng thái chờ hoặc đang xử lý");
-                if (sticker.stage == StickerStage.TransferPending)
-                    throw new ArgumentException($"Phiếu {sticker.sttId} đang chờ quầy khác phản hồi");
+                if (sticker.Status != StickerStatus.Waiting
+                    && sticker.Status != StickerStatus.Processing)
+                    throw new ArgumentException($"Phiếu {sticker.SttId} không ở trạng thái chờ hoặc đang xử lý");
+                if (sticker.Stage == StickerStage.TransferPending)
+                    throw new ArgumentException($"Phiếu {sticker.SttId} đang chờ quầy khác phản hồi");
             }
 
             var now = DateTimeOffset.UtcNow;
@@ -82,18 +82,18 @@ namespace SystemQMS.Services
                 {
                     var change = new CounterChange
                     {
-                        sttId = sticker.sttId,
-                        counterIdSender = counterId,
-                        counterIdReceive = request.toCounterId,
-                        status = CounterChangeStatus.Pending,
-                        createTime = now
+                        SttId = sticker.SttId,
+                        CounterIdSender = counterId,
+                        CounterIdReceive = request.toCounterId,
+                        Status = CounterChangeStatus.Pending,
+                        CreateTime = now
                     };
-                    _context.counterChanges.Add(change);
+                    _context.CounterChanges.Add(change);
                     changes.Add(change);
 
-                    sticker.stage = StickerStage.TransferPending;
+                    sticker.Stage = StickerStage.TransferPending;
                     if (request.isPriority == true)
-                        sticker.isPriority = true;
+                        sticker.IsPriority = true;
                 }
 
                 await _context.SaveChangesAsync(ct);
@@ -116,13 +116,13 @@ namespace SystemQMS.Services
         public async Task<List<TransferResponse>> GetPendingTransfersAsync(
             int counterId, CancellationToken ct = default)
         {
-            if (!await _context.counters.AnyAsync(c => c.id == counterId, ct))
+            if (!await _context.Counters.AnyAsync(c => c.Id == counterId, ct))
                 throw new KeyNotFoundException("Quầy không tồn tại");
 
-            var pending = await _context.counterChanges.AsNoTracking()
-                .Where(cc => cc.counterIdReceive == counterId
-                             && cc.status == CounterChangeStatus.Pending)
-                .OrderByDescending(cc => cc.createTime)
+            var pending = await _context.CounterChanges.AsNoTracking()
+                .Where(cc => cc.CounterIdReceive == counterId
+                             && cc.Status == CounterChangeStatus.Pending)
+                .OrderByDescending(cc => cc.CreateTime)
                 .ToListAsync(ct);
 
             return pending.Select(ToResponse).ToList();
@@ -132,23 +132,23 @@ namespace SystemQMS.Services
         public async Task<TransferResponse> ActionAsync(
             int transferId, string action, CancellationToken ct = default)
         {
-            var change = await _context.counterChanges.FirstOrDefaultAsync(c => c.id == transferId, ct);
+            var change = await _context.CounterChanges.FirstOrDefaultAsync(c => c.Id == transferId, ct);
             if (change == null)
                 throw new KeyNotFoundException("Yêu cầu chuyển quầy không tồn tại");
-            if (change.status != CounterChangeStatus.Pending)
+            if (change.Status != CounterChangeStatus.Pending)
                 throw new ArgumentException("Yêu cầu chuyển quầy đã được xử lý");
 
             if (string.Equals(action, "Accept", StringComparison.OrdinalIgnoreCase))
             {
                 await ApplyAcceptAsync(_context, change, isAuto: false, ct);
                 _logger.LogInformation("Chấp nhận chuyển quầy: TransferId={TransferId}, SttId={SttId}",
-                    change.id, change.sttId);
+                    change.Id, change.SttId);
             }
             else if (string.Equals(action, "Reject", StringComparison.OrdinalIgnoreCase))
             {
                 await ApplyRejectAsync(_context, change, ct);
                 _logger.LogInformation("Từ chối chuyển quầy: TransferId={TransferId}, SttId={SttId}",
-                    change.id, change.sttId);
+                    change.Id, change.SttId);
             }
             else
             {
@@ -162,35 +162,35 @@ namespace SystemQMS.Services
         public static async Task ApplyAcceptAsync(
             MyDbContext context, CounterChange change, bool isAuto, CancellationToken ct = default)
         {
-            var sticker = await context.stickers.FirstOrDefaultAsync(s => s.sttId == change.sttId, ct);
+            var sticker = await context.Tickets.FirstOrDefaultAsync(s => s.SttId == change.SttId, ct);
             if (sticker == null)
                 throw new KeyNotFoundException("Phiếu không tồn tại");
            
-            bool wasProcessing = sticker.status == StickerStatus.Processing;
+            bool wasProcessing = sticker.Status == StickerStatus.Processing;
 
-            sticker.counterId = change.counterIdReceive;
-            sticker.stage = StickerStage.Accepted;
-            sticker.status = StickerStatus.Waiting;
+            sticker.CounterId = change.CounterIdReceive;
+            sticker.Stage = StickerStage.Accepted;
+            sticker.Status = StickerStatus.Waiting;
 
-           
-            if (!sticker.isPriority)
-                sticker.issuanceTime = DateTimeOffset.UtcNow;
+            // Nếu không phải là phiếu ưu tiên, thì cập nhật thời gian phát hành
+            if (!sticker.IsPriority)
+                sticker.IssuanceTime = DateTimeOffset.UtcNow;
 
-            change.status = isAuto ? CounterChangeStatus.AutoAccepted : CounterChangeStatus.Accepted;
+            change.Status = isAuto ? CounterChangeStatus.AutoAccepted : CounterChangeStatus.Accepted;
 
             // Quầy gửi mất phiếu Processing cuối cùng thì hết trạng thái đang phục vụ
             if (wasProcessing)
             {
-                bool senderStillProcessing = await context.stickers.AnyAsync(
-                    s => s.counterId == change.counterIdSender
-                         && s.status == StickerStatus.Processing
-                         && s.sttId != sticker.sttId, ct);
+                bool senderStillProcessing = await context.Tickets.AnyAsync(
+                    s => s.CounterId == change.CounterIdSender
+                         && s.Status == StickerStatus.Processing
+                         && s.SttId != sticker.SttId, ct);
                 if (!senderStillProcessing)
                 {
-                    var sender = await context.counters
-                        .FirstOrDefaultAsync(c => c.id == change.counterIdSender, ct);
-                    if (sender != null && sender.status == CounterStatus.Serving)
-                        sender.status = CounterStatus.Idle;
+                    var sender = await context.Counters
+                        .FirstOrDefaultAsync(c => c.Id == change.CounterIdSender, ct);
+                    if (sender != null && sender.Status == CounterStatus.Serving)
+                        sender.Status = CounterStatus.Idle;
                 }
             }
 
@@ -201,12 +201,12 @@ namespace SystemQMS.Services
         public static async Task ApplyRejectAsync(
             MyDbContext context, CounterChange change, CancellationToken ct = default)
         {
-            var sticker = await context.stickers.FirstOrDefaultAsync(s => s.sttId == change.sttId, ct);
+            var sticker = await context.Tickets.FirstOrDefaultAsync(s => s.SttId == change.SttId, ct);
             if (sticker == null)
                 throw new KeyNotFoundException("Phiếu không tồn tại");
 
-            sticker.stage = StickerStage.Waiting;
-            change.status = CounterChangeStatus.Rejected;
+            sticker.Stage = StickerStage.Waiting;
+            change.Status = CounterChangeStatus.Rejected;
             await context.SaveChangesAsync(ct);
         }
     }
