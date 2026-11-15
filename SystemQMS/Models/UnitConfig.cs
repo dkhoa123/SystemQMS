@@ -16,6 +16,7 @@ namespace SystemQMS.Models
         public string BackgroundImage { get; set; }
         public string BannerText { get; set; }
         public string ToneColorHex { get; set; }
-        public int? ActiveAudioTemplateId { get; set; }
+        public int? ActiveAudioTemplateId { get; set; } = 1; 
+        public double ReadingSpeed { get; set; } = 1.0;
     }
 }

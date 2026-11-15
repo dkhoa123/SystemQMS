@@ -152,5 +152,56 @@ namespace SystemQMS.Services
             }
             return $"/{folder}/{fileName}";
         }
+        private static readonly double[] AllowedSpeeds = { 0.5, 1.0, 1.5, 2.0 };
+
+        public async Task<AudioConfigResponseDto> GetAudioConfigAsync(int unitId)
+        {
+            var config = await _context.unitConfigs
+                .AsNoTracking()
+                .FirstOrDefaultAsync(c => c.UnitId == unitId);
+
+            return new AudioConfigResponseDto
+            {
+                TemplateId = config?.ActiveAudioTemplateId ?? 1,
+                ReadingSpeed = config?.ReadingSpeed ?? 1.0
+            };
+        }
+
+        public async Task UpdateAudioConfigAsync(int unitId, AudioConfigUpdateDto dto)
+        {
+            if (dto.TemplateId < 1 || dto.TemplateId > 3)
+                throw new ArgumentException("Mẫu câu đọc chỉ chấp nhận giá trị 1, 2 hoặc 3.");
+
+            if (!AllowedSpeeds.Contains(dto.ReadingSpeed))
+                throw new ArgumentException("Tốc độ đọc chỉ chấp nhận: 0.5, 1, 1.5, 2.");
+
+            var config = await _context.unitConfigs.FirstOrDefaultAsync(c => c.UnitId == unitId);
+            if (config == null)
+            {
+                config = new UnitConfig
+                {
+                    UnitId = unitId,
+                    ActiveAudioTemplateId = dto.TemplateId,
+                    ReadingSpeed = dto.ReadingSpeed,
+                    BackgroundImage = "",
+                    BannerText = "",
+                    ToneColorHex = ""
+                };
+                _context.unitConfigs.Add(config);
+            }
+            else
+            {
+                config.ActiveAudioTemplateId = dto.TemplateId;
+                config.ReadingSpeed = dto.ReadingSpeed;
+            }
+
+            await _context.SaveChangesAsync();
+
+            await _hubContext.Clients.Group($"Unit_{unitId}").SendAsync("OnAudioConfigChanged", new
+            {
+                TemplateId = config.ActiveAudioTemplateId,
+                ReadingSpeed = config.ReadingSpeed
+            });
+        }
     }        
 }

@@ -1,5 +1,6 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using SystemQMS.Services.Interface;
+using SystemQMS.ViewModels.AudioDto;
 using SystemQMS.ViewModels.DspDto;
 
 namespace SystemQMS.System.Controllers
@@ -61,5 +62,23 @@ namespace SystemQMS.System.Controllers
             var result = await _dspService.ReportDisplayErrorAndSwitchMaintenanceAsync(deviceId, request);
             return Ok(result);
         }
+        [HttpPost("counters/{counterId:int}/play-audio")]
+        public async Task<ActionResult<AudioCallEventDto>> PlayCallAudio(
+            int counterId,
+            [FromQuery] string sttId,
+            [FromQuery] int repeatCount = 1)
+        {
+            if (string.IsNullOrWhiteSpace(sttId))
+                return BadRequest(new { message = "sttId không được để trống." });
+
+            if (repeatCount < 1) repeatCount = 1;
+            if (repeatCount > 3) repeatCount = 3;
+
+            var result = await _dspService.TriggerCallAudioAsync(GetCurrentUnitId(), counterId, sttId, repeatCount);
+            if (result == null) return NotFound(new { message = "Không tìm thấy quầy." });
+
+            return Ok(result);
+        }
     }
+
 }

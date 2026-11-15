@@ -1,7 +1,10 @@
-﻿using Microsoft.EntityFrameworkCore;
-using SystemQMS.ViewModels.DspDto;
+﻿using Microsoft.AspNetCore.SignalR;
+using Microsoft.EntityFrameworkCore;
+using SystemQMS.Hubs;
 using SystemQMS.Models;
 using SystemQMS.Services.Interface;
+using SystemQMS.ViewModels.AudioDto;
+using SystemQMS.ViewModels.DspDto;
 
 namespace SystemQMS.Services
 {
@@ -10,10 +13,17 @@ namespace SystemQMS.Services
         private const int AutoSwitchSeconds = 15;
 
         private readonly MyDbContext _context;
+        private readonly IAudioMappingSvc _audioMappingSvc;
+        private readonly IHubContext<QmsHub> _hubContext;
 
-        public DspSvc(MyDbContext context)
+        public DspSvc(
+            MyDbContext context,
+            IAudioMappingSvc audioMappingSvc,
+            IHubContext<QmsHub> hubContext)
         {
             _context = context;
+            _audioMappingSvc = audioMappingSvc;
+            _hubContext = hubContext;
         }
 
         public async Task<DisplayBoardPageResponseDto> GetDisplayBoardPageAsync(int page, bool showWaitlist, int unitId)
@@ -323,6 +333,32 @@ namespace SystemQMS.Services
             if (string.IsNullOrWhiteSpace(digits)) return null;
 
             return int.TryParse(digits, out var number) ? number : null;
+        }
+
+        public async Task<AudioCallEventDto?> TriggerCallAudioAsync(int unitId, int counterId, string sttId, int repeatCount = 1)
+        {
+            var counter = await _context.counters
+                .AsNoTracking()
+                .FirstOrDefaultAsync(c => c.id == counterId && c.unitId == unitId);
+
+            if (counter == null) return null;
+
+            var counterCodeForAudio = !string.IsNullOrWhiteSpace(counter.counterId)
+                ? counter.counterId
+                : counter.id.ToString();
+
+            var audioEvent = await _audioMappingSvc.BuildAudioCallEventAsync(
+                unitId,
+                counter.id,
+                counterCodeForAudio,
+                sttId,
+                repeatCount);
+
+            audioEvent.CounterName = counter.counterName ?? counter.counterId;
+
+            await _hubContext.Clients.Group($"Unit_{unitId}").SendAsync("OnCallNumberAudio", audioEvent);
+
+            return audioEvent;
         }
     }
 }

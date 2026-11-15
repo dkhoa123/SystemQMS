@@ -12,8 +12,8 @@ using SystemQMS.Models;
 namespace SystemQMS.Migrations
 {
     [DbContext(typeof(MyDbContext))]
-    [Migration("20261102185448_updateDB")]
-    partial class updateDB
+    [Migration("20261115143740_AddReadingSpeedToUnitConfig")]
+    partial class AddReadingSpeedToUnitConfig
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -153,18 +153,15 @@ namespace SystemQMS.Migrations
             modelBuilder.Entity("SystemQMS.Models.CounterChange", b =>
                 {
                     b.Property<int>("id")
+                        .ValueGeneratedOnAdd()
                         .HasColumnType("integer");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("id"));
 
                     b.Property<int>("counterIdReceive")
                         .HasColumnType("integer");
 
-                    b.Property<int>("counterIdReceiver")
-                        .HasColumnType("integer");
-
                     b.Property<int>("counterIdSender")
-                        .HasColumnType("integer");
-
-                    b.Property<int>("counterSenderId")
                         .HasColumnType("integer");
 
                     b.Property<DateTimeOffset>("createTime")
@@ -181,7 +178,9 @@ namespace SystemQMS.Migrations
 
                     b.HasKey("id");
 
-                    b.HasIndex("counterSenderId");
+                    b.HasIndex("counterIdReceive");
+
+                    b.HasIndex("counterIdSender");
 
                     b.HasIndex("sttId");
 
@@ -590,8 +589,8 @@ namespace SystemQMS.Migrations
 
                     NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("id"));
 
-                    b.Property<DateTimeOffset>("averageTime")
-                        .HasColumnType("timestamp with time zone");
+                    b.Property<int>("averageTime")
+                        .HasColumnType("integer");
 
                     b.Property<string>("description")
                         .HasMaxLength(255)
@@ -635,14 +634,14 @@ namespace SystemQMS.Migrations
 
                     NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("id"));
 
-                    b.Property<DateTimeOffset>("endTime")
-                        .HasColumnType("timestamp with time zone");
+                    b.Property<TimeSpan>("endTime")
+                        .HasColumnType("interval");
 
                     b.Property<int>("serviceId")
                         .HasColumnType("integer");
 
-                    b.Property<DateTimeOffset>("startTime")
-                        .HasColumnType("timestamp with time zone");
+                    b.Property<TimeSpan>("startTime")
+                        .HasColumnType("interval");
 
                     b.Property<string>("wordShift")
                         .IsRequired()
@@ -665,6 +664,9 @@ namespace SystemQMS.Migrations
                     b.Property<int>("counterId")
                         .HasColumnType("integer");
 
+                    b.Property<bool>("isPriority")
+                        .HasColumnType("boolean");
+
                     b.Property<DateTimeOffset>("issuanceTime")
                         .HasColumnType("timestamp with time zone");
 
@@ -680,6 +682,9 @@ namespace SystemQMS.Migrations
                         .IsRequired()
                         .HasMaxLength(100)
                         .HasColumnType("character varying(100)");
+
+                    b.Property<int>("ticketNumber")
+                        .HasColumnType("integer");
 
                     b.Property<int>("unitId")
                         .HasColumnType("integer");
@@ -701,6 +706,47 @@ namespace SystemQMS.Migrations
                     b.HasIndex("userId");
 
                     b.ToTable("stickers");
+                });
+
+            modelBuilder.Entity("SystemQMS.Models.Ticket", b =>
+                {
+                    b.Property<int>("id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("id"));
+
+                    b.Property<int?>("CounterId")
+                        .HasColumnType("integer");
+
+                    b.Property<DateTime>("createdAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("handledBy")
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)");
+
+                    b.Property<int>("serviceId")
+                        .HasColumnType("integer");
+
+                    b.Property<string>("status")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("character varying(50)");
+
+                    b.Property<string>("ticketNumber")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("character varying(50)");
+
+                    b.Property<DateTime?>("usedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.HasKey("id");
+
+                    b.HasIndex("CounterId");
+
+                    b.ToTable("Tickets");
                 });
 
             modelBuilder.Entity("SystemQMS.Models.Unit", b =>
@@ -768,6 +814,9 @@ namespace SystemQMS.Migrations
                     b.Property<string>("BannerText")
                         .IsRequired()
                         .HasColumnType("text");
+
+                    b.Property<double>("ReadingSpeed")
+                        .HasColumnType("double precision");
 
                     b.Property<string>("ToneColorHex")
                         .IsRequired()
@@ -921,16 +970,16 @@ namespace SystemQMS.Migrations
 
             modelBuilder.Entity("SystemQMS.Models.CounterChange", b =>
                 {
-                    b.HasOne("SystemQMS.Models.Counter", "CounterSender")
-                        .WithMany("CounterSend")
-                        .HasForeignKey("counterSenderId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
                     b.HasOne("SystemQMS.Models.Counter", "CounterReceiver")
                         .WithMany("CounterReceive")
-                        .HasForeignKey("id")
-                        .OnDelete(DeleteBehavior.Cascade)
+                        .HasForeignKey("counterIdReceive")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("SystemQMS.Models.Counter", "CounterSender")
+                        .WithMany("CounterSend")
+                        .HasForeignKey("counterIdSender")
+                        .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 
                     b.HasOne("SystemQMS.Models.Sticker", "Sticker")
@@ -1118,6 +1167,16 @@ namespace SystemQMS.Migrations
                     b.Navigation("Unit");
 
                     b.Navigation("Users");
+                });
+
+            modelBuilder.Entity("SystemQMS.Models.Ticket", b =>
+                {
+                    b.HasOne("SystemQMS.Models.Counter", "Counter")
+                        .WithMany()
+                        .HasForeignKey("CounterId")
+                        .OnDelete(DeleteBehavior.SetNull);
+
+                    b.Navigation("Counter");
                 });
 
             modelBuilder.Entity("SystemQMS.Models.UnitConfig", b =>

@@ -72,18 +72,40 @@ public class AudioConfigController : ControllerBase
 
     private int GetCurrentUnitId() => 1;
 
+    [HttpGet]
+    public async Task<IActionResult> GetAudioConfig()
+    {
+        var config = await _configService.GetAudioConfigAsync(GetCurrentUnitId());
+        return Ok(config);
+    }
+
     [HttpPut]
     public async Task<IActionResult> UpdateAudioConfig([FromBody] AudioConfigUpdateDto dto)
     {
-        await _configService.UpdateAudioConfigAsync(GetCurrentUnitId(), dto.TemplateId);
-        return Ok(new { message = "Cập nhật mẫu câu đọc thành công" });
+        try
+        {
+            await _configService.UpdateAudioConfigAsync(GetCurrentUnitId(), dto);
+            return Ok(new { message = "Cập nhật cấu hình audio thành công" });
+        }
+        catch (ArgumentException ex)
+        {
+            return BadRequest(new { message = ex.Message });
+        }
     }
 
     [HttpPost("preview")]
     public IActionResult PreviewAudio([FromBody] AudioPreviewDto request)
     {
-        var audioUrls = _audioService.BuildAudioSequence(request.SampleTicketNumber, request.SampleCounterName, request.TemplateId);
-        return Ok(new { playSequence = audioUrls });
+        var audioUrls = _audioService.BuildAudioSequence(
+            request.SampleTicketNumber,
+            request.SampleCounterName,
+            request.TemplateId);
+
+        return Ok(new
+        {
+            playSequence = audioUrls,
+            readingSpeed = request.ReadingSpeed
+        });
     }
 
     [HttpGet("AudioTemplates")]

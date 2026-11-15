@@ -1,4 +1,5 @@
-﻿using SystemQMS.ViewModels.DspDto;
+﻿using SystemQMS.ViewModels.AudioDto;
+using SystemQMS.ViewModels.DspDto;
 
 namespace SystemQMS.Services.Interface
 {
@@ -9,5 +10,6 @@ namespace SystemQMS.Services.Interface
         Task<CounterScreenStateResponseDto?> GetCounterScreenStateAsync(int counterId, bool showWaitlist);
         Task<CounterMultiCallDisplayResponseDto?> GetCounterMultiCallDisplayAsync(int counterId, int waitingLimit);
         Task<DisplayMaintenanceResponseDto> ReportDisplayErrorAndSwitchMaintenanceAsync(string deviceId, DisplayErrorRequestDto error);
+        Task<AudioCallEventDto?> TriggerCallAudioAsync(int unitId, int counterId, string sttId, int repeatCount = 1);
     }
 }

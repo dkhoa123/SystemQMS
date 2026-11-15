@@ -22,9 +22,4 @@ namespace SystemQMS.ViewModels.AudioDto
         public string ToneColorHex { get; set; }
         public int? EvaluationTemplateId { get; set; }
     }
-
-    public class AudioConfigUpdateDto
-    {
-        public int TemplateId { get; set; }
-    }
 }
