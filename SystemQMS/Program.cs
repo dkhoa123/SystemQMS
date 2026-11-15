@@ -5,6 +5,21 @@ using SystemQMS.Services.Interface;
 
 var builder = WebApplication.CreateBuilder(args);
 
+builder.Services.AddCors(options =>
+{
+    options.AddPolicy("AllowFrontend", policy =>
+    {
+        policy.WithOrigins(
+                "http://localhost:3000",
+                "https://localhost:3000",
+                "http://localhost:5173",
+                "https://localhost:5173"
+              )
+              .AllowAnyHeader()
+              .AllowAnyMethod();
+    });
+});
+
 // Add services to the container.
 IConfiguration configuration = new ConfigurationBuilder().SetBasePath(
     Directory.GetCurrentDirectory()).AddJsonFile("appsettings.json").Build();
@@ -34,6 +49,8 @@ builder.Services.AddScoped<ICounterSvc, CounterSvc>();
 builder.Services.AddScoped<IQueueSvc, QueueSvc>();
 builder.Services.AddScoped<ITransferSvc, TransferSvc>();
 
+builder.Services.AddScoped<IRoleSvc, RoleSvc>();
+
 builder.Services.AddScoped<IGuestSvc, GuestSvc>();
 // Job nền: tự nhận chuyển quầy quá hạn + mở lại quầy qua ngày mới
 builder.Services.AddHostedService<OprBackgroundSvc>();
@@ -53,6 +70,8 @@ if (app.Environment.IsDevelopment())
 }
 
 app.UseHttpsRedirection();
+
+app.UseCors("AllowFrontend");
 
 app.UseAuthorization();
 

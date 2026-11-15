@@ -11,6 +11,9 @@ namespace SystemQMS.Models
         [MaxLength(255)]
         public string? description { get; set; }
 
+        // Lưu danh sách mã quyền dưới dạng chuỗi
+        public string? permissions { get; set; }
+
         public ICollection<Users> Users { get; set; } = new List<Users>();
     }
 }
