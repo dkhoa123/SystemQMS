@@ -7,7 +7,6 @@ using SystemQMS.Services.Interface;
 using SystemQMS.Services.Interfaces;
 
 var builder = WebApplication.CreateBuilder(args);
-
 // Add services to the container.
 IConfiguration configuration = new ConfigurationBuilder().SetBasePath(
     Directory.GetCurrentDirectory()).AddJsonFile("appsettings.json").Build();
@@ -19,7 +18,7 @@ builder.Services.AddControllers();
 
 builder.Services.AddSignalR();
 builder.Services.AddScoped<IConfigSvc, ConfigService>();
-builder.Services.AddScoped<IAudioMappingSvc, AudioMappingService>();
+builder.Services.AddScoped<IAudioMappingSvc, AudioMappingSvc>();
 
 builder.Services.AddScoped<INumberFomularSvc, NumberFomularSvc>();
 builder.Services.AddScoped<IStickerSvc, StickerSvc>();
@@ -74,7 +73,19 @@ builder.Services.AddCors(opt =>
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 
+builder.Services.AddCors(options =>
+{
+    options.AddPolicy("AllowAll",
+        policy =>
+        {
+            policy.WithOrigins("http://localhost:3000", "http://localhost:7058") // Thêm port Frontend của bạn
+                  .AllowAnyHeader()
+                  .AllowAnyMethod();
+        });
+});
+
 var app = builder.Build();
+app.UseCors("AllowReactApp");
 
 app.UseCors("ReactPolicy");
 
@@ -86,6 +97,8 @@ if (app.Environment.IsDevelopment())
 }
 
 app.UseHttpsRedirection();
+
+app.UseCors("AllowAll");
 
 app.UseAuthorization();
 
