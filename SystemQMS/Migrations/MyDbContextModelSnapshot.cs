@@ -876,8 +876,9 @@ namespace SystemQMS.Migrations
                         .HasMaxLength(100)
                         .HasColumnType("character varying(100)");
 
-                    b.Property<int>("TicketNumber")
-                        .HasColumnType("integer");
+                    b.Property<string>("TicketNumber")
+                        .IsRequired()
+                        .HasColumnType("text");
 
                     b.Property<int>("UnitId")
                         .HasColumnType("integer");

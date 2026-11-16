@@ -53,6 +53,20 @@ namespace SystemQMS.System.Controllers
             return Ok(result);
         }
 
+        [HttpPost("counters/{counterId:int}/play-audio")]
+        public async Task<ActionResult<AudioCallEventDto>> PlayAudio(
+            int counterId,
+            [FromQuery] string sttId,
+            [FromQuery] int repeatCount = 1)
+        {
+            if (string.IsNullOrWhiteSpace(sttId))
+                return BadRequest(new { message = "Thiếu mã số thứ tự cần phát âm thanh." });
+
+            var result = await _dspService.BuildAudioCallEventAsync(counterId, sttId, repeatCount);
+            if (result == null) return NotFound(new { message = "Không tìm thấy vé hoặc quầy." });
+            return Ok(result);
+        }
+
         [HttpPost("devices/{deviceId}/display-errors")]
         public async Task<ActionResult<DisplayMaintenanceResponseDto>> ReportDisplayError(
             string deviceId,

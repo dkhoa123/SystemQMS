@@ -560,7 +560,7 @@ namespace SystemQMS.Migrations
                     ServiceId = table.Column<int>(type: "integer", nullable: false),
                     CounterId = table.Column<int>(type: "integer", nullable: false),
                     UserId = table.Column<int>(type: "integer", nullable: false),
-                    TicketNumber = table.Column<int>(type: "integer", nullable: false),
+                    TicketNumber = table.Column<string>(type: "text", nullable: false),
                     IssuanceTime = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: false),
                     UseTime = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: false),
                     CallTime = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: true),

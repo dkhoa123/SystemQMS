@@ -11,10 +11,46 @@ namespace SystemQMS.Services
         private const int AutoSwitchSeconds = 15;
 
         private readonly MyDbContext _context;
+        private readonly IAudioMappingSvc _audioMappingSvc;
 
-        public DspSvc(MyDbContext context)
+        public DspSvc(MyDbContext context, IAudioMappingSvc audioMappingSvc)
         {
             _context = context;
+            _audioMappingSvc = audioMappingSvc;
+        }
+
+        public async Task<AudioCallEventDto?> BuildAudioCallEventAsync(
+            int counterId,
+            string sttId,
+            int repeatCount)
+        {
+            var ticket = await _context.Tickets
+                .AsNoTracking()
+                .FirstOrDefaultAsync(t => t.CounterId == counterId && t.SttId == sttId);
+            if (ticket == null) return null;
+
+            var counter = await _context.Counters
+                .AsNoTracking()
+                .FirstOrDefaultAsync(c => c.Id == counterId);
+            if (counter == null) return null;
+
+            var templateId = await _context.UnitConfigs
+                .AsNoTracking()
+                .Where(c => c.UnitId == counter.UnitId)
+                .Select(c => c.ActiveAudioTemplateId)
+                .FirstOrDefaultAsync() ?? 1;
+
+            return new AudioCallEventDto
+            {
+                CounterId = counter.Id,
+                CounterName = counter.CounterName ?? counter.CounterId,
+                TicketNumber = ticket.TicketNumber,
+                AudioFiles = _audioMappingSvc.BuildAudioSequence(
+                    ticket.TicketNumber,
+                    counter.CounterName ?? counter.CounterId,
+                    templateId),
+                RepeatCount = Math.Clamp(repeatCount, 1, 3)
+            };
         }
 
         public async Task<DisplayBoardPageResponseDto> GetDisplayBoardPageAsync(int page, bool showWaitlist, int unitId)

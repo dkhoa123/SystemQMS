@@ -108,7 +108,7 @@ namespace SystemQMS.Services
                 var lastNumber = await _context.Tickets
                     .Where(st => st.ServiceId == serviceId &&
                                  st.IssuanceTime.Date == today)
-                    .MaxAsync(st => (int?)st.TicketNumber) ?? rule.StartNumber - 1;
+                    .MaxAsync(st => (int?)(object)st.TicketNumber) ?? rule.StartNumber - 1;
 
                 int nextNumber = lastNumber + 1;
 

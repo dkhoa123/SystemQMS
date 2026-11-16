@@ -11,10 +11,10 @@ namespace SystemQMS.Services.Interface
 
         Task<PageResultDto<ServiceHistoryDto>> GetServiceByIdAsync(int id, FilterServiceDto filter);
         
-        //Task<(bool Success, string Message, int? NewId, string? ServiceId)> CreateServiceAsync(CreateServiceDto dto);
-        
+        Task<ServiceResponseDto> CreateServiceAsync(int unitId, CreateServiceDto dto);
+
         Task<ServiceResponseDto> UpdateServiceAsync(int id, UpdateServiceDto dto);
         
-        Task<(bool Success, string Message)> DeleteServiceAsync(int id);
+        Task<(bool Success, string Message)> DeleteServiceAsync(DeleteServiceDto dto);
     }
 }

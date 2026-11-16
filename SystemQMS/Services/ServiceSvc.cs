@@ -1,4 +1,5 @@
 using Microsoft.EntityFrameworkCore;
+using System.Globalization;
 using SystemQMS.Constants;
 using SystemQMS.Models;
 using SystemQMS.Services.Interface;
@@ -280,35 +281,259 @@ namespace SystemQMS.Services
         }
 
         // SVC-02 & SVC-03: Thêm mới dịch vụ
-        //public async Task<(bool Success, string Message, int? NewId, string? ServiceId)> CreateServiceAsync(CreateServiceDto dto)
-        //{
-        //    bool unitExists = await _context.Units.AnyAsync(u => u.UnitId == dto.unitId);
-        //    if (!unitExists)
-        //        return (false, $"Đơn vị có ID = {dto.unitId} không tồn tại trong hệ thống.", null, null);
+        public async Task<ServiceResponseDto> CreateServiceAsync(int unitId, CreateServiceDto dto)
+        {
+            // 1. Kiểm tra đơn vị
+            var unitExists = await _context.Units
+                .AnyAsync(u => u.UnitId == unitId);
 
-        //    bool isDuplicate = await _context.Services.AnyAsync(s =>
-        //        s.UnitId == dto.unitId && s.ServiceId.ToLower() == dto.serviceId.Trim().ToLower());
+            if (!unitExists)
+                throw new Exception("Đơn vị không tồn tại.");
 
-        //    if (isDuplicate)
-        //        return (false, $"Mã dịch vụ '{dto.serviceId}' đã tồn tại trong đơn vị.", null, null);
+            // 2. Kiểm tra mã dịch vụ trùng
+            var serviceCodeExists = await _context.Services
+                .AnyAsync(s => s.ServiceId == dto.serviceCode && s.UnitId == unitId);
 
-        //    var service = new Service
-        //    {
-        //        UnitId = dto.unitId,
-        //        ServiceId = dto.serviceId.Trim(),
-        //        ServiceName = dto.serviceName.Trim(),
-        //        Description = dto.description,
-        //        Image = dto.image,
-        //        IsActive = dto.isActive,
-        //        SharingLink = dto.sharingLink,
-        //        AverageTime = dto.averageTime
-        //    };
+            if (serviceCodeExists)
+                throw new Exception("Mã dịch vụ đã tồn tại.");
 
-        //    _context.Services.Add(service);
-        //    await _context.SaveChangesAsync();
+            // 3. Chuẩn hóa dữ liệu
+            var status = string.IsNullOrWhiteSpace(dto.status)
+                ? "ACTIVE"
+                : dto.status.Trim();
 
-        //    return (true, "Thêm dịch vụ thành công.", service.Id, service.ServiceId);
-        //}
+            byte[]? imageBytes = null;
+
+            if (!string.IsNullOrWhiteSpace(dto.imageUrl))
+            {
+                // Hỗ trợ cả data:image/...;base64,xxxx và chuỗi base64 thuần
+                var base64 = dto.imageUrl.Contains(',')
+                    ? dto.imageUrl[(dto.imageUrl.IndexOf(',') + 1)..]
+                    : dto.imageUrl;
+
+                try
+                {
+                    imageBytes = Convert.FromBase64String(base64);
+                }
+                catch (FormatException)
+                {
+                    throw new Exception("Ảnh không đúng định dạng Base64.");
+                }
+            }
+
+            // 4. Kiểm tra và lấy danh sách quầy
+            var requestedCounterIds = (dto.counterIds ?? new List<string>())
+                .Where(id => !string.IsNullOrWhiteSpace(id))
+                .Distinct()
+                .ToList();
+
+            var counters = await _context.Counters
+                .Where(c => requestedCounterIds.Contains(c.CounterId)
+                            && c.UnitId == unitId)
+                .ToListAsync();
+
+            if (counters.Count != requestedCounterIds.Count)
+                throw new Exception("Có quầy không tồn tại hoặc không thuộc đơn vị.");
+
+            // 5. Chuẩn bị danh sách ca làm việc từ shiftIds
+            var requestedShiftIds = (dto.schedule ?? new Dictionary<string, ServiceScheduleDayDto>())
+                .Values
+                .Where(day => day.shiftIds != null)
+                .SelectMany(day => day.shiftIds!)
+                .Where(id => !string.IsNullOrWhiteSpace(id))
+                .Distinct()
+                .ToList();
+
+            // Tìm ca làm việc theo mã WordShift
+            var existingShifts = await _context.Set<SheduleActive>()
+                .Where(s => requestedShiftIds.Contains(s.WordShift))
+                .ToListAsync();
+
+            // Kiểm tra mã ca có tồn tại không
+            if (existingShifts.Count != requestedShiftIds.Count)
+            {
+                var foundCodes = existingShifts
+                    .Select(s => s.WordShift)
+                    .ToHashSet();
+
+                var missingCodes = requestedShiftIds
+                    .Where(id => !foundCodes.Contains(id))
+                    .ToList();
+
+                throw new Exception(
+                    $"Không tìm thấy mã ca làm việc: {string.Join(", ", missingCodes)}");
+            }
+
+            // Tạo Dictionary để tra cứu mã ca -> ID database
+            var shiftMap = existingShifts.ToDictionary(
+                s => s.WordShift,
+                s => s.Id
+            );
+
+
+            // 6. Bắt đầu transaction để lưu đồng bộ
+            await using var transaction =
+                await _context.Database.BeginTransactionAsync();
+
+            try
+            {
+                // 7. Tạo Service
+                var service = new Service
+                {
+                    UnitId = unitId,
+                    ServiceId = dto.serviceCode.Trim(),
+                    ServiceName = dto.serviceName.Trim(),
+                    Description = dto.description,
+                    Status = status,
+                    IsActive = status.Equals("ACTIVE",
+                        StringComparison.OrdinalIgnoreCase),
+                    AssignmentMethod = string.IsNullOrWhiteSpace(dto.assignmentMethod)
+                        ? "ASSIGN_ON_ISSUE"
+                        : dto.assignmentMethod.Trim(),
+                    CreatedAt = DateTime.UtcNow,
+                    Image = imageBytes,
+                    AverageTime = 0
+                };
+
+                // Gán quan hệ nhiều-nhiều với Counter
+                foreach (var counter in counters)
+                {
+                    service.Counters.Add(counter);
+                }
+
+                _context.Services.Add(service);
+
+                // Lưu lần đầu để lấy service.Id
+                await _context.SaveChangesAsync();
+
+                // 8. Lưu lịch ServiceSchedule và quan hệ ServiceScheduleShift
+                if (dto.schedule != null)
+                {
+                    foreach (var item in dto.schedule)
+                    {
+                        var dayName = item.Key;
+                        var dayDto = item.Value;
+
+                        if (dayName.Length > 20)
+                            throw new Exception($"Tên thứ '{dayName}' vượt quá 20 ký tự.");
+
+                        TimeSpan? startTime = null;
+                        TimeSpan? endTime = null;
+
+                        if (!string.IsNullOrWhiteSpace(dayDto.startTime))
+                        {
+                            if (!TimeSpan.TryParse(
+                                dayDto.startTime,
+                                CultureInfo.InvariantCulture,
+                                out var parsedStart))
+                            {
+                                throw new Exception(
+                                    $"Giờ bắt đầu của {dayName} không hợp lệ.");
+                            }
+
+                            startTime = parsedStart;
+                        }
+
+                        if (!string.IsNullOrWhiteSpace(dayDto.endTime))
+                        {
+                            if (!TimeSpan.TryParse(
+                                dayDto.endTime,
+                                CultureInfo.InvariantCulture,
+                                out var parsedEnd))
+                            {
+                                throw new Exception(
+                                    $"Giờ kết thúc của {dayName} không hợp lệ.");
+                            }
+
+                            endTime = parsedEnd;
+                        }
+
+                        if (startTime.HasValue && endTime.HasValue
+                            && startTime.Value >= endTime.Value)
+                        {
+                            throw new Exception(
+                                $"Giờ bắt đầu phải nhỏ hơn giờ kết thúc ở {dayName}.");
+                        }
+
+                        var schedule = new ServiceSchedule
+                        {
+                            ServiceId = service.Id,
+                            DayOfWeek = dayName,
+                            Enabled = dayDto.enabled,
+                            StartTime = startTime,
+                            EndTime = endTime
+                        };
+
+                        // Liên kết các ca làm việc qua bảng ServiceScheduleShift
+                        if (dayDto.shiftIds != null)
+                        {
+                            foreach (var shiftCode in dayDto.shiftIds.Distinct())
+                            {
+                                schedule.Shifts.Add(new ServiceScheduleShift
+                                {
+                                    SheduleActiveId = shiftMap[shiftCode]
+                                });
+                            }
+                        }
+
+                        _context.Set<ServiceSchedule>().Add(schedule);
+                    }
+                }
+
+                await _context.SaveChangesAsync();
+
+                // 9. Đọc lại dữ liệu thực tế từ database
+                var savedService = await _context.Services
+                    .AsNoTracking()
+                    .Include(s => s.Counters)
+                    .Include(s => s.Schedules)
+                        .ThenInclude(s => s.Shifts)
+                    .FirstOrDefaultAsync(s => s.Id == service.Id);
+
+                if (savedService == null)
+                    throw new Exception("Không tìm thấy dịch vụ sau khi tạo.");
+
+                // 10. Map dữ liệu đã lưu sang Response DTO
+                var response = new ServiceResponseDto
+                {
+                    id = savedService.Id,
+                    serviceCode = savedService.ServiceId,
+                    serviceName = savedService.ServiceName,
+
+                    counterIds = savedService.Counters
+                        .Select(c => c.CounterId)
+                        .ToList(),
+
+                    status = savedService.Status,
+                    createdAt = savedService.CreatedAt,
+                    description = savedService.Description,
+                    assignmentMethod = savedService.AssignmentMethod,
+
+                    schedule = savedService.Schedules.ToDictionary(
+                        s => s.DayOfWeek,
+                        s => new ServiceScheduleDayDto
+                        {
+                            enabled = s.Enabled,
+                            startTime = s.StartTime?.ToString(@"hh\:mm"),
+                            endTime = s.EndTime?.ToString(@"hh\:mm"),
+                            shiftIds = s.Shifts
+                                .Select(sh => sh.SheduleActiveId.ToString())
+                                .ToList()
+                        }),
+
+                    imageUrl = savedService.Image
+                };
+
+                await transaction.CommitAsync();
+
+                return response;
+            }
+            catch
+            {
+                await transaction.RollbackAsync();
+                throw;
+            }
+        }
 
         // SVC-04: Cập nhật thông tin dịch vụ
         public async Task<ServiceResponseDto> UpdateServiceAsync(int id, UpdateServiceDto dto)
@@ -428,20 +653,24 @@ namespace SystemQMS.Services
         }
 
         // SVC-06: Xóa dịch vụ (Bảo vệ toàn vẹn lịch sử vé)
-        public async Task<(bool Success, string Message)> DeleteServiceAsync(int id)
+        public async Task<(bool Success, string Message)> DeleteServiceAsync(DeleteServiceDto dto)
         {
-            var service = await _context.Services.FirstOrDefaultAsync(s => s.Id == id);
-            if (service == null)
-                return (false, $"Không tìm thấy dịch vụ có ID = {id}");
+            foreach (var serviceId in dto.ServiceIds)
+            {
+                var result = await _context.Services.FirstOrDefaultAsync(s => s.Id == serviceId);
+                 if(result == null)
+                return (false, $"Không tìm thấy dịch vụ có ID = {serviceId}");
 
-            bool hasTickets = await _context.Tickets.AnyAsync(t => t.ServiceId == service.Id);
-            bool hasBookings = await _context.Bookings.AnyAsync(b => b.ServiceId == service.Id);
+                bool hasTickets = await _context.Tickets.AnyAsync(t => t.ServiceId == result.Id);
+                bool hasBookings = await _context.Bookings.AnyAsync(b => b.ServiceId == result.Id);
 
-            if (hasTickets || hasBookings)
-                return (false, "Không thể xóa dịch vụ này vì đã có phiếu STT hoặc lịch hẹn phát sinh. Hãy chuyển trạng thái sang 'Ngưng hoạt động'.");
+                if (hasTickets || hasBookings)
+                    return (false, "Không thể xóa dịch vụ này vì đã có phiếu STT hoặc lịch hẹn phát sinh. Hãy chuyển trạng thái sang 'Ngưng hoạt động'.");
 
-            _context.Services.Remove(service);
+                _context.Services.Remove(result);
+            }
             await _context.SaveChangesAsync();
+
             return (true, "Xóa dịch vụ thành công.");
         }
 

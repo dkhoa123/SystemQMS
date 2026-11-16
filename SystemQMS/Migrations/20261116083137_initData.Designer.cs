@@ -12,7 +12,7 @@ using SystemQMS.Models;
 namespace SystemQMS.Migrations
 {
     [DbContext(typeof(MyDbContext))]
-    [Migration("20261115080050_initData")]
+    [Migration("20261116083137_initData")]
     partial class initData
     {
         /// <inheritdoc />
@@ -879,8 +879,9 @@ namespace SystemQMS.Migrations
                         .HasMaxLength(100)
                         .HasColumnType("character varying(100)");
 
-                    b.Property<int>("TicketNumber")
-                        .HasColumnType("integer");
+                    b.Property<string>("TicketNumber")
+                        .IsRequired()
+                        .HasColumnType("text");
 
                     b.Property<int>("UnitId")
                         .HasColumnType("integer");

@@ -11,8 +11,9 @@ namespace SystemQMS.ViewModels.ServiceDto
         public string? description { get; set; }
         public string? status { get; set; } = "ACTIVE";
         public string? assignmentMethod { get; set; }
-        public Dictionary<string, ServiceScheduleDayDto> schedule { get; set; }
-            = new();
+        public List<string> counterIds { get; set; } = new();
+
+        public Dictionary<string, ServiceScheduleDayDto> schedule { get; set; } = new();
 
         public string? imageUrl { get; set; }
     }

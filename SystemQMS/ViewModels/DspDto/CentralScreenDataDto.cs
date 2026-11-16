@@ -40,6 +40,16 @@
         public string Message { get; set; } = string.Empty;
     }
 
+    public class AudioCallEventDto
+    {
+        public int CounterId { get; set; }
+        public string CounterName { get; set; } = string.Empty;
+        public string TicketNumber { get; set; } = string.Empty;
+        public List<string> AudioFiles { get; set; } = new();
+        public double ReadingSpeed { get; set; } = 1.0;
+        public int RepeatCount { get; set; } = 1;
+    }
+
     public class DisplayMaintenanceResponseDto
     {
         public string DeviceId { get; set; } = string.Empty;

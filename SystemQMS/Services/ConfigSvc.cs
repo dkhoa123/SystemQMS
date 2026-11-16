@@ -61,7 +61,7 @@ namespace SystemQMS.Services
 
             if (!string.IsNullOrEmpty(dto.UnitName))
             {
-                unit.unitName = dto.UnitName;
+                unit.UnitName = dto.UnitName;
             }
             if (dto.BannerText != null) unit.UnitConfig.BannerText = dto.BannerText;
             if (dto.ToneColorHex != null) unit.UnitConfig.ToneColorHex = dto.ToneColorHex;

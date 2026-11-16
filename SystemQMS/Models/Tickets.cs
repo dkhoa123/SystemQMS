@@ -13,7 +13,7 @@ namespace SystemQMS.Models
         public int CounterId { get; set; }
         public int UserId { get; set; }
 
-        public int TicketNumber { get; set; }
+        public string TicketNumber { get; set; }
         public DateTimeOffset IssuanceTime { get; set; }
         public DateTimeOffset UseTime { get; set; }
 

@@ -48,27 +48,18 @@ namespace SystemQMS.Controllers
 
         // SVC-02 & SVC-03: Thêm mới dịch vụ, thiết lập chế độ chia quầy & thời gian xử lý
 
-        //[HttpPost]
-        //public async Task<IActionResult> CreateService([FromBody] CreateServiceDto dto)
-        //{
-        //    if (!ModelState.IsValid)
-        //    {
-        //        return BadRequest(ModelState);
-        //    }
+        [HttpPost("create")]
+        public async Task<IActionResult> CreateService([FromBody] CreateServiceDto dto)
+        {
+            //var unitIdClaim = User.FindFirst("unitId")?.Value;
 
-        //    var result = await _serviceSvc.CreateServiceAsync(dto);
-        //    if (!result.Success)
-        //    {
-        //        return BadRequest(new { message = result.Message });
-        //    }
+            //if (!int.TryParse(unitIdClaim, out var unitId))
+            //    return Unauthorized("Không tìm thấy thông tin đơn vị trong tài khoản.");
 
-        //    return CreatedAtAction(nameof(GetServiceById), new { id = result.NewId }, new 
-        //    { 
-        //        id = result.NewId, 
-        //        serviceId = result.ServiceId, 
-        //        message = result.Message 
-        //    });
-        //}
+            var result = await _serviceSvc.CreateServiceAsync( 1, dto);
+
+            return Ok(result);
+        }
 
 
         // SVC-04: Cập nhật dịch vụ (Sửa toàn bộ trừ mã dịch vụ serviceId)
@@ -76,25 +67,16 @@ namespace SystemQMS.Controllers
         [HttpPut("{id:int}/edit")]
         public async Task<IActionResult> UpdateService(int id,[FromBody] UpdateServiceDto dto)
         {
-            Console.WriteLine("===== UPDATE SERVICE =====");
-            Console.WriteLine($"ID: {id}");
-            Console.WriteLine($"Code: {dto.serviceCode}");
-            Console.WriteLine($"Name: {dto.serviceName}");
-            Console.WriteLine($"Description: {dto.description}");
-            Console.WriteLine($"Status: {dto.status}");
-            Console.WriteLine($"Assignment: {dto.assignmentMethod}");
-
             var result = await _serviceSvc.UpdateServiceAsync(id, dto);
             return Ok(result);
         }
 
 
         // SVC-06: Xóa dịch vụ (Kiểm tra ràng buộc STT trước khi xóa)
-
-        [HttpDelete("{id:int}")]
-        public async Task<IActionResult> DeleteService(int id)
+        [HttpDelete("delete")]
+        public async Task<IActionResult> DeleteService([FromBody] DeleteServiceDto dto)
         {
-            var result = await _serviceSvc.DeleteServiceAsync(id);
+            var result = await _serviceSvc.DeleteServiceAsync(dto);
             if (!result.Success)
             {
                 return BadRequest(new { message = result.Message });

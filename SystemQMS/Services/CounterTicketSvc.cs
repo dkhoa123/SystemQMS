@@ -53,7 +53,7 @@ namespace SystemQMS.Services
             counter.Status = CounterStatus.Serving;
             await _context.SaveChangesAsync();
 
-            var (templateId, audioSequence) = await BuildAudioSequenceAsync(counter, ticket.SttId);
+            var (templateId, audioSequence) = await BuildAudioSequenceAsync(counter, ticket.TicketNumber);
             var response = MapToDto(ticket, counter.CounterName, null);
             response.audioTemplateId = templateId;
             response.audioSequence = audioSequence;
@@ -102,7 +102,7 @@ namespace SystemQMS.Services
                 foreach (var t in tickets)
                 {
                     var mapped = MapToDto(t, counter.CounterName, null);
-                    var (templateId, audioSequence) = await BuildAudioSequenceAsync(counter, t.SttId);
+                    var (templateId, audioSequence) = await BuildAudioSequenceAsync(counter, t.TicketNumber);
                     mapped.audioTemplateId = templateId;
                     mapped.audioSequence = audioSequence;
                     response.Add(mapped);
@@ -199,7 +199,7 @@ namespace SystemQMS.Services
             var response = MapToDto(ticket, counter?.CounterName, null);
             if (counter != null)
             {
-                var (templateId, audioSequence) = await BuildAudioSequenceAsync(counter, ticket.SttId);
+                var (templateId, audioSequence) = await BuildAudioSequenceAsync(counter, ticket.TicketNumber);
                 response.audioTemplateId = templateId;
                 response.audioSequence = audioSequence;
             }
@@ -207,7 +207,7 @@ namespace SystemQMS.Services
             return (true, $"Đang gọi lại số phiếu {ticket.SttId}.", response);
         }
 
-        private async Task<(int templateId, List<string> audioSequence)> BuildAudioSequenceAsync(Counter counter, string sttId)
+        private async Task<(int templateId, List<string> audioSequence)> BuildAudioSequenceAsync(Counter counter, string ticketNumber)
         {
             var configuredTemplateId = await _context.UnitConfigs
                 .AsNoTracking()
@@ -216,7 +216,7 @@ namespace SystemQMS.Services
                 .FirstOrDefaultAsync();
 
             var templateId = configuredTemplateId ?? 1;
-            var sequence = _audioMappingSvc.BuildAudioSequence(sttId, counter.CounterName ?? counter.CounterId, templateId);
+            var sequence = _audioMappingSvc.BuildAudioSequence(ticketNumber, counter.CounterName ?? counter.CounterId, templateId);
             return (templateId, sequence);
         }
 
