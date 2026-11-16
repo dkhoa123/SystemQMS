@@ -12,7 +12,7 @@ using SystemQMS.Models;
 namespace SystemQMS.Migrations
 {
     [DbContext(typeof(MyDbContext))]
-    [Migration("20261113134440_initData")]
+    [Migration("20261115080050_initData")]
     partial class initData
     {
         /// <inheritdoc />
@@ -79,6 +79,9 @@ namespace SystemQMS.Migrations
                     NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
 
                     b.Property<DateTimeOffset>("Date")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<DateTimeOffset?>("ExpiresAt")
                         .HasColumnType("timestamp with time zone");
 
                     b.Property<int>("GuestId")
@@ -480,6 +483,56 @@ namespace SystemQMS.Migrations
                     b.ToTable("Histories");
                 });
 
+            modelBuilder.Entity("SystemQMS.Models.News", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+
+                    b.Property<string>("AttachmentUrl")
+                        .IsRequired()
+                        .HasMaxLength(255)
+                        .HasColumnType("character varying(255)");
+
+                    b.Property<string>("Content")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<int>("CreatedById")
+                        .HasColumnType("integer");
+
+                    b.Property<DateTimeOffset>("PublishDate")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("Status")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)");
+
+                    b.Property<string>("Title")
+                        .IsRequired()
+                        .HasMaxLength(255)
+                        .HasColumnType("character varying(255)");
+
+                    b.Property<int>("UnitId")
+                        .HasColumnType("integer");
+
+                    b.Property<int?>("UpdatedById")
+                        .HasColumnType("integer");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("CreatedById");
+
+                    b.HasIndex("UnitId");
+
+                    b.HasIndex("UpdatedById");
+
+                    b.ToTable("News");
+                });
+
             modelBuilder.Entity("SystemQMS.Models.Notification", b =>
                 {
                     b.Property<int>("Id")
@@ -487,6 +540,11 @@ namespace SystemQMS.Migrations
                         .HasColumnType("integer");
 
                     NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+
+                    b.Property<string>("AttachmentUrl")
+                        .IsRequired()
+                        .HasMaxLength(255)
+                        .HasColumnType("character varying(255)");
 
                     b.Property<string>("Content")
                         .IsRequired()
@@ -608,8 +666,16 @@ namespace SystemQMS.Migrations
 
                     NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
 
+                    b.Property<string>("AssignmentMethod")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("character varying(50)");
+
                     b.Property<int>("AverageTime")
                         .HasColumnType("integer");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("timestamp with time zone");
 
                     b.Property<string>("Description")
                         .HasMaxLength(255)
@@ -632,8 +698,12 @@ namespace SystemQMS.Migrations
                         .HasColumnType("character varying(100)");
 
                     b.Property<string>("SharingLink")
-                        .IsRequired()
-                        .HasColumnType("text");
+                        .HasMaxLength(255)
+                        .HasColumnType("character varying(255)");
+
+                    b.Property<string>("Status")
+                        .HasMaxLength(50)
+                        .HasColumnType("character varying(50)");
 
                     b.Property<int>("UnitId")
                         .HasColumnType("integer");
@@ -646,6 +716,63 @@ namespace SystemQMS.Migrations
                     b.HasIndex("UnitId");
 
                     b.ToTable("Services");
+                });
+
+            modelBuilder.Entity("SystemQMS.Models.ServiceSchedule", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+
+                    b.Property<string>("DayOfWeek")
+                        .IsRequired()
+                        .HasMaxLength(20)
+                        .HasColumnType("character varying(20)");
+
+                    b.Property<bool>("Enabled")
+                        .HasColumnType("boolean");
+
+                    b.Property<TimeSpan?>("EndTime")
+                        .HasColumnType("interval");
+
+                    b.Property<int>("ServiceId")
+                        .HasColumnType("integer");
+
+                    b.Property<TimeSpan?>("StartTime")
+                        .HasColumnType("interval");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("ServiceId", "DayOfWeek")
+                        .IsUnique();
+
+                    b.ToTable("ServiceSchedules");
+                });
+
+            modelBuilder.Entity("SystemQMS.Models.ServiceScheduleShift", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+
+                    b.Property<int>("ScheduleId")
+                        .HasColumnType("integer");
+
+                    b.Property<int>("SheduleActiveId")
+                        .HasColumnType("integer");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("SheduleActiveId");
+
+                    b.HasIndex("ScheduleId", "SheduleActiveId")
+                        .IsUnique();
+
+                    b.ToTable("ServiceScheduleShifts");
                 });
 
             modelBuilder.Entity("SystemQMS.Models.SheduleActive", b =>
@@ -678,6 +805,47 @@ namespace SystemQMS.Migrations
                 });
 
             modelBuilder.Entity("SystemQMS.Models.Ticket", b =>
+                {
+                    b.Property<int>("id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("id"));
+
+                    b.Property<int?>("CounterId")
+                        .HasColumnType("integer");
+
+                    b.Property<DateTime>("createdAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("handledBy")
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)");
+
+                    b.Property<int>("serviceId")
+                        .HasColumnType("integer");
+
+                    b.Property<string>("status")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("character varying(50)");
+
+                    b.Property<string>("ticketNumber")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("character varying(50)");
+
+                    b.Property<DateTime?>("usedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.HasKey("id");
+
+                    b.HasIndex("CounterId");
+
+                    b.ToTable("Ticket");
+                });
+
+            modelBuilder.Entity("SystemQMS.Models.Tickets", b =>
                 {
                     b.Property<string>("SttId")
                         .HasMaxLength(100)
@@ -794,6 +962,17 @@ namespace SystemQMS.Migrations
                     b.Property<int?>("ActiveEvaluationTemplateId")
                         .HasColumnType("integer");
 
+                    b.Property<int?>("AdvanceBookingDays")
+                        .HasColumnType("integer");
+
+                    b.Property<bool>("AllowImmediateBooking")
+                        .HasColumnType("boolean");
+
+                    b.Property<string>("AppliedScope")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)");
+
                     b.Property<string>("BackgroundImage")
                         .IsRequired()
                         .HasColumnType("text");
@@ -802,12 +981,50 @@ namespace SystemQMS.Migrations
                         .IsRequired()
                         .HasColumnType("text");
 
+                    b.Property<string>("BookingMethod")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)");
+
+                    b.Property<string>("DescriptionHome")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<string>("Favicon")
+                        .IsRequired()
+                        .HasMaxLength(255)
+                        .HasColumnType("character varying(255)");
+
+                    b.Property<int?>("MaxBookingsPerUserDaily")
+                        .HasColumnType("integer");
+
+                    b.Property<int?>("MaxGuestsPerSlot")
+                        .HasColumnType("integer");
+
+                    b.Property<string>("Slogan")
+                        .IsRequired()
+                        .HasMaxLength(255)
+                        .HasColumnType("character varying(255)");
+
+                    b.Property<int?>("SlotDuration")
+                        .HasColumnType("integer");
+
+                    b.Property<string>("TitleHome")
+                        .IsRequired()
+                        .HasMaxLength(255)
+                        .HasColumnType("character varying(255)");
+
                     b.Property<string>("ToneColorHex")
                         .IsRequired()
                         .HasColumnType("text");
 
                     b.Property<int>("UnitId")
                         .HasColumnType("integer");
+
+                    b.Property<string>("Website")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)");
 
                     b.HasKey("Id");
 
@@ -932,7 +1149,7 @@ namespace SystemQMS.Migrations
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
-                    b.HasOne("SystemQMS.Models.Ticket", "Ticket")
+                    b.HasOne("SystemQMS.Models.Tickets", "Ticket")
                         .WithMany("Bookings")
                         .HasForeignKey("SttId")
                         .OnDelete(DeleteBehavior.Cascade)
@@ -970,7 +1187,7 @@ namespace SystemQMS.Migrations
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 
-                    b.HasOne("SystemQMS.Models.Ticket", "Tickets")
+                    b.HasOne("SystemQMS.Models.Tickets", "Tickets")
                         .WithMany("CounterChanges")
                         .HasForeignKey("SttId")
                         .OnDelete(DeleteBehavior.Cascade)
@@ -1027,7 +1244,7 @@ namespace SystemQMS.Migrations
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
-                    b.HasOne("SystemQMS.Models.Ticket", "Tickets")
+                    b.HasOne("SystemQMS.Models.Tickets", "Tickets")
                         .WithMany("Evaluations")
                         .HasForeignKey("SttId")
                         .OnDelete(DeleteBehavior.Cascade)
@@ -1089,6 +1306,32 @@ namespace SystemQMS.Migrations
                     b.Navigation("Notification");
                 });
 
+            modelBuilder.Entity("SystemQMS.Models.News", b =>
+                {
+                    b.HasOne("SystemQMS.Models.Users", "CreatedBy")
+                        .WithMany("CreatedNews")
+                        .HasForeignKey("CreatedById")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("SystemQMS.Models.Unit", "Unit")
+                        .WithMany("News")
+                        .HasForeignKey("UnitId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("SystemQMS.Models.Users", "UpdatedBy")
+                        .WithMany("UpdatedNews")
+                        .HasForeignKey("UpdatedById")
+                        .OnDelete(DeleteBehavior.Restrict);
+
+                    b.Navigation("CreatedBy");
+
+                    b.Navigation("Unit");
+
+                    b.Navigation("UpdatedBy");
+                });
+
             modelBuilder.Entity("SystemQMS.Models.Notification", b =>
                 {
                     b.HasOne("SystemQMS.Models.Unit", "Unit")
@@ -1122,6 +1365,36 @@ namespace SystemQMS.Migrations
                     b.Navigation("Unit");
                 });
 
+            modelBuilder.Entity("SystemQMS.Models.ServiceSchedule", b =>
+                {
+                    b.HasOne("SystemQMS.Models.Service", "Service")
+                        .WithMany("Schedules")
+                        .HasForeignKey("ServiceId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Service");
+                });
+
+            modelBuilder.Entity("SystemQMS.Models.ServiceScheduleShift", b =>
+                {
+                    b.HasOne("SystemQMS.Models.ServiceSchedule", "Schedule")
+                        .WithMany("Shifts")
+                        .HasForeignKey("ScheduleId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("SystemQMS.Models.SheduleActive", "SheduleActive")
+                        .WithMany()
+                        .HasForeignKey("SheduleActiveId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Schedule");
+
+                    b.Navigation("SheduleActive");
+                });
+
             modelBuilder.Entity("SystemQMS.Models.SheduleActive", b =>
                 {
                     b.HasOne("SystemQMS.Models.Service", "Service")
@@ -1134,6 +1407,16 @@ namespace SystemQMS.Migrations
                 });
 
             modelBuilder.Entity("SystemQMS.Models.Ticket", b =>
+                {
+                    b.HasOne("SystemQMS.Models.Counter", "Counter")
+                        .WithMany()
+                        .HasForeignKey("CounterId")
+                        .OnDelete(DeleteBehavior.SetNull);
+
+                    b.Navigation("Counter");
+                });
+
+            modelBuilder.Entity("SystemQMS.Models.Tickets", b =>
                 {
                     b.HasOne("SystemQMS.Models.Counter", "Counter")
                         .WithMany("Tickets")
@@ -1251,12 +1534,19 @@ namespace SystemQMS.Migrations
 
                     b.Navigation("NumberFomulars");
 
+                    b.Navigation("Schedules");
+
                     b.Navigation("SheduleActives");
 
                     b.Navigation("Tickets");
                 });
 
-            modelBuilder.Entity("SystemQMS.Models.Ticket", b =>
+            modelBuilder.Entity("SystemQMS.Models.ServiceSchedule", b =>
+                {
+                    b.Navigation("Shifts");
+                });
+
+            modelBuilder.Entity("SystemQMS.Models.Tickets", b =>
                 {
                     b.Navigation("Bookings");
 
@@ -1279,6 +1569,8 @@ namespace SystemQMS.Migrations
 
                     b.Navigation("Guests");
 
+                    b.Navigation("News");
+
                     b.Navigation("Notifications");
 
                     b.Navigation("Services");
@@ -1293,9 +1585,13 @@ namespace SystemQMS.Migrations
 
             modelBuilder.Entity("SystemQMS.Models.Users", b =>
                 {
+                    b.Navigation("CreatedNews");
+
                     b.Navigation("Diaries");
 
                     b.Navigation("Tickets");
+
+                    b.Navigation("UpdatedNews");
                 });
 #pragma warning restore 612, 618
         }

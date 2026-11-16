@@ -12,11 +12,18 @@ namespace SystemQMS.Models
         public string ServiceId { get; set; }
         [MaxLength(100)]
         public string ServiceName { get; set; }
+        public DateTime CreatedAt { get; set; }
+
+        [MaxLength(50)]
+        public string AssignmentMethod { get; set; }
         [MaxLength(255)]
         public string? Description { get; set; }
         public byte[]? Image { get; set; }
         public bool IsActive { get; set; }
-        public string SharingLink { get; set; }
+        [MaxLength(50)]
+        public string? Status { get; set; }
+        [MaxLength(255)]
+        public string? SharingLink { get; set; }
         public int AverageTime { get; set; }
 
         public ICollection<Counter> Counters { get; set; } = new List<Counter>();
@@ -26,6 +33,7 @@ namespace SystemQMS.Models
         public ICollection<Tickets> Tickets { get; set; } = new List<Tickets>();
         public ICollection<Evaluation> Evaluations { get; set; } = new List<Evaluation>();
         public ICollection<SheduleActive> SheduleActives { get; set; } = new List<SheduleActive>();
+        public ICollection<ServiceSchedule> Schedules { get; set; } = new List<ServiceSchedule>();
 
         public ICollection<NumberFomular> NumberFomulars { get; set; } = new List<NumberFomular>();
         public ICollection<Booking> Bookings { get; set; } = new List<Booking>();

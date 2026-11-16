@@ -163,7 +163,8 @@ namespace SystemQMS.Migrations
                     Content = table.Column<string>(type: "character varying(255)", maxLength: 255, nullable: false),
                     Form = table.Column<string>(type: "character varying(100)", maxLength: 100, nullable: false),
                     TimeSend = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: false),
-                    Status = table.Column<string>(type: "character varying(100)", maxLength: 100, nullable: false)
+                    Status = table.Column<string>(type: "character varying(100)", maxLength: 100, nullable: false),
+                    AttachmentUrl = table.Column<string>(type: "character varying(255)", maxLength: 255, nullable: false)
                 },
                 constraints: table =>
                 {
@@ -185,10 +186,13 @@ namespace SystemQMS.Migrations
                     UnitId = table.Column<int>(type: "integer", nullable: false),
                     ServiceId = table.Column<string>(type: "character varying(100)", maxLength: 100, nullable: false),
                     ServiceName = table.Column<string>(type: "character varying(100)", maxLength: 100, nullable: false),
+                    CreatedAt = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
+                    AssignmentMethod = table.Column<string>(type: "character varying(50)", maxLength: 50, nullable: false),
                     Description = table.Column<string>(type: "character varying(255)", maxLength: 255, nullable: true),
                     Image = table.Column<byte[]>(type: "bytea", nullable: true),
                     IsActive = table.Column<bool>(type: "boolean", nullable: false),
-                    SharingLink = table.Column<string>(type: "text", nullable: false),
+                    Status = table.Column<string>(type: "character varying(50)", maxLength: 50, nullable: true),
+                    SharingLink = table.Column<string>(type: "character varying(255)", maxLength: 255, nullable: true),
                     AverageTime = table.Column<int>(type: "integer", nullable: false)
                 },
                 constraints: table =>
@@ -200,6 +204,31 @@ namespace SystemQMS.Migrations
                         principalTable: "Units",
                         principalColumn: "UnitId",
                         onDelete: ReferentialAction.Cascade);
+                });
+
+            migrationBuilder.CreateTable(
+                name: "Ticket",
+                columns: table => new
+                {
+                    id = table.Column<int>(type: "integer", nullable: false)
+                        .Annotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.IdentityByDefaultColumn),
+                    ticketNumber = table.Column<string>(type: "character varying(50)", maxLength: 50, nullable: false),
+                    status = table.Column<string>(type: "character varying(50)", maxLength: 50, nullable: false),
+                    serviceId = table.Column<int>(type: "integer", nullable: false),
+                    CounterId = table.Column<int>(type: "integer", nullable: true),
+                    createdAt = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
+                    usedAt = table.Column<DateTime>(type: "timestamp with time zone", nullable: true),
+                    handledBy = table.Column<string>(type: "character varying(100)", maxLength: 100, nullable: true)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_Ticket", x => x.id);
+                    table.ForeignKey(
+                        name: "FK_Ticket_Counters_CounterId",
+                        column: x => x.CounterId,
+                        principalTable: "Counters",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.SetNull);
                 });
 
             migrationBuilder.CreateTable(
@@ -277,7 +306,19 @@ namespace SystemQMS.Migrations
                     BackgroundImage = table.Column<string>(type: "text", nullable: false),
                     BannerText = table.Column<string>(type: "text", nullable: false),
                     ToneColorHex = table.Column<string>(type: "text", nullable: false),
-                    ActiveAudioTemplateId = table.Column<int>(type: "integer", nullable: true)
+                    ActiveAudioTemplateId = table.Column<int>(type: "integer", nullable: true),
+                    Favicon = table.Column<string>(type: "character varying(255)", maxLength: 255, nullable: false),
+                    Slogan = table.Column<string>(type: "character varying(255)", maxLength: 255, nullable: false),
+                    Website = table.Column<string>(type: "character varying(100)", maxLength: 100, nullable: false),
+                    TitleHome = table.Column<string>(type: "character varying(255)", maxLength: 255, nullable: false),
+                    DescriptionHome = table.Column<string>(type: "text", nullable: false),
+                    BookingMethod = table.Column<string>(type: "character varying(100)", maxLength: 100, nullable: false),
+                    SlotDuration = table.Column<int>(type: "integer", nullable: true),
+                    MaxGuestsPerSlot = table.Column<int>(type: "integer", nullable: true),
+                    AdvanceBookingDays = table.Column<int>(type: "integer", nullable: true),
+                    AllowImmediateBooking = table.Column<bool>(type: "boolean", nullable: false),
+                    MaxBookingsPerUserDaily = table.Column<int>(type: "integer", nullable: true),
+                    AppliedScope = table.Column<string>(type: "character varying(100)", maxLength: 100, nullable: false)
                 },
                 constraints: table =>
                 {
@@ -398,6 +439,29 @@ namespace SystemQMS.Migrations
                 });
 
             migrationBuilder.CreateTable(
+                name: "ServiceSchedules",
+                columns: table => new
+                {
+                    Id = table.Column<int>(type: "integer", nullable: false)
+                        .Annotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.IdentityByDefaultColumn),
+                    ServiceId = table.Column<int>(type: "integer", nullable: false),
+                    DayOfWeek = table.Column<string>(type: "character varying(20)", maxLength: 20, nullable: false),
+                    Enabled = table.Column<bool>(type: "boolean", nullable: false),
+                    StartTime = table.Column<TimeSpan>(type: "interval", nullable: true),
+                    EndTime = table.Column<TimeSpan>(type: "interval", nullable: true)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_ServiceSchedules", x => x.Id);
+                    table.ForeignKey(
+                        name: "FK_ServiceSchedules_Services_ServiceId",
+                        column: x => x.ServiceId,
+                        principalTable: "Services",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Cascade);
+                });
+
+            migrationBuilder.CreateTable(
                 name: "Shedules",
                 columns: table => new
                 {
@@ -450,6 +514,44 @@ namespace SystemQMS.Migrations
                 });
 
             migrationBuilder.CreateTable(
+                name: "News",
+                columns: table => new
+                {
+                    Id = table.Column<int>(type: "integer", nullable: false)
+                        .Annotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.IdentityByDefaultColumn),
+                    Title = table.Column<string>(type: "character varying(255)", maxLength: 255, nullable: false),
+                    Content = table.Column<string>(type: "text", nullable: false),
+                    AttachmentUrl = table.Column<string>(type: "character varying(255)", maxLength: 255, nullable: false),
+                    PublishDate = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: false),
+                    Status = table.Column<string>(type: "character varying(100)", maxLength: 100, nullable: false),
+                    UnitId = table.Column<int>(type: "integer", nullable: false),
+                    CreatedById = table.Column<int>(type: "integer", nullable: false),
+                    UpdatedById = table.Column<int>(type: "integer", nullable: true)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_News", x => x.Id);
+                    table.ForeignKey(
+                        name: "FK_News_Units_UnitId",
+                        column: x => x.UnitId,
+                        principalTable: "Units",
+                        principalColumn: "UnitId",
+                        onDelete: ReferentialAction.Cascade);
+                    table.ForeignKey(
+                        name: "FK_News_Users_CreatedById",
+                        column: x => x.CreatedById,
+                        principalTable: "Users",
+                        principalColumn: "UserId",
+                        onDelete: ReferentialAction.Restrict);
+                    table.ForeignKey(
+                        name: "FK_News_Users_UpdatedById",
+                        column: x => x.UpdatedById,
+                        principalTable: "Users",
+                        principalColumn: "UserId",
+                        onDelete: ReferentialAction.Restrict);
+                });
+
+            migrationBuilder.CreateTable(
                 name: "Tickets",
                 columns: table => new
                 {
@@ -497,6 +599,32 @@ namespace SystemQMS.Migrations
                 });
 
             migrationBuilder.CreateTable(
+                name: "ServiceScheduleShifts",
+                columns: table => new
+                {
+                    Id = table.Column<int>(type: "integer", nullable: false)
+                        .Annotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.IdentityByDefaultColumn),
+                    ScheduleId = table.Column<int>(type: "integer", nullable: false),
+                    SheduleActiveId = table.Column<int>(type: "integer", nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_ServiceScheduleShifts", x => x.Id);
+                    table.ForeignKey(
+                        name: "FK_ServiceScheduleShifts_ServiceSchedules_ScheduleId",
+                        column: x => x.ScheduleId,
+                        principalTable: "ServiceSchedules",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Cascade);
+                    table.ForeignKey(
+                        name: "FK_ServiceScheduleShifts_Shedules_SheduleActiveId",
+                        column: x => x.SheduleActiveId,
+                        principalTable: "Shedules",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Cascade);
+                });
+
+            migrationBuilder.CreateTable(
                 name: "Bookings",
                 columns: table => new
                 {
@@ -507,7 +635,8 @@ namespace SystemQMS.Migrations
                     Date = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: false),
                     TimeDate = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: false),
                     Status = table.Column<string>(type: "character varying(100)", maxLength: 100, nullable: true),
-                    SttId = table.Column<string>(type: "character varying(100)", maxLength: 100, nullable: false)
+                    SttId = table.Column<string>(type: "character varying(100)", maxLength: 100, nullable: false),
+                    ExpiresAt = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: true)
                 },
                 constraints: table =>
                 {
@@ -729,6 +858,21 @@ namespace SystemQMS.Migrations
                 column: "GuestId");
 
             migrationBuilder.CreateIndex(
+                name: "IX_News_CreatedById",
+                table: "News",
+                column: "CreatedById");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_News_UnitId",
+                table: "News",
+                column: "UnitId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_News_UpdatedById",
+                table: "News",
+                column: "UpdatedById");
+
+            migrationBuilder.CreateIndex(
                 name: "IX_Notifications_UnitId",
                 table: "Notifications",
                 column: "UnitId");
@@ -750,9 +894,31 @@ namespace SystemQMS.Migrations
                 column: "UnitId");
 
             migrationBuilder.CreateIndex(
+                name: "IX_ServiceSchedules_ServiceId_DayOfWeek",
+                table: "ServiceSchedules",
+                columns: new[] { "ServiceId", "DayOfWeek" },
+                unique: true);
+
+            migrationBuilder.CreateIndex(
+                name: "IX_ServiceScheduleShifts_ScheduleId_SheduleActiveId",
+                table: "ServiceScheduleShifts",
+                columns: new[] { "ScheduleId", "SheduleActiveId" },
+                unique: true);
+
+            migrationBuilder.CreateIndex(
+                name: "IX_ServiceScheduleShifts_SheduleActiveId",
+                table: "ServiceScheduleShifts",
+                column: "SheduleActiveId");
+
+            migrationBuilder.CreateIndex(
                 name: "IX_Shedules_ServiceId",
                 table: "Shedules",
                 column: "ServiceId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_Ticket_CounterId",
+                table: "Ticket",
+                column: "CounterId");
 
             migrationBuilder.CreateIndex(
                 name: "IX_Tickets_CounterId",
@@ -829,10 +995,16 @@ namespace SystemQMS.Migrations
                 name: "Histories");
 
             migrationBuilder.DropTable(
+                name: "News");
+
+            migrationBuilder.DropTable(
                 name: "NumberFomulars");
 
             migrationBuilder.DropTable(
-                name: "Shedules");
+                name: "ServiceScheduleShifts");
+
+            migrationBuilder.DropTable(
+                name: "Ticket");
 
             migrationBuilder.DropTable(
                 name: "UnitConfigs");
@@ -850,13 +1022,19 @@ namespace SystemQMS.Migrations
                 name: "Notifications");
 
             migrationBuilder.DropTable(
+                name: "ServiceSchedules");
+
+            migrationBuilder.DropTable(
+                name: "Shedules");
+
+            migrationBuilder.DropTable(
                 name: "EvaluationTemplates");
 
             migrationBuilder.DropTable(
-                name: "Services");
+                name: "Users");
 
             migrationBuilder.DropTable(
-                name: "Users");
+                name: "Services");
 
             migrationBuilder.DropTable(
                 name: "Counters");

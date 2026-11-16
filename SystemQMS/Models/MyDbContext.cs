@@ -27,6 +27,8 @@ namespace SystemQMS.Models
         public DbSet<Notification> Notifications { get; set; }
         public DbSet<UnitConfig> UnitConfigs { get; set; }
         public DbSet<News> News { get; set; }
+        public DbSet<ServiceSchedule> ServiceSchedules { get; set; }
+        public DbSet<ServiceScheduleShift> ServiceScheduleShifts { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
@@ -306,7 +308,7 @@ namespace SystemQMS.Models
                 .HasForeignKey(uc => uc.ActiveEvaluationTemplateId)
                 .OnDelete(DeleteBehavior.SetNull);
 
-            modelBuilder.Entity<Tickets>()
+            modelBuilder.Entity<Ticket>()
                 .HasOne(t => t.Counter)
                 .WithMany()
                 .HasForeignKey(t => t.CounterId)
@@ -328,6 +330,14 @@ namespace SystemQMS.Models
                       .HasForeignKey(n => n.UpdatedById)
                       .OnDelete(DeleteBehavior.Restrict);
             });
+
+            modelBuilder.Entity<ServiceSchedule>()
+                .HasIndex(x => new { x.ServiceId, x.DayOfWeek })
+                .IsUnique();
+
+            modelBuilder.Entity<ServiceScheduleShift>()
+                .HasIndex(x => new { x.ScheduleId, x.SheduleActiveId })
+                .IsUnique();
         }
     }
 }

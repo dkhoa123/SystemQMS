@@ -1,26 +1,37 @@
+using SystemQMS.Constants;
+
 namespace SystemQMS.ViewModels.ServiceDto
 {
     public class ServiceResponseDto
     {
-        // DTO trả về danh sách dịch vụ (SVC-01)
         public int id { get; set; }
-        public int unitId { get; set; }
-        public string serviceId { get; set; } = string.Empty;
+
+        public string serviceCode { get; set; } = string.Empty;
+
         public string serviceName { get; set; } = string.Empty;
+
+        public List<string> counterIds { get; set; } = new();
+
+        public string? status { get; set; }
+
+        public DateTime createdAt { get; set; }
+
         public string? description { get; set; }
-        public byte[]? image { get; set; }
-        public bool isActive { get; set; }
-        public string sharingLink { get; set; } = string.Empty;
-        public int averageTime { get; set; }
-        public int totalTicketsIssued { get; set; }
+
+        public string? assignmentMethod { get; set; }
+
+        public Dictionary<string, ServiceScheduleDayDto> schedule { get; set; }
+            = new();
+
+        public byte[]? imageUrl { get; set; }
     }
 
     // DTO chi tiết dịch vụ gồm quầy xử lý và danh sách STT đã cấp (SVC-05)
 
     public class ServiceDetailDto : ServiceResponseDto
     {
-        public List<ServiceCounterItemDto> assignedCounters { get; set; } = new List<ServiceCounterItemDto>();
-        public List<ServiceTicketItemDto> issuedTickets { get; set; } = new List<ServiceTicketItemDto>();
+        //public List<ServiceCounterItemDto> assignedCounters { get; set; } = new List<ServiceCounterItemDto>();
+        //public List<ServiceTicketItemDto> issuedTickets { get; set; } = new List<ServiceTicketItemDto>();
     }
 
     public class ServiceCounterItemDto
