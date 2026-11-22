@@ -44,12 +44,16 @@ namespace SystemQMS.Services
             return new DateTimeOffset(l.Year, l.Month, l.Day, 0, 0, 0, Vn);
         }
 
-        private static (DateTimeOffset from, DateTimeOffset to) ResolveRange(DashboardFilterRequest f)
+        private static (DateTimeOffset from, DateTimeOffset to)
+         ResolveRange(DashboardFilterRequest f)
         {
             var now = DateTimeOffset.UtcNow;
 
-            var from = (f.From ?? StartOfDay(now)).ToUniversalTime();
-            var to = (f.To ?? now).ToUniversalTime();
+            var todayStart = StartOfDay(now);
+            var todayEnd = todayStart.AddDays(1).AddTicks(-1);
+
+            var from = (f.From ?? todayStart).ToUniversalTime();
+            var to = (f.To ?? todayEnd).ToUniversalTime();
 
             return (from, to);
         }
@@ -324,16 +328,6 @@ namespace SystemQMS.Services
                 _ => time.ToString("dd/MM/yyyy")
             };
         }
-
-        private int GetWeekOfMonth(DateTime date)
-        {
-            var firstDay = new DateTime(date.Year, date.Month, 1);
-
-            // Tuần bắt đầu từ thứ Hai
-            int offset = ((int)firstDay.DayOfWeek + 6) % 7;
-
-            return ((date.Day + offset - 1) / 7) + 1;
-        }
         private string FormatWeekOfMonth(
     DateTime bucketStart,
     DateOnly? fromDate)
@@ -509,7 +503,7 @@ namespace SystemQMS.Services
                     break;
 
                 case StatisticsFilter.Ngay:
-                    startDate = fromDate.Date.AddDays(1);
+                    startDate = fromDate.Date.AddDays(-6);
                     endDate = fromDate.Date.AddDays(1);
                     break;
 
