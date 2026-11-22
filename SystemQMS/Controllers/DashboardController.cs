@@ -41,8 +41,8 @@ namespace SystemQMS.Controllers
         [HttpGet("tickets/issued")]
         public async Task<ActionResult<TicketSummaryDto>> TicketSummary(
             [FromQuery] string filter,
-            [FromQuery] DateOnly fromDate,
-            [FromQuery] DateOnly toDate
+            [FromQuery] DateOnly? fromDate,
+            [FromQuery] DateOnly? toDate
             )
         {
             try
@@ -128,7 +128,7 @@ namespace SystemQMS.Controllers
         [HttpGet("tickets/by-service")]
         public async Task<IActionResult> GetTicketsByService(
                 [FromQuery] string filter,
-                [FromQuery] DateTime fromDate)
+                [FromQuery] DateTime? fromDate)
         {
             try
             {
@@ -144,11 +144,22 @@ namespace SystemQMS.Controllers
                         "Filter phải là Gio, Ngay, Tuan hoặc Thang."
                     );
                 }
+                var timeZone = TimeZoneInfo.FindSystemTimeZoneById(
+                        OperatingSystem.IsWindows()
+                        ? "SE Asia Standard Time"
+                        : "Asia/Ho_Chi_Minh"
+);
+
+                var currentTime = TimeZoneInfo.ConvertTimeFromUtc(
+                    DateTime.UtcNow,
+                    timeZone
+                );
+                var date = fromDate ?? currentTime;
 
                 var result = await dashboardSvc.GetTicketsByServiceAsync(
                     unitId,
                     parsedFilter,
-                    fromDate
+                    date
                 );
 
                 return Ok(result);

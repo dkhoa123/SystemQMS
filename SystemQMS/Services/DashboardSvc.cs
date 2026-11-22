@@ -97,23 +97,70 @@ namespace SystemQMS.Services
         // ----------------------------------------------------------------
         // DSH-01
         // ----------------------------------------------------------------
-        public async Task<List<TicketSummaryDto>> GetTicketIssuedAsync(int unitId, StatisticsFilter filter, DateOnly fromDate, DateOnly toDate)
+
+        private (DateOnly from, DateOnly to) GetDefaultDateRange(StatisticsFilter filter)
         {
+            // Lấy ngày hiện tại theo múi giờ Việt Nam
+            DateTime localNow = TimeZoneInfo.ConvertTimeFromUtc(DateTime.UtcNow, _timeZone);
+            DateOnly today = DateOnly.FromDateTime(localNow);
+
+            switch (filter)
+            {
+                case StatisticsFilter.Gio:
+                    // Hôm nay (từ 00:00 đến 23:59 hôm nay -> trả về 24 cột giờ)
+                    return (today, today);
+
+                case StatisticsFilter.Ngay:
+                    // Tuần hiện tại: từ Thứ 2 đầu tuần đến Chủ Nhật cuối tuần (trả về 7 ngày T2 -> CN)
+                    int daysFromMonday = ((int)today.DayOfWeek + 6) % 7;
+                    DateOnly startOfWeek = today.AddDays(-daysFromMonday);
+                    DateOnly endOfWeek = startOfWeek.AddDays(6);
+                    return (startOfWeek, endOfWeek);
+
+                case StatisticsFilter.Tuan:
+                    // Tháng hiện tại: từ ngày 1 đến ngày cuối tháng (trả về 4-5 tuần)
+                    DateOnly startOfMonth = new DateOnly(today.Year, today.Month, 1);
+                    DateOnly endOfMonth = startOfMonth.AddMonths(1).AddDays(-1);
+                    return (startOfMonth, endOfMonth);
+
+                case StatisticsFilter.Thang:
+                    // Năm hiện tại: từ 01/01 đến 31/12 (trả về 12 tháng)
+                    DateOnly startOfYear = new DateOnly(today.Year, 1, 1);
+                    DateOnly endOfYear = new DateOnly(today.Year, 12, 31);
+                    return (startOfYear, endOfYear);
+
+                default:
+                    throw new ArgumentException("Bộ lọc thống kê không hợp lệ.");
+            }
+        }
+        public async Task<List<TicketSummaryDto>> GetTicketIssuedAsync(
+    int unitId,
+    StatisticsFilter filter,
+    DateOnly? fromDate = null,
+    DateOnly? toDate = null)
+        {
+            // Nếu không truyền fromDate hoặc toDate, tự động lấy theo thời điểm hiện tại
+            if (!fromDate.HasValue || !toDate.HasValue)
+            {
+                var defaultRange = GetDefaultDateRange(filter);
+                fromDate ??= defaultRange.from;
+                toDate ??= defaultRange.to;
+            }
+
+            if (fromDate > toDate)
+            {
+                throw new ArgumentException("Ngày bắt đầu không được lớn hơn ngày kết thúc.");
+            }
+
+            // 1. Chuyển khoảng ngày Việt Nam sang UTC (dùng .Value vì đã đảm bảo có dữ liệu)
+            DateTime localStart = fromDate.Value.ToDateTime(TimeOnly.MinValue);
+            DateTime localEnd = toDate.Value.AddDays(1).ToDateTime(TimeOnly.MinValue);
             if (fromDate > toDate)
             {
                 throw new ArgumentException(
                     "Ngày bắt đầu không được lớn hơn ngày kết thúc."
                 );
             }
-
-            // 1. Chuyển khoảng ngày Việt Nam sang UTC
-            DateTime localStart = fromDate.ToDateTime(
-                TimeOnly.MinValue
-            );
-
-            DateTime localEnd = toDate.AddDays(1).ToDateTime(
-                TimeOnly.MinValue
-            );
 
             DateTimeOffset fromUtc = new DateTimeOffset(
                 TimeZoneInfo.ConvertTimeToUtc(localStart, _timeZone),
@@ -253,10 +300,10 @@ namespace SystemQMS.Services
 
         // Format nhãn hiển thị trên biểu đồ
         private string FormatTime(
-            DateTime time,
-            StatisticsFilter filter,
-            DateOnly fromDate,
-            DateOnly toDate)
+    DateTime time,
+    StatisticsFilter filter,
+    DateOnly? fromDate,
+    DateOnly? toDate)
         {
             return filter switch
             {
@@ -269,13 +316,47 @@ namespace SystemQMS.Services
                     time.ToString("dd/MM"),
 
                 StatisticsFilter.Tuan =>
-                    $"Tuần {ISOWeek.GetWeekOfYear(time)}/{ISOWeek.GetYear(time)}",
+                        FormatWeekOfMonth(time, fromDate),
 
                 StatisticsFilter.Thang =>
                     time.ToString("MM/yyyy"),
 
                 _ => time.ToString("dd/MM/yyyy")
             };
+        }
+
+        private int GetWeekOfMonth(DateTime date)
+        {
+            var firstDay = new DateTime(date.Year, date.Month, 1);
+
+            // Tuần bắt đầu từ thứ Hai
+            int offset = ((int)firstDay.DayOfWeek + 6) % 7;
+
+            return ((date.Day + offset - 1) / 7) + 1;
+        }
+        private string FormatWeekOfMonth(
+    DateTime bucketStart,
+    DateOnly? fromDate)
+        {
+            if (!fromDate.HasValue)
+                return $"Tuần {ISOWeek.GetWeekOfYear(bucketStart)}/{bucketStart.Month}";
+
+            // Ngày đầu tiên của tháng được chọn
+            var monthStart = new DateTime(
+                fromDate.Value.Year,
+                fromDate.Value.Month,
+                1
+            );
+
+            // Tìm thứ Hai đầu tuần chứa ngày đầu tháng
+            int offset = ((int)monthStart.DayOfWeek + 6) % 7;
+            var firstWeekStart = monthStart.AddDays(-offset);
+
+            // Tính số thứ tự tuần trong tháng
+            int weekNumber =
+                ((bucketStart.Date - firstWeekStart.Date).Days / 7) + 1;
+
+            return $"Tuần {weekNumber}/{monthStart.Month}";
         }
 
         // ----------------------------------------------------------------
@@ -428,7 +509,7 @@ namespace SystemQMS.Services
                     break;
 
                 case StatisticsFilter.Ngay:
-                    startDate = fromDate.Date.AddDays(-6);
+                    startDate = fromDate.Date.AddDays(1);
                     endDate = fromDate.Date.AddDays(1);
                     break;
 

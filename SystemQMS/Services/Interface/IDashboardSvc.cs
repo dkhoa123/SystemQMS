@@ -4,7 +4,7 @@ namespace SystemQMS.Services.Interface
 {
     public interface IDashboardSvc
     {
-        public  Task<List<TicketSummaryDto>> GetTicketIssuedAsync(int unitId, StatisticsFilter filter, DateOnly fromDate, DateOnly toDate);                       // DSH-01
+        public  Task<List<TicketSummaryDto>> GetTicketIssuedAsync(int unitId, StatisticsFilter filter, DateOnly? fromDate, DateOnly? toDate);                       // DSH-01
         public Task<TicketStatusDonutDto> GetTicketStatusAsync(); // DSH-02
         public Task<ChartSeriesDto> GetTicketTrendAsync(int unitId, DashboardFilterRequest f, CancellationToken ct = default);        // DSH-03
         public Task<CounterServiceSummaryDto> GetCounterServiceSummaryAsync(); // DSH-04
