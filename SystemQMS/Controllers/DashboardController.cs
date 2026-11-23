@@ -1,5 +1,6 @@
 ﻿using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
+using SystemQMS.Services;
 using SystemQMS.Services.Interface;
 using static SystemQMS.ViewModels.DashboardDto.DashboardDto;
 
@@ -96,32 +97,12 @@ namespace SystemQMS.Controllers
             return Ok(await dashboardSvc.GetTicketStatusAsync());
         }
 
-        // ---------------- DSH-03 ----------------
-        [HttpGet("tickets/trend")]
-        public async Task<ActionResult<ChartSeriesDto>> TicketTrend(
-            [FromQuery] DashboardFilterRequest f, CancellationToken ct)
-        {
-            if (!TryGetUnitId(out var unitId)) return Unauthorized();
-            if (ValidateFilter(f) is { } err) return BadRequest(new { message = err });
-            return Ok(await dashboardSvc.GetTicketTrendAsync(unitId, f, ct));
-        }
-
         // ---------------- DSH-04 ----------------
         [HttpGet("counters-services/summary")]
         public async Task<ActionResult<CounterServiceSummaryDto>> CounterServiceSummary()
         {
-            
-            return Ok(await dashboardSvc.GetCounterServiceSummaryAsync());
-        }
 
-        // ---------------- DSH-05 ----------------
-        [HttpGet("ratings/services")]
-        public async Task<ActionResult<ServiceRatingDashboardDto>> ServiceRatings(
-            [FromQuery] DashboardFilterRequest f, CancellationToken ct)
-        {
-            if (!TryGetUnitId(out var unitId)) return Unauthorized();
-            if (ValidateFilter(f) is { } err) return BadRequest(new { message = err });
-            return Ok(await dashboardSvc.GetServiceRatingsAsync(unitId, f, ct));
+            return Ok(await dashboardSvc.GetCounterServiceSummaryAsync());
         }
 
         // ---------------- DSH-06 ----------------
@@ -132,7 +113,6 @@ namespace SystemQMS.Controllers
         {
             try
             {
-                int unitId = 1;
 
                 // Chuyển string thành enum
                 if (!Enum.TryParse<StatisticsFilter>(
@@ -157,7 +137,7 @@ namespace SystemQMS.Controllers
                 var date = fromDate ?? currentTime;
 
                 var result = await dashboardSvc.GetTicketsByServiceAsync(
-                    unitId,
+                    //unitId,
                     parsedFilter,
                     date
                 );
@@ -170,61 +150,36 @@ namespace SystemQMS.Controllers
             }
         }
 
-        [HttpGet("tickets/by-counter")]
-        public async Task<ActionResult<ChartSeriesDto>> TicketsByCounter(
-            [FromQuery] DashboardFilterRequest f, CancellationToken ct)
+        // ---------------- DSH-03 ----------------
+        [HttpGet("tickets/trend")]
+        public async Task<ActionResult> TicketTrend()
         {
-            if (!TryGetUnitId(out var unitId)) return Unauthorized();
-            if (ValidateFilter(f) is { } err) return BadRequest(new { message = err });
-            return Ok(await dashboardSvc.GetTicketsByCounterAsync(unitId, f, ct));
+            return Ok(await dashboardSvc.GetTicketTrendAsync());
         }
 
-        // ---------------- DSH-07 ----------------
-        [HttpGet("wait-time/services")]
-        public async Task<ActionResult<ChartSeriesDto>> WaitTimeByService(
-            [FromQuery] DashboardFilterRequest f, CancellationToken ct)
+        [HttpGet("services/statistics")]
+        public async Task<IActionResult> GetServiceStatistics()
         {
-            if (!TryGetUnitId(out var unitId)) return Unauthorized();
-            if (ValidateFilter(f) is { } err) return BadRequest(new { message = err });
-            return Ok(await dashboardSvc.GetWaitTimeByServiceAsync(unitId, f, ct));
-        }
+            try
+            {
+                var result = await dashboardSvc.GetServiceStatisticsAsync(
+                    //unitId.Value,
+                );
 
-        // ---------------- DSH-08 ----------------
-        [HttpGet("process-time/counters")]
-        public async Task<ActionResult<ChartSeriesDto>> ProcessTimeByCounter(
-            [FromQuery] DashboardFilterRequest f, CancellationToken ct)
-        {
-            if (!TryGetUnitId(out var unitId)) return Unauthorized();
-            if (ValidateFilter(f) is { } err) return BadRequest(new { message = err });
-            return Ok(await dashboardSvc.GetProcessTimeByCounterAsync(unitId, f, ct));
-        }
-
-        // ---------------- DSH-09 ----------------
-        [HttpGet("peak-hours")]
-        public async Task<ActionResult<HeatmapDto>> PeakHours(
-            [FromQuery] HeatmapRequest r, CancellationToken ct)
-        {
-            if (!TryGetUnitId(out var unitId)) return Unauthorized();
-            return Ok(await dashboardSvc.GetPeakHoursAsync(unitId, r, ct));
-        }
-
-        // ---------------- DSH-10 / 11 / 12 ----------------
-        [HttpGet("devices/summary")]
-        public async Task<ActionResult<DeviceSummaryDto>> DeviceSummary(CancellationToken ct)
-        {
-            if (!TryGetUnitId(out var unitId)) return Unauthorized();
-            return Ok(await dashboardSvc.GetDeviceSummaryAsync(unitId, ct));
-        }
-
-        // DSH-11: gọi trước khi đổi thiết bị sang "Không khả dụng" để quyết định hiện popup cảnh báo.
-        // Dùng "~/" để route nằm ngoài tiền tố api/dashboard, khớp với /api/devices/{id}/deactivate-check.
-        [HttpGet("~/api/devices/{id:int}/deactivate-check")]
-        public async Task<ActionResult<DeviceDeactivateCheckDto>> DeviceDeactivateCheck(
-            int id, CancellationToken ct)
-        {
-            if (!TryGetUnitId(out var unitId)) return Unauthorized();
-            var result = await dashboardSvc.CheckDeviceDeactivateAsync(unitId, id, ct);
-            return result is null ? NotFound(new { message = "Không tìm thấy thiết bị." }) : Ok(result);
+                return Ok(new
+                {
+                    success = true,
+                    data = result
+                });
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new
+                {
+                    success = false,
+                    message = ex.Message
+                });
+            }
         }
     }
 }

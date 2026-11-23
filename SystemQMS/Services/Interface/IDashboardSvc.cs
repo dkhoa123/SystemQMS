@@ -6,16 +6,15 @@ namespace SystemQMS.Services.Interface
     {
         public  Task<List<TicketSummaryDto>> GetTicketIssuedAsync(int unitId, StatisticsFilter filter, DateOnly? fromDate, DateOnly? toDate);                       // DSH-01
         public Task<TicketStatusDonutDto> GetTicketStatusAsync(); // DSH-02
-        public Task<ChartSeriesDto> GetTicketTrendAsync(int unitId, DashboardFilterRequest f, CancellationToken ct = default);        // DSH-03
+        
         public Task<CounterServiceSummaryDto> GetCounterServiceSummaryAsync(); // DSH-04
-        public Task<ServiceRatingDashboardDto> GetServiceRatingsAsync(int unitId, DashboardFilterRequest f, CancellationToken ct = default); // DSH-05
-        Task<List<ServiceBarPointDto>> GetTicketsByServiceAsync(int unitId, StatisticsFilter filter, DateTime fromDate);
-        public Task<ChartSeriesDto> GetTicketsByCounterAsync(int unitId, DashboardFilterRequest f, CancellationToken ct = default);   // DSH-06
-        public Task<ChartSeriesDto> GetWaitTimeByServiceAsync(int unitId, DashboardFilterRequest f, CancellationToken ct = default);  // DSH-07
-        public Task<ChartSeriesDto> GetProcessTimeByCounterAsync(int unitId, DashboardFilterRequest f, CancellationToken ct = default); // DSH-08
-        public Task<HeatmapDto> GetPeakHoursAsync(int unitId, HeatmapRequest r, CancellationToken ct = default);               // DSH-09
-        public Task<DeviceSummaryDto> GetDeviceSummaryAsync(int unitId, CancellationToken ct = default);                        // DSH-10/11/12
-        public Task<DeviceDeactivateCheckDto?> CheckDeviceDeactivateAsync(int unitId, int deviceId, CancellationToken ct = default);  // DSH-11 popup
+
+        Task<List<ServiceBarPointDto>> GetTicketsByServiceAsync(StatisticsFilter filter, DateTime fromDate); // DSH-06
+
+        public Task<TrendPointDto> GetTicketTrendAsync();        // DSH-03
+
+        Task<DashboardServiceStatisticsDto> GetServiceStatisticsAsync();
+
 
     }
 }
