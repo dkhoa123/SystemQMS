@@ -646,6 +646,9 @@ namespace SystemQMS.Migrations
                         .HasMaxLength(255)
                         .HasColumnType("character varying(255)");
 
+                    b.Property<string>("Permissions")
+                        .HasColumnType("text");
+
                     b.Property<string>("RoleName")
                         .HasMaxLength(100)
                         .HasColumnType("character varying(100)");

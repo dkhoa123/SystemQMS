@@ -35,6 +35,7 @@ builder.Services.AddScoped<ICounterTicketSvc, CounterTicketSvc>();
 builder.Services.AddScoped<IQueueSvc, QueueSvc>();
 builder.Services.AddScoped<ITransferSvc, TransferSvc>();
 
+builder.Services.AddScoped<IRoleService, RoleService>();
 
 builder.Services.AddScoped<IAuthSvc, AuthSvc>();
 
