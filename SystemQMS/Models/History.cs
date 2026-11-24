@@ -5,15 +5,15 @@ namespace SystemQMS.Models
 {
     public class History
     {
-        public int notiId { get; set; }
+        public int NotiId { get; set; }
         
-        public int guestId { get; set; }
+        public int GuestId { get; set; }
         [MaxLength(100)]
-        public string status { get; set; }
+        public string Status { get; set; }
 
-        [ForeignKey("guestId")]
+        [ForeignKey("GuestId")]
         public virtual Guest? Guest { get; set; }
-        [ForeignKey("notiId")]
+        [ForeignKey("NotiId")]
         public virtual Notification? Notification { get; set; }
     }
 }

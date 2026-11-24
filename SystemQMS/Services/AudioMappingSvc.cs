@@ -24,7 +24,6 @@ namespace SystemQMS.Services
                 audioFiles.Add($"{_audioBaseUrl}welcome.wav");
             }
 
-            // Đọc từng ký tự của số thứ tự
             AppendAlphanumericAudio(audioFiles, ticketNumber);
 
             if (templateId == 3) return audioFiles;
@@ -34,7 +33,6 @@ namespace SystemQMS.Services
                 audioFiles.Add($"{_audioBaseUrl}come-to.wav");
             }
 
-            // Đọc mã/số quầy
             AppendAlphanumericAudio(audioFiles, counterIdentifier);
 
             return audioFiles;
@@ -47,11 +45,10 @@ namespace SystemQMS.Services
             string ticketNumber,
             int repeatCount = 1)
         {
-            var config = await _context.unitConfigs
+            var config = await _context.UnitConfigs
                 .AsNoTracking()
                 .FirstOrDefaultAsync(c => c.UnitId == unitId);
 
-            // Mặc định mẫu 1 và tốc độ 1.0 nếu chưa thiết lập
             int templateId = config?.ActiveAudioTemplateId ?? 1;
             double speed = config?.ReadingSpeed ?? 1.0;
 

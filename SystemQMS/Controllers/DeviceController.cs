@@ -17,16 +17,17 @@ namespace SystemQMS.Controllers
         }
 
         [HttpPost("create")]
-        public IActionResult CreateDevice([FromForm] CreateDeviceDto device)
+        public IActionResult CreateDevice([FromBody] CreateDeviceDto device, [FromQuery] int unitId)
         {
             try
             {
-                _devService.createDevice(device);
+                _devService.createDevice(device, unitId);
                 return Ok(device);
             }
             catch (Exception ex)
             {
-                return BadRequest(ex.Message);
+                var innerMessage = ex.InnerException != null ? ex.InnerException.Message : "";
+                throw new Exception($"Error creating device: {ex.Message}. Chi tiết lỗi (Inner): {innerMessage}");
             }
         }
         [HttpPut("updateStatus/{deviceId}")]
@@ -43,7 +44,7 @@ namespace SystemQMS.Controllers
             }
         }
         [HttpPut("update/{deviceId}")]
-        public IActionResult UpdateDevice(string deviceId, [FromForm] UpdateDeviceDto device)
+        public IActionResult UpdateDevice(int deviceId, [FromBody] UpdateDeviceDto device)
         {
             try
             {
@@ -57,7 +58,7 @@ namespace SystemQMS.Controllers
         }
 
         [HttpGet("get/{deviceId}")]
-        public IActionResult GetDevice(string deviceId)
+        public IActionResult GetDevice(int deviceId)
         {
             try
             {
@@ -71,11 +72,11 @@ namespace SystemQMS.Controllers
         }
 
         [HttpGet("getAll")]
-        public IActionResult GetAllDevices()
+        public IActionResult GetAllDevices([FromQuery] FilterDeviceDto filterDevice)
         {
             try
             {
-                var devices = _devService.GetAllDevices();
+                var devices = _devService.GetAllDevices(filterDevice);
                 return Ok(devices);
             }
             catch (Exception ex)
@@ -118,12 +119,13 @@ namespace SystemQMS.Controllers
             }
         }
 
-        [HttpDelete("delete/{deviceId}")]
-        public IActionResult DeleteDevice(string deviceId)
+
+        [HttpDelete("delete")]
+        public IActionResult DeleteDevice([FromBody] DeleteDeviceDto devices)
         {
             try
             {
-                var result = _devService.DeleteDevice(deviceId);
+                var result = _devService.DeleteDevice(devices);
                 return Ok(result);
             }
             catch (Exception ex)
@@ -138,20 +140,6 @@ namespace SystemQMS.Controllers
             try
             {
                 var result = _devService.UpdateVolumeDevices(updateVolumnDeviceDto);
-                return Ok(result);
-            }
-            catch (Exception ex)
-            {
-                return BadRequest(new { message = ex.Message });
-            }
-        }
-
-        [HttpGet("filterDevice")]
-        public IActionResult FilterDevice([FromQuery] FilterDeviceDto filterDto)
-        {
-            try
-            {
-                var result = _devService.FilterDevices(filterDto);
                 return Ok(result);
             }
             catch (Exception ex)

@@ -1,7 +1,9 @@
 using Microsoft.EntityFrameworkCore;
 using System.Linq.Expressions;
+using SystemQMS.Constants;
 using SystemQMS.Models;
 using SystemQMS.Services.Interface;
+using SystemQMS.ViewModels.PageResultDto;
 using SystemQMS.ViewModels.QueueDto;
 
 namespace SystemQMS.Services
@@ -19,257 +21,332 @@ namespace SystemQMS.Services
             _logger = logger;
         }
 
-        // Dùng chung cho mọi truy vấn danh sách phiếu, giữ projection dịch được sang SQL
-        private static readonly Expression<Func<Sticker, QueueTicketDto>> TicketProjection = s => new QueueTicketDto
-        {
-            sttId = s.sttId,
-            status = s.status,
-            stage = s.stage,
-            isPriority = s.isPriority,
-            issuanceTime = s.issuanceTime,
-            useTime = s.useTime,
-            serviceName = s.Service != null ? s.Service.serviceName : null,
-            handlerName = s.Users != null ? s.Users.username : null
-        };
+        //// Dùng chung cho mọi truy vấn danh sách phiếu, giữ projection dịch được sang SQL
+        //private static readonly Expression<Func<Tickets, QueueTicketDto>> TicketProjection = s => new QueueTicketDto
+        //{
+        //    sttId = s.SttId,
+        //    status = s.Status,
+        //    stage = s.Stage,
+        //    isPriority = s.IsPriority,
+        //    issuanceTime = s.IssuanceTime,
+        //    useTime = s.UseTime,
+        //    serviceName = s.Service != null ? s.Service.ServiceName : null,
+        //    handlerName = s.Users != null ? s.Users.Username : null
+        //};
 
         private async Task<Counter> GetCounterAsync(int counterId, CancellationToken ct)
         {
-            var counter = await _context.counters.FirstOrDefaultAsync(c => c.id == counterId, ct);
+            var counter = await _context.Counters.FirstOrDefaultAsync(c => c.Id == counterId, ct);
             if (counter == null)
                 throw new KeyNotFoundException("Quầy không tồn tại");
             return counter;
         }
 
-        private async Task<CounterStateResponse> BuildStateAsync(Counter counter, CancellationToken ct)
+        public CounterStateResponse getStatesCounter(int counterId)
         {
-            var waitingCount = await _context.stickers.CountAsync(
-                s => s.counterId == counter.id
-                     && s.status == StickerStatus.Waiting
-                     && s.stage != StickerStage.TransferPending, ct);
-            var processingCount = await _context.stickers.CountAsync(
-                s => s.counterId == counter.id && s.status == StickerStatus.Processing, ct);
-
+            var counter = _context.Counters.AsNoTracking()
+                   .FirstOrDefault(c => c.Id == counterId);
+            if (counter == null)
+                throw new KeyNotFoundException("Quầy không tồn tại");
             return new CounterStateResponse
             {
-                counterId = counter.id,
-                status = counter.status,
-                isAccepting = counter.status != CounterStatus.PausedAccepting
-                              && counter.status != CounterStatus.Closed,
-                waitingCount = waitingCount,
-                processingCount = processingCount
+                issued = _context.Tickets.Count(s => s.CounterId == counter.Id && s.Status == "Completed"),
+                waiting = _context.Tickets.Count(s => s.CounterId == counter.Id && s.Status == "Waiting"),
+                used = _context.Tickets.Count(s => s.CounterId == counter.Id && s.Status == "Used"),
+                skipped = _context.Tickets.Count(s => s.CounterId == counter.Id && s.Status == "Skipped"),
+                cancelled = _context.Tickets.Count(s => s.CounterId == counter.Id && s.Status == "Cancelled")
             };
         }
 
-        // OPR-09: ngưng nhận phiếu mới
-        public async Task<CounterStateResponse> PauseAcceptingAsync(int counterId, CancellationToken ct = default)
+        public PageResultDto<QueueTicketDto> GetCounterTickets(FilterQueueDto filter)
         {
-            var counter = await GetCounterAsync(counterId, ct);
+            var query = _context.Tickets
+                .Include(s => s.Service)
+                .AsNoTracking();
 
-            if (counter.status == CounterStatus.Closed)
-                throw new ArgumentException("Quầy đã đóng, không thể ngưng nhận phiếu");
-            if (counter.status == CounterStatus.PausedAccepting)
-                throw new ArgumentException("Quầy đang ngưng nhận phiếu");
-
-            counter.status = CounterStatus.PausedAccepting;
-            await _context.SaveChangesAsync(ct);
-            _logger.LogInformation("Quầy ngưng nhận phiếu: CounterId={CounterId}", counterId);
-            return await BuildStateAsync(counter, ct);
-        }
-
-        // OPR-09: nhận phiếu lại
-        public async Task<CounterStateResponse> ResumeAcceptingAsync(int counterId, CancellationToken ct = default)
-        {
-            var counter = await GetCounterAsync(counterId, ct);
-
-            if (counter.status != CounterStatus.PausedAccepting)
-                throw new ArgumentException("Quầy không ở trạng thái ngưng nhận phiếu");
-
-            await ResumeCoreAsync(counter, ct);
-            _logger.LogInformation("Quầy nhận phiếu lại: CounterId={CounterId}, Status={Status}",
-                counterId, counter.status);
-            return await BuildStateAsync(counter, ct);
-        }
-
-        // OPR-09: 1 endpoint bật/tắt theo tài liệu của thầy
-        public async Task<CounterStateResponse> ToggleReceivingAsync(int counterId, CancellationToken ct = default)
-        {
-            var counter = await GetCounterAsync(counterId, ct);
-
-            if (counter.status == CounterStatus.Closed)
-                throw new ArgumentException("Quầy đã đóng, không thể đổi trạng thái nhận phiếu");
-
-            if (counter.status == CounterStatus.PausedAccepting)
-                await ResumeCoreAsync(counter, ct);
-            else
+            if (!string.IsNullOrEmpty(filter.keyword))
             {
-                counter.status = CounterStatus.PausedAccepting;
-                await _context.SaveChangesAsync(ct);
+                query = query.Where(s => s.SttId.Contains(filter.keyword) ||
+                s.Service.ServiceName.Contains(filter.keyword));
+            }
+            if (!string.IsNullOrEmpty(filter.status))
+            {
+                query = query.Where(s => s.Status == filter.status);
+            }
+            if(filter.startDate.HasValue)
+            {
+                query = query.Where(s => s.IssuanceTime >= filter.startDate);
+            }
+            if(filter.endDate.HasValue)
+            {
+                var endDate = filter.endDate.Value.Date.AddDays(1);
+
+                query = query.Where(s =>
+                    s.IssuanceTime < endDate);
             }
 
-            _logger.LogInformation("Đổi trạng thái nhận phiếu: CounterId={CounterId}, Status={Status}",
-                counterId, counter.status);
-            return await BuildStateAsync(counter, ct);
+            // Đếm tổng số bản ghi sau khi lọc
+            int totalRecords = query.Count();
+
+            int page = Math.Max(1, filter.page); // Đảm bảo trang tối thiểu là 1
+            int pageSize = Math.Max(1, filter.pageSize); // Đảm bảo kích thước trang tối thiểu là 1
+
+            // Tính tổng số trang
+            int totalPages = (int)Math.Ceiling(
+                (double)totalRecords / filter.pageSize
+            );
+
+            var tickets = query
+                .OrderByDescending(s => s.IssuanceTime)
+                .Skip((page - 1) * pageSize)
+                .Take(pageSize)
+                .ToList();
+
+            var data = tickets.Select(s => new QueueTicketDto
+            {
+                id = s.SttId,
+                number = s.TicketNumber,
+                issuedAt = s.IssuanceTime.ToString("yyyy-MM-dd HH:mm:ss"),
+                serviceName = s.Service != null ? s.Service.ServiceName : null,
+                status = s.Stage,
+                
+            });
+            return new PageResultDto<QueueTicketDto>
+            {
+                items = data.ToList(),
+                page = page,
+                pageSize = pageSize,
+                total = totalPages
+            };
         }
+
+        //private async Task<CounterStateResponse> BuildStateAsync(int counterId,)
+        //{
+        //    var waitingCount = await _context.Tickets.CountAsync(
+        //        s => s.CounterId == counter.Id
+        //             && s.Status == StickerStatus.Waiting
+        //             && s.Stage != StickerStage.TransferPending, ct);
+        //    var processingCount = await _context.Tickets.CountAsync(
+        //        s => s.CounterId == counter.Id && s.Status == StickerStatus.Processing, ct);
+
+        //    return new CounterStateResponse
+        //    {
+        //        counterId = counter.Id,
+        //        status = counter.Status,
+        //        isAccepting = counter.Status != CounterStatus.PausedAccepting
+        //                      && counter.Status != CounterStatus.Closed,
+        //        waitingCount = waitingCount,
+        //        processingCount = processingCount
+        //    };
+        //}
+
+        //// OPR-09: ngưng nhận phiếu mới
+        //public async Task<CounterStateResponse> PauseAcceptingAsync(int counterId, CancellationToken ct = default)
+        //{
+        //    var counter = await GetCounterAsync(counterId, ct);
+
+        //    if (counter.Status == CounterStatus.Closed)
+        //        throw new ArgumentException("Quầy đã đóng, không thể ngưng nhận phiếu");
+        //    if (counter.Status == CounterStatus.PausedAccepting)
+        //        throw new ArgumentException("Quầy đang ngưng nhận phiếu");
+
+        //    counter.Status = CounterStatus.PausedAccepting;
+        //    await _context.SaveChangesAsync(ct);
+        //    _logger.LogInformation("Quầy ngưng nhận phiếu: CounterId={CounterId}", counterId);
+        //    return await BuildStateAsync(counter, ct);
+        //}
+
+        //// OPR-09: nhận phiếu lại
+        //public async Task<CounterStateResponse> ResumeAcceptingAsync(int counterId, CancellationToken ct = default)
+        //{
+        //    var counter = await GetCounterAsync(counterId, ct);
+
+        //    if (counter.Status != CounterStatus.PausedAccepting)
+        //        throw new ArgumentException("Quầy không ở trạng thái ngưng nhận phiếu");
+
+        //    await ResumeCoreAsync(counter, ct);
+        //    _logger.LogInformation("Quầy nhận phiếu lại: CounterId={CounterId}, Status={Status}",
+        //        counterId, counter.Status); 
+        //    return await BuildStateAsync(counter, ct);
+        //}
+
+        //// OPR-09: 1 endpoint bật/tắt theo tài liệu của thầy
+        //public async Task<CounterStateResponse> ToggleReceivingAsync(int counterId, CancellationToken ct = default)
+        //{
+        //    var counter = await GetCounterAsync(counterId, ct);
+
+        //    if (counter.Status == CounterStatus.Closed)
+        //        throw new ArgumentException("Quầy đã đóng, không thể đổi trạng thái nhận phiếu");
+
+        //    if (counter.Status == CounterStatus.PausedAccepting)
+        //        await ResumeCoreAsync(counter, ct);
+        //    else
+        //    {
+        //        counter.Status = CounterStatus.PausedAccepting;
+        //        await _context.SaveChangesAsync(ct);
+        //    }
+
+        //    _logger.LogInformation("Đổi trạng thái nhận phiếu: CounterId={CounterId}, Status={Status}",
+        //        counterId, counter.Status);
+        //    return await BuildStateAsync(counter, ct);
+        //}
 
         // Còn phiếu đang xử lý thì về Serving, hết thì về Idle
         private async Task ResumeCoreAsync(Counter counter, CancellationToken ct)
         {
-            bool hasProcessing = await _context.stickers.AnyAsync(
-                s => s.counterId == counter.id && s.status == StickerStatus.Processing, ct);
-            counter.status = hasProcessing ? CounterStatus.Serving : CounterStatus.Idle;
+            bool hasProcessing = await _context.Tickets.AnyAsync(
+                s => s.CounterId == counter.Id && s.Status == StickerStatus.Processing, ct);
+            counter.Status = hasProcessing ? CounterStatus.Serving : CounterStatus.Idle;
             await _context.SaveChangesAsync(ct);
         }
 
         // OPR-14: đặt ưu tiên, phiếu ưu tiên được xếp lên đầu hàng chờ (Quy tắc 2)
-        public async Task<QueueTicketDto> SetPriorityAsync(string sttId, CancellationToken ct = default)
-        {
-            var sticker = await _context.stickers
-                .Include(s => s.Service)
-                .Include(s => s.Users)
-                .FirstOrDefaultAsync(s => s.sttId == sttId, ct);
+        //public async Task<QueueTicketDto> SetPriorityAsync(string sttId, CancellationToken ct = default)
+        //{
+        //    var sticker = await _context.Tickets
+        //        .Include(s => s.Service)
+        //        .Include(s => s.Users)
+        //        .FirstOrDefaultAsync(s => s.SttId == sttId, ct);
 
-            if (sticker == null)
-                throw new KeyNotFoundException("Phiếu không tồn tại");
-            if (sticker.status != StickerStatus.Waiting)
-                throw new ArgumentException("Chỉ đặt ưu tiên cho phiếu đang chờ");
-            if (sticker.stage == StickerStage.TransferPending)
-                throw new ArgumentException("Phiếu đang chờ quầy khác phản hồi, không thể đặt ưu tiên");
+        //    if (sticker == null)
+        //        throw new KeyNotFoundException("Phiếu không tồn tại");
+        //    if (sticker.Status != StickerStatus.Waiting)
+        //        throw new ArgumentException("Chỉ đặt ưu tiên cho phiếu đang chờ");
+        //    if (sticker.Stage == StickerStage.TransferPending)
+        //        throw new ArgumentException("Phiếu đang chờ quầy khác phản hồi, không thể đặt ưu tiên");
 
-            sticker.isPriority = true;
-            await _context.SaveChangesAsync(ct);
-            _logger.LogInformation("Đặt ưu tiên phiếu: SttId={SttId}", sttId);
+        //    sticker.IsPriority = true;
+        //    await _context.SaveChangesAsync(ct);
+        //    _logger.LogInformation("Đặt ưu tiên phiếu: SttId={SttId}", sttId);
 
-            return new QueueTicketDto
-            {
-                sttId = sticker.sttId,
-                status = sticker.status,
-                stage = sticker.stage,
-                isPriority = sticker.isPriority,
-                issuanceTime = sticker.issuanceTime,
-                useTime = sticker.useTime,
-                serviceName = sticker.Service?.serviceName,
-                handlerName = sticker.Users?.username
-            };
-        }
+        //    return new QueueTicketDto
+        //    {
+        //        sttId = sticker.SttId,
+        //        status = sticker.Status,
+        //        stage = sticker.Stage,
+        //        isPriority = sticker.IsPriority,
+        //        issuanceTime = sticker.IssuanceTime,
+        //        useTime = sticker.UseTime,
+        //        serviceName = sticker.Service?.ServiceName,
+        //        handlerName = sticker.Users?.Username
+        //    };
+        //}
 
-        // OPR-12: 3 nhóm phiếu của quầy
-        public async Task<CounterTicketsResponse> GetCounterTicketsAsync(int counterId, CancellationToken ct = default)
-        {
-            var counter = await _context.counters.AsNoTracking()
-                .FirstOrDefaultAsync(c => c.id == counterId, ct);
-            if (counter == null)
-                throw new KeyNotFoundException("Quầy không tồn tại");
+        //// OPR-12: 3 nhóm phiếu của quầy
+        //public async Task<CounterTicketsResponse> GetCounterTicketsAsync(int counterId, CancellationToken ct = default)
+        //{
+        //    var counter = await _context.Counters.AsNoTracking()
+        //        .FirstOrDefaultAsync(c => c.Id == counterId, ct);
+        //    if (counter == null)
+        //        throw new KeyNotFoundException("Quầy không tồn tại");
 
-            var baseQuery = _context.stickers.AsNoTracking().Where(s => s.counterId == counterId);
+        //    var baseQuery = _context.Tickets.AsNoTracking().Where(s => s.CounterId == counterId);
 
-            // Quy tắc 2: phiếu ưu tiên lên đầu, cùng mức ưu tiên thì ai lấy số trước đứng trước.
-            // Phiếu đang chờ quầy khác phản hồi (TransferPending) không nằm trong hàng chờ.
-            var waiting = await baseQuery
-                .Where(s => s.status == StickerStatus.Waiting && s.stage != StickerStage.TransferPending)
-                .OrderByDescending(s => s.isPriority)
-                .ThenBy(s => s.issuanceTime)
-                .Select(TicketProjection)
-                .ToListAsync(ct);
+        //    // Quy tắc 2: phiếu ưu tiên lên đầu, cùng mức ưu tiên thì ai lấy số trước đứng trước.
+        //    // Phiếu đang chờ quầy khác phản hồi (TransferPending) không nằm trong hàng chờ.
+        //    var waiting = await baseQuery
+        //        .Where(s => s.Status == StickerStatus.Waiting && s.Stage != StickerStage.TransferPending)
+        //        .OrderByDescending(s => s.IsPriority)
+        //        .ThenBy(s => s.IssuanceTime)
+        //        .Select(TicketProjection)
+        //        .ToListAsync(ct);
 
-            var processing = await baseQuery
-                .Where(s => s.status == StickerStatus.Processing)
-                .OrderBy(s => s.issuanceTime)
-                .Select(TicketProjection)
-                .ToListAsync(ct);
+        //    var processing = await baseQuery
+        //        .Where(s => s.Status == StickerStatus.Processing)
+        //        .OrderBy(s => s.IssuanceTime)
+        //        .Select(TicketProjection)
+        //        .ToListAsync(ct);
 
-            var absent = await baseQuery
-                .Where(s => s.status == StickerStatus.Absent)
-                .OrderByDescending(s => s.useTime)
-                .Select(TicketProjection)
-                .ToListAsync(ct);
+        //    var absent = await baseQuery
+        //        .Where(s => s.Status == StickerStatus.Absent)
+        //        .OrderByDescending(s => s.UseTime)
+        //        .Select(TicketProjection)
+        //        .ToListAsync(ct);
 
-            return new CounterTicketsResponse
-            {
-                counterId = counter.id,
-                counterStatus = counter.status,
-                waiting = waiting,
-                processing = processing,
-                absent = absent
-            };
-        }
+        //    return new CounterTicketsResponse
+        //    {
+        //        counterId = counter.Id,
+        //        counterStatus = counter.Status,
+        //        waiting = waiting,
+        //        processing = processing,
+        //        absent = absent
+        //    };
+        //}
 
         // OPR-13: gộp phiếu kết thúc (theo useTime) và phiếu đã chuyển đi
         // (CounterChange Accepted/AutoAccepted theo createTime), sort giảm dần rồi mới phân trang.
-        public async Task<CounterHistoryResponse> GetCounterHistoryAsync(
-            int counterId, int page = 1, int pageSize = 20,
-            DateTimeOffset? from = null, DateTimeOffset? to = null,
-            CancellationToken ct = default)
+
+
+
+        public List<HistoryItemResponse> GetCounterHistory(int counterId)
         {
-            if (!await _context.counters.AnyAsync(c => c.id == counterId, ct))
-                throw new KeyNotFoundException("Quầy không tồn tại");
+            var targetStatuses = new[] { "DONE", "TRANSFERRED", "ABSENT" };
+            var sticker = _context.Tickets
+        .AsNoTracking()
+        .Where(s => s.CounterId == counterId)
+        .OrderByDescending(s => s.UseTime)
+        .Select(s => new HistoryItemResponse
+        {
+            id = s.SttId,
+            number = s.TicketNumber,
+            serviceName = s.Service != null ? s.Service.ServiceName : null,
+            staffName = s.Users != null ? s.Users.Username : null,
+            result = s.Counter.Status
+        })
+        .ToList();
+            return sticker;
+        }
 
-            if (page < 1) page = 1;
-            if (pageSize < 1) pageSize = 20;
-            if (pageSize > MaxPageSize) pageSize = MaxPageSize;
+        private const string StageWaiting = "WAITING_ASSIGN";
+        private const string StageProcessing = "WAITING_ACCEPT";
 
-            // Npgsql chỉ nhận tham số DateTimeOffset offset 0 (UTC), trong khi query string
-            // bind ra DateTimeOffset theo offset của server (+07:00) -> phải quy về UTC trước,
-            // nếu không sẽ lỗi "Cannot write DateTimeOffset with Offset=07:00:00".
-            if (from.HasValue) from = from.Value.ToUniversalTime();
-            if (to.HasValue) to = to.Value.ToUniversalTime();
 
-            var finishedQuery = _context.stickers.AsNoTracking()
-                .Where(s => s.counterId == counterId
-                            && (s.status == StickerStatus.Completed
-                                || s.status == StickerStatus.Absent
-                                || s.status == StickerStatus.Cancelled
-                                || s.status == StickerStatus.Expired));
-            if (from.HasValue) finishedQuery = finishedQuery.Where(s => s.useTime >= from.Value);
-            if (to.HasValue) finishedQuery = finishedQuery.Where(s => s.useTime <= to.Value);
+        // Gọi đúng một vé theo SttId
+        public QueueTicketDto CallTicket(int counterId, string sttId)
+        {
+            var ticket = _context.Tickets
+                .Include(t => t.Service)
+                .FirstOrDefault(t => t.SttId == sttId)
+                ?? throw new KeyNotFoundException("Không tìm thấy số thứ tự");
 
-            var finished = await finishedQuery
-                .Select(s => new HistoryItemResponse
-                {
-                    sttId = s.sttId,
-                    result = s.status,
-                    time = s.useTime,
-                    serviceName = s.Service != null ? s.Service.serviceName : null,
-                    handlerName = s.Users != null ? s.Users.username : null,
-                    isPriority = s.isPriority
-                })
-                .ToListAsync(ct);
+            if (ticket.Stage != StageWaiting)
+                throw new InvalidOperationException("Số này không ở trạng thái chờ");
 
-            // Quầy gửi nhìn thấy phiếu mình đã chuyển đi với kết quả "Transferred"
-            var transferredQuery = _context.counterChanges.AsNoTracking()
-                .Where(cc => cc.counterIdSender == counterId
-                             && (cc.status == CounterChangeStatus.Accepted
-                                 || cc.status == CounterChangeStatus.AutoAccepted));
-            if (from.HasValue) transferredQuery = transferredQuery.Where(cc => cc.createTime >= from.Value);
-            if (to.HasValue) transferredQuery = transferredQuery.Where(cc => cc.createTime <= to.Value);
+            ticket.CounterId = counterId;
+            ticket.Stage = StageProcessing;
+            _context.SaveChanges();
 
-            var transferred = await transferredQuery
-                .Select(cc => new HistoryItemResponse
-                {
-                    sttId = cc.sttId,
-                    result = HistoryResult.Transferred,
-                    time = cc.createTime,
-                    serviceName = cc.Sticker != null && cc.Sticker.Service != null
-                        ? cc.Sticker.Service.serviceName
-                        : null,
-                    handlerName = cc.Sticker != null && cc.Sticker.Users != null
-                        ? cc.Sticker.Users.username
-                        : null,
-                    counterName = cc.CounterReceiver != null ? cc.CounterReceiver.counterName : null
-                })
-                .ToListAsync(ct);
+            return ToDto(ticket);
+        }
 
-            var all = finished
-                .Concat(transferred)
-                .OrderByDescending(x => x.time)
+        // Gọi N số kế tiếp trong hàng chờ, theo thứ tự cấp số
+        public List<QueueTicketDto> CallNext(int counterId, int count)
+        {
+            var tickets = _context.Tickets
+                .Include(t => t.Service)
+                .Where(t => t.Stage == StageWaiting)
+                .OrderBy(t => t.IssuanceTime)
+                .Take(count)
                 .ToList();
 
-            return new CounterHistoryResponse
+            foreach (var t in tickets)
             {
-                page = page,
-                pageSize = pageSize,
-                total = all.Count,
-                items = all.Skip((page - 1) * pageSize).Take(pageSize).ToList()
-            };
+                t.CounterId = counterId;
+                t.Stage = StageProcessing;
+            }
+
+            _context.SaveChanges();
+
+            return tickets.Select(ToDto).ToList();
         }
+
+        private static QueueTicketDto ToDto(Tickets t) => new()
+        {
+            id = t.SttId,
+            number = t.TicketNumber,
+            issuedAt = t.IssuanceTime.ToString("yyyy-MM-dd HH:mm:ss"),
+            serviceName = t.Service?.ServiceName,
+            status = t.Stage,
+        };
     }
 }

@@ -1,4 +1,4 @@
-namespace SystemQMS.Models;
+namespace SystemQMS.Constants;
 
 public static class CounterChangeStatus
 {

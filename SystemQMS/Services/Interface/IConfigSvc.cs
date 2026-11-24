@@ -7,7 +7,7 @@ namespace SystemQMS.Services.Interface
         Task<DisplayConfigResponseDto> GetDisplayConfigAsync(int unitId);
         Task<DisplayConfigResponseDto> UpdateDisplayConfigAsync(int unitId, DisplayConfigUpdateDto dto);
         Task ResetDisplayFieldAsync(int unitId, string fieldName);
-        Task UpdateAudioConfigAsync(int unitId, AudioConfigUpdateDto dto);
         Task<AudioConfigResponseDto> GetAudioConfigAsync(int unitId);
+        Task UpdateAudioConfigAsync(int unitId, AudioConfigUpdateDto dto);
     }
 }

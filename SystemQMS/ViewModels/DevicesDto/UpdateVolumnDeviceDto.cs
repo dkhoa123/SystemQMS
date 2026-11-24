@@ -2,7 +2,7 @@
 {
     public class UpdateVolumnDeviceDto
     {
-        public List<string> deviceIds { get; set; } = new List<string>();
+        public List<int> deviceIds { get; set; } = new List<int>();
         public int volume { get; set; } = 50;
     }
 }

@@ -5,19 +5,19 @@ namespace SystemQMS.Models
 {
     public class Diary
     {
-        public int id { get; set; }
-        public int unitId { get; set; }
-        public int userId { get; set; }
+        public int Id { get; set; }
+        public int UnitId { get; set; }
+        public int UserId { get; set; }
         [MaxLength(100)]
-        public string moduleActive { get; set; }
+        public string ModuleActive { get; set; }
         [MaxLength(100)]
-        public string typeActive { get; set; }
-        public int changeNumber { get; set; }
-        public DateTimeOffset time { get; set; }
+        public string TypeActive { get; set; }
+        public int ChangeNumber { get; set; }
+        public DateTimeOffset Time { get; set; }
 
-        [ForeignKey("unitId")]
+        [ForeignKey("UnitId")]
         public virtual Unit? Unit { get; set; }
-        [ForeignKey("userId")]
+        [ForeignKey("UserId")]
         public virtual Users? User { get; set; }
     }
 }

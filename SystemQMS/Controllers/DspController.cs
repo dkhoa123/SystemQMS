@@ -54,6 +54,7 @@ namespace SystemQMS.System.Controllers
             return Ok(result);
         }
 
+
         [HttpPost("devices/{deviceId}/display-errors")]
         public async Task<ActionResult<DisplayMaintenanceResponseDto>> ReportDisplayError(
             string deviceId,
@@ -64,18 +65,35 @@ namespace SystemQMS.System.Controllers
         }
         [HttpPost("counters/{counterId:int}/play-audio")]
         public async Task<ActionResult<AudioCallEventDto>> PlayCallAudio(
-            int counterId,
-            [FromQuery] string sttId,
-            [FromQuery] int repeatCount = 1)
+    int counterId,
+    [FromQuery] string? sttId,
+    [FromQuery] string? ticketNumber,
+    [FromQuery] int? repeatCount,
+    [FromBody(EmptyBodyBehavior = Microsoft.AspNetCore.Mvc.ModelBinding.EmptyBodyBehavior.Allow)] PlayAudioRequestDto? body)
         {
-            if (string.IsNullOrWhiteSpace(sttId))
-                return BadRequest(new { message = "sttId không được để trống." });
+            var resolvedIdentifier = sttId
+                ?? body?.SttId
+                ?? ticketNumber
+                ?? body?.TicketNumber;
 
-            if (repeatCount < 1) repeatCount = 1;
-            if (repeatCount > 3) repeatCount = 3;
+            if (string.IsNullOrWhiteSpace(resolvedIdentifier))
+            {
+                return BadRequest(new { message = "Thiếu tham số sttId hoặc ticketNumber." });
+            }
 
-            var result = await _dspService.TriggerCallAudioAsync(GetCurrentUnitId(), counterId, sttId, repeatCount);
-            if (result == null) return NotFound(new { message = "Không tìm thấy quầy." });
+            int finalRepeat = repeatCount ?? body?.RepeatCount ?? 1;
+            finalRepeat = Math.Clamp(finalRepeat, 1, 3);
+
+            var result = await _dspService.TriggerCallAudioAsync(
+                GetCurrentUnitId(),
+                counterId,
+                resolvedIdentifier,
+                finalRepeat);
+
+            if (result == null)
+            {
+                return NotFound(new { message = "Không tìm thấy quầy hoặc thông tin vé tương ứng với sttId." });
+            }
 
             return Ok(result);
         }

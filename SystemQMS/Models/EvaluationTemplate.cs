@@ -5,16 +5,16 @@ namespace SystemQMS.Models
 {
     public class EvaluationTemplate
     {
-        public int id { get; set; }
-        public int unitId { get; set; }
+        public int Id { get; set; }
+        public int UnitId { get; set; }
         [MaxLength(100)]
-        public string templateId { get; set; }
+        public string TemplateId { get; set; }
         [MaxLength(100)]
-        public string templateName { get; set; }
+        public string TemplateName { get; set; }
         [MaxLength(255)]
-        public string contentQuestion { get; set; }
+        public string ContentQuestion { get; set; }
 
-        [ForeignKey("unitId")]
+        [ForeignKey("UnitId")]
         public virtual Unit? Unit { get; set; }
     }
 }

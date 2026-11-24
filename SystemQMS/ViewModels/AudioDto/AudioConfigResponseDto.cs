@@ -35,4 +35,10 @@
         public double ReadingSpeed { get; set; } = 1.0;
         public int RepeatCount { get; set; } = 1;
     }
+    public class PlayAudioRequestDto
+    {
+        public string? SttId { get; set; }
+        public string? TicketNumber { get; set; }
+        public int? RepeatCount { get; set; }
+    }
 }

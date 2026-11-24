@@ -2,13 +2,10 @@
 {
     public class FilterDeviceDto
     {
-        public string? statusActive { get; set; }
-        public string? statusConnect { get; set; }
-        public string? deviceType { get; set; }
-        public string? deviceId { get; set; }
-        public string? deviceName { get; set; }
-        public string? ipAddress { get; set; }
-        public string? serviceId { get; set; }
-        public string? couterId { get; set; }
+        public int page { get; set; } = 1;
+        public int pageSize { get; set; } = 10;
+        public string? keyword { get; set; }
+        public string? availability { get; set; }
+        public string? connectionStatus { get; set; }
     }
 }

@@ -1,5 +1,6 @@
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
+using SystemQMS.Constants;
 using SystemQMS.Models;
 using SystemQMS.Services.Interface;
 using SystemQMS.ViewModels.CountersDto;
@@ -24,58 +25,58 @@ namespace SystemQMS.Services
         // OPR-02: GỌI 1 SỐ KẾ TIẾP (Ưu tiên isPriority, né TransferPending, check giờ)
         public async Task<(bool Success, string Message, TicketOperationResponseDto? Data)> CallNextTicketAsync(int counterId, int userId)
         {
-            var counter = await _context.counters.FirstOrDefaultAsync(c => c.id == counterId);
-            if (counter == null || counter.status == CounterStatus.Closed)
+            var counter = await _context.Counters.FirstOrDefaultAsync(c => c.Id == counterId);
+            if (counter == null || counter.Status == CounterStatus.Closed)
                 return (false, "Quầy đang ở trạng thái đóng (Closed), không thể gọi số.", null);
 
             // Bốc vé: Waiting, né TransferPending, ưu tiên vé isPriority lên trước
-            var ticket = await _context.stickers
-                .Where(s => s.counterId == counterId
-                         && s.status == StickerStatus.Waiting
-                         && s.stage != StickerStage.TransferPending)
-                .OrderByDescending(s => s.isPriority)
-                .ThenBy(s => s.issuanceTime)
+            var ticket = await _context.Tickets
+                .Where(s => s.CounterId == counterId
+                         && s.Status == StickerStatus.Waiting
+                         && s.Stage != StickerStage.TransferPending)
+                .OrderByDescending(s => s.IsPriority)
+                .ThenBy(s => s.IssuanceTime)
                 .FirstOrDefaultAsync();
 
             if (ticket == null)
                 return (false, "Hiện không còn số thứ tự nào đang chờ tại quầy này.", null);
 
-            bool inWorkingHours = await _scheduleSvc.IsWithinOperatingHoursAsync(ticket.serviceId);
+            bool inWorkingHours = await _scheduleSvc.IsWithinOperatingHoursAsync(ticket.ServiceId);
             if (!inWorkingHours)
                 return (false, "Dịch vụ của vé này hiện đã ngoài khung giờ tiếp nhận phục vụ.", null);
 
-            ticket.status = StickerStatus.Processing;
-            ticket.stage = StickerStage.Processing;
-            ticket.userId = userId;
-            ticket.useTime = DateTimeOffset.UtcNow;
+            ticket.Status = StickerStatus.Processing;
+            ticket.Stage = StickerStage.Processing;
+            ticket.UserId = userId;
+            ticket.UseTime = DateTimeOffset.UtcNow;
 
-            counter.status = CounterStatus.Serving;
+            counter.Status = CounterStatus.Serving;
             await _context.SaveChangesAsync();
 
-            var (templateId, audioSequence) = await BuildAudioSequenceAsync(counter, ticket.sttId);
-            var response = MapToDto(ticket, counter.counterName, null);
+            var (templateId, audioSequence) = await BuildAudioSequenceAsync(counter, ticket.TicketNumber);
+            var response = MapToDto(ticket, counter.CounterName, null);
             response.audioTemplateId = templateId;
             response.audioSequence = audioSequence;
 
-            return (true, $"Đang gọi số phiếu {ticket.sttId}.", response);
+            return (true, $"Đang gọi số phiếu {ticket.SttId}.", response);
         }
 
         // OPR-03 & OPR-08: GỌI NHIỀU SỐ CÙNG LÚC (Lấy batch từ cấu hình, mặc định 6)
 
         public async Task<(bool Success, string Message, List<TicketOperationResponseDto> Data)> CallMultipleTicketsAsync(int counterId, int userId)
         {
-            var counter = await _context.counters.FirstOrDefaultAsync(c => c.id == counterId);
-            if (counter == null || counter.status == CounterStatus.Closed)
+            var counter = await _context.Counters.FirstOrDefaultAsync(c => c.Id == counterId);
+            if (counter == null || counter.Status == CounterStatus.Closed)
                 return (false, "Quầy đang đóng, không thể gọi số.", new List<TicketOperationResponseDto>());
 
             int batchSize = _configuration.GetValue<int>("CounterOpSettings:MaxCallBatch", 6);
 
-            var tickets = await _context.stickers
-                .Where(s => s.counterId == counterId
-                         && s.status == StickerStatus.Waiting
-                         && s.stage != StickerStage.TransferPending)
-                .OrderByDescending(s => s.isPriority)
-                .ThenBy(s => s.issuanceTime)
+            var tickets = await _context.Tickets
+                .Where(s => s.CounterId == counterId
+                         && s.Status == StickerStatus.Waiting
+                         && s.Stage != StickerStage.TransferPending)
+                .OrderByDescending(s => s.IsPriority)
+                .ThenBy(s => s.IssuanceTime)
                 .Take(batchSize)
                 .ToListAsync();
 
@@ -87,21 +88,21 @@ namespace SystemQMS.Services
             {
                 foreach (var t in tickets)
                 {
-                    t.status = StickerStatus.Processing;
-                    t.stage = StickerStage.Processing;
-                    t.userId = userId;
-                    t.useTime = DateTimeOffset.UtcNow;
+                    t.Status = StickerStatus.Processing;
+                    t.Stage = StickerStage.Processing;
+                    t.UserId = userId;
+                    t.UseTime = DateTimeOffset.UtcNow;
                 }
 
-                counter.status = CounterStatus.Serving;
+                counter.Status = CounterStatus.Serving;
                 await _context.SaveChangesAsync();
                 await transaction.CommitAsync();
 
                 var response = new List<TicketOperationResponseDto>();
                 foreach (var t in tickets)
                 {
-                    var mapped = MapToDto(t, counter.counterName, null);
-                    var (templateId, audioSequence) = await BuildAudioSequenceAsync(counter, t.sttId);
+                    var mapped = MapToDto(t, counter.CounterName, null);
+                    var (templateId, audioSequence) = await BuildAudioSequenceAsync(counter, t.TicketNumber);
                     mapped.audioTemplateId = templateId;
                     mapped.audioSequence = audioSequence;
                     response.Add(mapped);
@@ -120,27 +121,27 @@ namespace SystemQMS.Services
 
         public async Task<(bool Success, string Message, TicketOperationResponseDto? Data)> CompleteTicketAsync(int counterId, string sttId, int userId)
         {
-            var ticket = await _context.stickers.FirstOrDefaultAsync(s => s.sttId == sttId && s.counterId == counterId);
+            var ticket = await _context.Tickets.FirstOrDefaultAsync(s => s.SttId == sttId && s.CounterId == counterId);
             if (ticket == null) return (false, "Không tìm thấy vé tại quầy này.", null);
 
             // Chặn hoàn thành nếu vé đang trong tiến trình chuyển giao
-            if (ticket.stage == StickerStage.TransferPending)
+            if (ticket.Stage == StickerStage.TransferPending)
                 return (false, "Vé đang trong tiến trình chờ chuyển quầy (TransferPending), không thể hoàn thành!", null);
 
-            ticket.status = StickerStatus.Completed;
-            ticket.stage = StickerStage.Completed;
-            ticket.userId = userId;
-            ticket.useTime = DateTimeOffset.UtcNow;
+            ticket.Status = StickerStatus.Completed;
+            ticket.Stage = StickerStage.Completed;
+            ticket.UserId = userId;
+            ticket.UseTime = DateTimeOffset.UtcNow;
 
-            var hasOtherProcessing = await _context.stickers.AnyAsync(s => s.counterId == counterId && s.status == StickerStatus.Processing && s.sttId != sttId);
-            var counter = await _context.counters.FirstOrDefaultAsync(c => c.id == counterId);
+            var hasOtherProcessing = await _context.Tickets.AnyAsync(s => s.CounterId == counterId && s.Status == StickerStatus.Processing && s.SttId != sttId);
+            var counter = await _context.Counters.FirstOrDefaultAsync(c => c.Id == counterId);
             if (counter != null && !hasOtherProcessing)
             {
-                counter.status = CounterStatus.Idle;
+                counter.Status = CounterStatus.Idle;
             }
 
             await _context.SaveChangesAsync();
-            return (true, $"Đã hoàn thành phục vụ phiếu {ticket.sttId}.", MapToDto(ticket, counter?.counterName, null));
+            return (true, $"Đã hoàn thành phục vụ phiếu {ticket.SttId}.", MapToDto(ticket, counter?.CounterName, null));
         }
 
 
@@ -148,27 +149,27 @@ namespace SystemQMS.Services
 
         public async Task<(bool Success, string Message, TicketOperationResponseDto? Data)> SkipTicketAsync(int counterId, string sttId, int userId, SkipTicketRequestDto? dto)
         {
-            var ticket = await _context.stickers.FirstOrDefaultAsync(s => s.sttId == sttId && s.counterId == counterId);
+            var ticket = await _context.Tickets.FirstOrDefaultAsync(s => s.SttId == sttId && s.CounterId == counterId);
             if (ticket == null) return (false, "Không tìm thấy vé tại quầy này.", null);
 
             // Chặn bỏ qua nếu vé đang chờ phản hồi chuyển giao
-            if (ticket.stage == StickerStage.TransferPending)
+            if (ticket.Stage == StickerStage.TransferPending)
                 return (false, "Vé đang chờ quầy khác phản hồi chuyển giao, không thể đánh dấu vắng mặt!", null);
 
-            ticket.status = StickerStatus.Absent;
-            ticket.stage = StickerStage.Absent;
-            ticket.userId = userId;
-            ticket.useTime = DateTimeOffset.UtcNow;
+            ticket.Status = StickerStatus.Absent;
+            ticket.Stage = StickerStage.Absent;
+            ticket.UserId = userId;
+            ticket.UseTime = DateTimeOffset.UtcNow;
 
-            var hasOtherProcessing = await _context.stickers.AnyAsync(s => s.counterId == counterId && s.status == StickerStatus.Processing && s.sttId != sttId);
-            var counter = await _context.counters.FirstOrDefaultAsync(c => c.id == counterId);
+            var hasOtherProcessing = await _context.Tickets.AnyAsync(s => s.CounterId == counterId && s.Status == StickerStatus.Processing && s.SttId != sttId);
+            var counter = await _context.Counters.FirstOrDefaultAsync(c => c.Id == counterId);
             if (counter != null && !hasOtherProcessing)
             {
-                counter.status = CounterStatus.Idle;
+                counter.Status = CounterStatus.Idle;
             }
 
             await _context.SaveChangesAsync();
-            return (true, $"Đã ghi nhận khách vắng mặt cho phiếu {ticket.sttId}.", MapToDto(ticket, counter?.counterName, null));
+            return (true, $"Đã ghi nhận khách vắng mặt cho phiếu {ticket.SttId}.", MapToDto(ticket, counter?.CounterName, null));
         }
 
 
@@ -176,65 +177,65 @@ namespace SystemQMS.Services
 
         public async Task<(bool Success, string Message, TicketOperationResponseDto? Data)> RecallTicketAsync(int counterId, string sttId, int userId)
         {
-            var ticket = await _context.stickers.FirstOrDefaultAsync(s => s.sttId == sttId && s.counterId == counterId);
+            var ticket = await _context.Tickets.FirstOrDefaultAsync(s => s.SttId == sttId && s.CounterId == counterId);
             if (ticket == null) return (false, "Không tìm thấy vé tại quầy này.", null);
 
-            if (ticket.stage == StickerStage.TransferPending)
+            if (ticket.Stage == StickerStage.TransferPending)
                 return (false, "Không thể gọi lại vé đang trong trạng thái chuyển quầy.", null);
 
-            if (ticket.status != StickerStatus.Processing && ticket.status != StickerStatus.Absent)
+            if (ticket.Status != StickerStatus.Processing && ticket.Status != StickerStatus.Absent)
                 return (false, "Chỉ được phép gọi lại vé đang xử lý (Processing) hoặc vé vừa bị bỏ qua (Absent).", null);
 
-            ticket.status = StickerStatus.Processing;
-            ticket.stage = StickerStage.Processing;
-            ticket.userId = userId;
-            ticket.useTime = DateTimeOffset.UtcNow;
+            ticket.Status = StickerStatus.Processing;
+            ticket.Stage = StickerStage.Processing;
+            ticket.UserId = userId;
+            ticket.UseTime = DateTimeOffset.UtcNow;
 
-            var counter = await _context.counters.FirstOrDefaultAsync(c => c.id == counterId);
-            if (counter != null) counter.status = CounterStatus.Serving;
+            var counter = await _context.Counters.FirstOrDefaultAsync(c => c.Id == counterId);
+            if (counter != null) counter.Status = CounterStatus.Serving;
 
             await _context.SaveChangesAsync();
 
-            var response = MapToDto(ticket, counter?.counterName, null);
+            var response = MapToDto(ticket, counter?.CounterName, null);
             if (counter != null)
             {
-                var (templateId, audioSequence) = await BuildAudioSequenceAsync(counter, ticket.sttId);
+                var (templateId, audioSequence) = await BuildAudioSequenceAsync(counter, ticket.TicketNumber);
                 response.audioTemplateId = templateId;
                 response.audioSequence = audioSequence;
             }
 
-            return (true, $"Đang gọi lại số phiếu {ticket.sttId}.", response);
+            return (true, $"Đang gọi lại số phiếu {ticket.SttId}.", response);
         }
 
-        private async Task<(int templateId, List<string> audioSequence)> BuildAudioSequenceAsync(Counter counter, string sttId)
+        private async Task<(int templateId, List<string> audioSequence)> BuildAudioSequenceAsync(Counter counter, string ticketNumber)
         {
-            var configuredTemplateId = await _context.unitConfigs
+            var configuredTemplateId = await _context.UnitConfigs
                 .AsNoTracking()
-                .Where(x => x.UnitId == counter.unitId)
+                .Where(x => x.UnitId == counter.UnitId)
                 .Select(x => x.ActiveAudioTemplateId)
                 .FirstOrDefaultAsync();
 
             var templateId = configuredTemplateId ?? 1;
-            var sequence = _audioMappingSvc.BuildAudioSequence(sttId, counter.counterName ?? counter.counterId, templateId);
+            var sequence = _audioMappingSvc.BuildAudioSequence(ticketNumber, counter.CounterName ?? counter.CounterId, templateId);
             return (templateId, sequence);
         }
 
         // Helper Map Entity sang DTO
-        private static TicketOperationResponseDto MapToDto(Sticker ticket, string? counterName, string? staffName)
+        private static TicketOperationResponseDto MapToDto(Tickets ticket, string? counterName, string? staffName)
         {
             return new TicketOperationResponseDto
             {
-                sttId = ticket.sttId,
-                serviceId = ticket.serviceId,
-                counterId = ticket.counterId,
+                sttId = ticket.SttId,
+                serviceId = ticket.ServiceId,
+                counterId = ticket.CounterId,
                 counterName = counterName ?? string.Empty,
-                userId = ticket.userId,
+                userId = ticket.UserId,
                 staffName = staffName,
-                status = ticket.status,
-                stage = ticket.stage,
-                isPriority = ticket.isPriority,
-                issuanceTime = ticket.issuanceTime,
-                useTime = ticket.useTime
+                status = ticket.Status,
+                stage = ticket.Stage,
+                isPriority = ticket.IsPriority,
+                issuanceTime = ticket.IssuanceTime,
+                useTime = ticket.UseTime
             };
         }
     }

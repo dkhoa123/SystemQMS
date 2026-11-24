@@ -4,7 +4,7 @@ using SystemQMS.ViewModels.QueueDto;
 
 namespace SystemQMS.Controllers
 {
-    [Route("api/counters/{counterId}/queue")]
+    [Route("api/Counters/{counterId}/queue")]
     [ApiController]
     public class QueueController : ControllerBase
     {
@@ -15,46 +15,59 @@ namespace SystemQMS.Controllers
             _queueSvc = queueSvc;
         }
 
-        [HttpPost("pause")]
-        public async Task<ActionResult<CounterStateResponse>> Pause(int counterId, CancellationToken ct)
-        {
-            try
-            {
-                return Ok(await _queueSvc.PauseAcceptingAsync(counterId, ct));
-            }
-            catch (KeyNotFoundException ex)
-            {
-                return NotFound(new { message = ex.Message });
-            }
-            catch (ArgumentException ex)
-            {
-                return BadRequest(new { message = ex.Message });
-            }
-        }
+        //[HttpPost("pause")]
+        //public async Task<ActionResult<CounterStateResponse>> Pause(int counterId, CancellationToken ct)
+        //{
+        //    try
+        //    {
+        //        return Ok(await _queueSvc.PauseAcceptingAsync(counterId, ct));
+        //    }
+        //    catch (KeyNotFoundException ex)
+        //    {
+        //        return NotFound(new { message = ex.Message });
+        //    }
+        //    catch (ArgumentException ex)
+        //    {
+        //        return BadRequest(new { message = ex.Message });
+        //    }
+        //}
 
-        [HttpPost("resume")]
-        public async Task<ActionResult<CounterStateResponse>> Resume(int counterId, CancellationToken ct)
-        {
-            try
-            {
-                return Ok(await _queueSvc.ResumeAcceptingAsync(counterId, ct));
-            }
-            catch (KeyNotFoundException ex)
-            {
-                return NotFound(new { message = ex.Message });
-            }
-            catch (ArgumentException ex)
-            {
-                return BadRequest(new { message = ex.Message });
-            }
-        }
+        //[HttpPost("resume")]
+        //public async Task<ActionResult<CounterStateResponse>> Resume(int counterId, CancellationToken ct)
+        //{
+        //    try
+        //    {
+        //        return Ok(await _queueSvc.ResumeAcceptingAsync(counterId, ct));
+        //    }
+        //    catch (KeyNotFoundException ex)
+        //    {
+        //        return NotFound(new { message = ex.Message });
+        //    }
+        //    catch (ArgumentException ex)
+        //    {
+        //        return BadRequest(new { message = ex.Message });
+        //    }
+        //}
 
         [HttpGet("tickets")]
-        public async Task<ActionResult<CounterTicketsResponse>> GetTickets(int counterId, CancellationToken ct)
+        public IActionResult GetTickets(int counterId)
         {
             try
             {
-                return Ok(await _queueSvc.GetCounterTicketsAsync(counterId, ct));
+                return Ok(_queueSvc.getStatesCounter(counterId));
+            }
+            catch (KeyNotFoundException ex)
+            {
+                return NotFound(new { message = ex.Message });
+            }
+        }
+
+        [HttpGet("tickets/filter")]
+        public IActionResult GetFilteredTickets(int counterId, [FromQuery] FilterQueueDto filter)
+        {
+            try
+            {
+                return Ok(_queueSvc.GetCounterTickets(filter));
             }
             catch (KeyNotFoundException ex)
             {
@@ -63,14 +76,11 @@ namespace SystemQMS.Controllers
         }
 
         [HttpGet("history")]
-        public async Task<ActionResult<CounterHistoryResponse>> GetHistory(
-            int counterId, int page = 1, int pageSize = 20,
-            DateTimeOffset? from = null, DateTimeOffset? to = null,
-            CancellationToken ct = default)
+        public IActionResult GetHistory(int counterId)
         {
             try
             {
-                return Ok(await _queueSvc.GetCounterHistoryAsync(counterId, page, pageSize, from, to, ct));
+                return Ok(_queueSvc.GetCounterHistory(counterId));
             }
             catch (KeyNotFoundException ex)
             {
@@ -78,39 +88,62 @@ namespace SystemQMS.Controllers
             }
         }
 
-
-        [HttpPost("/api/counters/{counterId}/toggle-receiving")]
-        public async Task<ActionResult<CounterStateResponse>> ToggleReceiving(int counterId, CancellationToken ct)
+        [HttpPost("call")]
+        public IActionResult Call(int counterId, [FromBody] CallRequest req)
         {
             try
             {
-                return Ok(await _queueSvc.ToggleReceivingAsync(counterId, ct));
+                // Frontend gửi sttId thì gọi đúng số đó
+                if (!string.IsNullOrWhiteSpace(req.SttId))
+                    return Ok(_queueSvc.CallTicket(counterId, req.SttId));
+
+                // Không có sttId thì gọi N số kế tiếp (tối đa 6)
+                var count = Math.Clamp(req.Count, 1, 6);
+                return Ok(_queueSvc.CallNext(counterId, count));
             }
             catch (KeyNotFoundException ex)
             {
                 return NotFound(new { message = ex.Message });
             }
-            catch (ArgumentException ex)
+            catch (InvalidOperationException ex)
             {
                 return BadRequest(new { message = ex.Message });
             }
         }
 
-        [HttpPost("/api/stickers/{sttId}/priority")]
-        public async Task<ActionResult<QueueTicketDto>> SetPriority(string sttId, CancellationToken ct)
-        {
-            try
-            {
-                return Ok(await _queueSvc.SetPriorityAsync(sttId, ct));
-            }
-            catch (KeyNotFoundException ex)
-            {
-                return NotFound(new { message = ex.Message });
-            }
-            catch (ArgumentException ex)
-            {
-                return BadRequest(new { message = ex.Message });
-            }
-        }
+
+        //[HttpPost("/api/counters/{counterId}/toggle-receiving")]
+        //public async Task<ActionResult<CounterStateResponse>> ToggleReceiving(int counterId, CancellationToken ct)
+        //{
+        //    try
+        //    {
+        //        return Ok(await _queueSvc.ToggleReceivingAsync(counterId, ct));
+        //    }
+        //    catch (KeyNotFoundException ex)
+        //    {
+        //        return NotFound(new { message = ex.Message });
+        //    }
+        //    catch (ArgumentException ex)
+        //    {
+        //        return BadRequest(new { message = ex.Message });
+        //    }
+        //}
+
+        //[HttpPost("/api/stickers/{sttId}/priority")]
+        //public async Task<ActionResult<QueueTicketDto>> SetPriority(string sttId, CancellationToken ct)
+        //{
+        //    try
+        //    {
+        //        return Ok(await _queueSvc.SetPriorityAsync(sttId, ct));
+        //    }
+        //    catch (KeyNotFoundException ex)
+        //    {
+        //        return NotFound(new { message = ex.Message });
+        //    }
+        //    catch (ArgumentException ex)
+        //    {
+        //        return BadRequest(new { message = ex.Message });
+        //    }
+        //}
     }
 }

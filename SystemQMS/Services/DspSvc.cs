@@ -1,5 +1,6 @@
 ﻿using Microsoft.AspNetCore.SignalR;
 using Microsoft.EntityFrameworkCore;
+using SystemQMS.Constants;
 using SystemQMS.Hubs;
 using SystemQMS.Models;
 using SystemQMS.Services.Interface;
@@ -26,36 +27,120 @@ namespace SystemQMS.Services
             _hubContext = hubContext;
         }
 
+        public async Task<AudioCallEventDto?> BuildAudioCallEventAsync(
+            int counterId,
+            string ticketNumber,
+            int repeatCount)
+        {
+            var ticket = await _context.Tickets
+                .AsNoTracking()
+                .FirstOrDefaultAsync(t => t.CounterId == counterId && t.TicketNumber == ticketNumber);
+            if (ticket == null) return null;
+
+            var counter = await _context.Counters
+                .AsNoTracking()
+                .FirstOrDefaultAsync(c => c.Id == counterId);
+            if (counter == null) return null;
+
+            var config = await _context.UnitConfigs
+                .AsNoTracking()
+                .FirstOrDefaultAsync(c => c.UnitId == counter.UnitId);
+
+            int templateId = config?.ActiveAudioTemplateId ?? 1;
+            double speed = config?.ReadingSpeed ?? 1.0;
+
+            var counterCodeForAudio = !string.IsNullOrWhiteSpace(counter.CounterId)
+                ? counter.CounterId
+                : counter.Id.ToString();
+
+            return new AudioCallEventDto
+            {
+                CounterId = counter.Id,
+                CounterName = counter.CounterName ?? counter.CounterId,
+                TicketNumber = ticket.TicketNumber,
+                AudioFiles = _audioMappingSvc.BuildAudioSequence(
+                    ticket.TicketNumber,
+                    counterCodeForAudio,
+                    templateId),
+                ReadingSpeed = speed,
+                RepeatCount = Math.Clamp(repeatCount, 1, 3)
+            };
+        }
+
+        public async Task<AudioCallEventDto?> TriggerCallAudioAsync(
+            int unitId,
+            int counterId,
+            string ticketIdentifier,
+            int repeatCount = 1)
+        {
+            var counter = await _context.Counters
+                .AsNoTracking()
+                .FirstOrDefaultAsync(c => c.Id == counterId && c.UnitId == unitId);
+
+            if (counter == null) return null;
+
+            var ticket = await _context.Tickets
+                .AsNoTracking()
+                .Where(t => t.UnitId == unitId && (t.SttId == ticketIdentifier || t.TicketNumber == ticketIdentifier))
+                .OrderByDescending(t => t.IssuanceTime)
+                .FirstOrDefaultAsync();
+
+            if (ticket == null && Guid.TryParse(ticketIdentifier, out _))
+            {
+                return null;
+            }
+
+            var resolvedTicketNumber = ticket?.TicketNumber ?? ticketIdentifier;
+
+            var counterCodeForAudio = !string.IsNullOrWhiteSpace(counter.CounterId)
+                ? counter.CounterId
+                : counter.Id.ToString();
+
+            var audioEvent = await _audioMappingSvc.BuildAudioCallEventAsync(
+                unitId,
+                counter.Id,
+                counterCodeForAudio,
+                resolvedTicketNumber,
+                Math.Clamp(repeatCount, 1, 3));
+
+            audioEvent.CounterName = counter.CounterName ?? counter.CounterId;
+
+            await _hubContext.Clients.Group($"Unit_{unitId}").SendAsync("OnCallNumberAudio", audioEvent);
+
+            return audioEvent;
+        }
+
         public async Task<DisplayBoardPageResponseDto> GetDisplayBoardPageAsync(int page, bool showWaitlist, int unitId)
         {
             if (page < 1) page = 1;
 
-            var counters = await _context.counters
+            var counters = await _context.Counters
                 .AsNoTracking()
-                .Where(c => c.isActive
-                            && c.unitId == unitId
-                            && c.status != CounterStatus.PausedAccepting)
+                .Where(c => c.IsActive
+                            && c.UnitId == unitId
+                            && c.Status != CounterStatus.PausedAccepting)
                 .Select(c => new
                 {
-                    c.id,
-                    Name = c.counterName ?? c.counterId
+                    c.Id,
+                    Name = c.CounterName ?? c.CounterId
                 })
                 .ToListAsync();
 
-            var counterMap = counters.ToDictionary(c => c.id, c => c.Name);
+            var counterMap = counters.ToDictionary(c => c.Id, c => c.Name);
             var counterIds = counterMap.Keys.ToList();
 
-            var calledTickets = await _context.stickers
+            var calledTickets = await _context.Tickets
                 .AsNoTracking()
-                .Where(s => counterIds.Contains(s.counterId) && s.status == StickerStatus.Processing)
+                .Where(s => counterIds.Contains(s.CounterId) && s.Status == StickerStatus.Processing)
                 .Select(s => new
                 {
-                    s.counterId,
-                    s.sttId,
-                    CalledAt = s.useTime == default ? s.issuanceTime : s.useTime
+                    s.CounterId,
+                    s.SttId,
+                    s.TicketNumber,
+                    CalledAt = s.UseTime == default ? s.IssuanceTime : s.UseTime
                 })
                 .OrderByDescending(s => s.CalledAt)
-                .ThenBy(s => s.counterId)
+                .ThenBy(s => s.CounterId)
                 .ToListAsync();
 
             var pageSize = showWaitlist ? 5 : 10;
@@ -63,47 +148,51 @@ namespace SystemQMS.Services
 
             if (showWaitlist)
             {
-                var waitingByCounter = await _context.stickers
+                var waitingByCounter = await _context.Tickets
                     .AsNoTracking()
-                    .Where(s => counterIds.Contains(s.counterId)
-                                && s.status == StickerStatus.Waiting
-                                && s.stage != StickerStage.TransferPending)
-                    .OrderByDescending(s => s.isPriority)
-                    .ThenBy(s => s.issuanceTime)
+                    .Where(s => counterIds.Contains(s.CounterId)
+                                && s.Status == StickerStatus.Waiting
+                                && s.Stage != StickerStage.TransferPending)
+                    .OrderByDescending(s => s.IsPriority)
+                    .ThenBy(s => s.IssuanceTime)
                     .Select(s => new
                     {
-                        s.counterId,
-                        s.sttId
+                        s.CounterId,
+                        s.SttId,
+                        s.TicketNumber
                     })
                     .ToListAsync();
 
                 var waitingLookup = waitingByCounter
-                    .GroupBy(x => x.counterId)
+                    .GroupBy(x => x.CounterId)
                     .ToDictionary(g => g.Key, g => g.ToList());
                 var waitingIndexByCounter = waitingLookup.Keys.ToDictionary(k => k, _ => 0);
 
                 foreach (var called in calledTickets)
                 {
-                    waitingLookup.TryGetValue(called.counterId, out var waitingList);
+                    waitingLookup.TryGetValue(called.CounterId, out var waitingList);
 
                     string? waitingSttId = null;
                     int? waitingTicketNumber = null;
 
                     if (waitingList != null
-                        && waitingIndexByCounter.TryGetValue(called.counterId, out var waitingIndex)
+                        && waitingIndexByCounter.TryGetValue(called.CounterId, out var waitingIndex)
                         && waitingIndex < waitingList.Count)
                     {
-                        waitingSttId = waitingList[waitingIndex].sttId;
-                        waitingTicketNumber = TryExtractTicketNumber(waitingSttId);
-                        waitingIndexByCounter[called.counterId] = waitingIndex + 1;
+                        var waitItem = waitingList[waitingIndex];
+                        waitingSttId = waitItem.TicketNumber ?? waitItem.SttId;
+                        waitingTicketNumber = TryExtractTicketNumber(waitItem.TicketNumber ?? waitItem.SttId);
+                        waitingIndexByCounter[called.CounterId] = waitingIndex + 1;
                     }
+
+                    var calledDisplay = called.TicketNumber ?? called.SttId;
 
                     rows.Add(new DisplayBoardRowDto
                     {
-                        CounterId = called.counterId,
-                        CounterName = counterMap.TryGetValue(called.counterId, out var name) ? name : string.Empty,
-                        CalledSttId = called.sttId,
-                        CalledTicketNumber = TryExtractTicketNumber(called.sttId),
+                        CounterId = called.CounterId,
+                        CounterName = counterMap.TryGetValue(called.CounterId, out var name) ? name : string.Empty,
+                        CalledSttId = calledDisplay,
+                        CalledTicketNumber = TryExtractTicketNumber(calledDisplay),
                         WaitingSttId = waitingSttId,
                         WaitingTicketNumber = waitingTicketNumber
                     });
@@ -111,12 +200,16 @@ namespace SystemQMS.Services
             }
             else
             {
-                rows = calledTickets.Select(called => new DisplayBoardRowDto
+                rows = calledTickets.Select(called =>
                 {
-                    CounterId = called.counterId,
-                    CounterName = counterMap.TryGetValue(called.counterId, out var name) ? name : string.Empty,
-                    CalledSttId = called.sttId,
-                    CalledTicketNumber = TryExtractTicketNumber(called.sttId)
+                    var calledDisplay = called.TicketNumber ?? called.SttId;
+                    return new DisplayBoardRowDto
+                    {
+                        CounterId = called.CounterId,
+                        CounterName = counterMap.TryGetValue(called.CounterId, out var name) ? name : string.Empty,
+                        CalledSttId = calledDisplay,
+                        CalledTicketNumber = TryExtractTicketNumber(calledDisplay)
+                    };
                 }).ToList();
             }
 
@@ -145,24 +238,24 @@ namespace SystemQMS.Services
 
         public async Task<DisplayCounterStatusResponseDto> GetDisplayCounterStatusAsync(int unitId)
         {
-            var counters = await _context.counters
+            var counters = await _context.Counters
                 .AsNoTracking()
-                .Where(c => c.isActive
-                            && c.unitId == unitId
-                            && c.status != CounterStatus.PausedAccepting)
+                .Where(c => c.IsActive
+                            && c.UnitId == unitId
+                            && c.Status != CounterStatus.PausedAccepting)
                 .Select(c => new
                 {
-                    c.id,
-                    Name = c.counterName ?? c.counterId,
-                    c.status
+                    c.Id,
+                    Name = c.CounterName ?? c.CounterId,
+                    c.Status
                 })
                 .ToListAsync();
 
-            var counterIds = counters.Select(c => c.id).ToList();
-            var servingCounterIds = await _context.stickers
+            var counterIds = counters.Select(c => c.Id).ToList();
+            var servingCounterIds = await _context.Tickets
                 .AsNoTracking()
-                .Where(s => counterIds.Contains(s.counterId) && s.status == StickerStatus.Processing)
-                .Select(s => s.counterId)
+                .Where(s => counterIds.Contains(s.CounterId) && s.Status == StickerStatus.Processing)
+                .Select(s => s.CounterId)
                 .Distinct()
                 .ToListAsync();
 
@@ -174,12 +267,12 @@ namespace SystemQMS.Services
                 Counters = counters
                     .Select(c =>
                     {
-                        var isServing = servingSet.Contains(c.id);
+                        var isServing = servingSet.Contains(c.Id);
                         return new DisplayCounterStatusDto
                         {
-                            CounterId = c.id,
+                            CounterId = c.Id,
                             CounterName = c.Name,
-                            CounterStatus = c.status,
+                            CounterStatus = c.Status,
                             IsServing = isServing,
                             IsDimmed = !isServing
                         };
@@ -191,21 +284,21 @@ namespace SystemQMS.Services
 
         public async Task<CounterScreenStateResponseDto?> GetCounterScreenStateAsync(int counterId, bool showWaitlist)
         {
-            var counter = await _context.counters
+            var counter = await _context.Counters
                 .AsNoTracking()
-                .FirstOrDefaultAsync(c => c.id == counterId);
+                .FirstOrDefaultAsync(c => c.Id == counterId);
 
             if (counter == null) return null;
 
             var response = new CounterScreenStateResponseDto
             {
                 CurrentTime = DateTime.Now,
-                CounterId = counter.id,
-                CounterName = counter.counterName ?? counter.counterId,
+                CounterId = counter.Id,
+                CounterName = counter.CounterName ?? counter.CounterId,
                 ShowWaitlist = showWaitlist
             };
 
-            if (!counter.isActive || counter.status == CounterStatus.Closed)
+            if (!counter.IsActive || counter.Status == CounterStatus.Closed)
             {
                 response.ScreenState = "Closed";
                 response.ScreenMessage = "QUẦY ĐÃ ĐÓNG";
@@ -213,31 +306,31 @@ namespace SystemQMS.Services
                 return response;
             }
 
-            var called = await _context.stickers
+            var called = await _context.Tickets
                 .AsNoTracking()
-                .Where(s => s.counterId == counterId && s.status == StickerStatus.Processing)
-                .OrderByDescending(s => s.useTime)
-                .ThenByDescending(s => s.issuanceTime)
+                .Where(s => s.CounterId == counterId && s.Status == StickerStatus.Processing)
+                .OrderByDescending(s => s.UseTime)
+                .ThenByDescending(s => s.IssuanceTime)
                 .Select(s => new CounterCalledTicketDto
                 {
-                    SttId = s.sttId,
-                    TicketNumber = TryExtractTicketNumber(s.sttId)
+                    SttId = s.TicketNumber ?? s.SttId,
+                    TicketNumber = TryExtractTicketNumber(s.TicketNumber ?? s.SttId)
                 })
                 .FirstOrDefaultAsync();
 
             var waiting = showWaitlist
-                ? await _context.stickers
+                ? await _context.Tickets
                     .AsNoTracking()
-                    .Where(s => s.counterId == counterId
-                                && s.status == StickerStatus.Waiting
-                                && s.stage != StickerStage.TransferPending)
-                    .OrderByDescending(s => s.isPriority)
-                    .ThenBy(s => s.issuanceTime)
+                    .Where(s => s.CounterId == counterId
+                                && s.Status == StickerStatus.Waiting
+                                && s.Stage != StickerStage.TransferPending)
+                    .OrderByDescending(s => s.IsPriority)
+                    .ThenBy(s => s.IssuanceTime)
                     .Take(9)
                     .Select(s => new CounterWaitingTicketDto
                     {
-                        SttId = s.sttId,
-                        TicketNumber = TryExtractTicketNumber(s.sttId)
+                        SttId = s.TicketNumber ?? s.SttId,
+                        TicketNumber = TryExtractTicketNumber(s.TicketNumber ?? s.SttId)
                     })
                     .ToListAsync()
                 : new List<CounterWaitingTicketDto>();
@@ -264,44 +357,44 @@ namespace SystemQMS.Services
             if (waitingLimit < 1) waitingLimit = 1;
             if (waitingLimit > 9) waitingLimit = 9;
 
-            var counter = await _context.counters
+            var counter = await _context.Counters
                 .AsNoTracking()
-                .FirstOrDefaultAsync(c => c.id == counterId);
+                .FirstOrDefaultAsync(c => c.Id == counterId);
 
             if (counter == null) return null;
 
-            var callingTickets = await _context.stickers
+            var callingTickets = await _context.Tickets
                 .AsNoTracking()
-                .Where(s => s.counterId == counterId && s.status == StickerStatus.Processing)
-                .OrderByDescending(s => s.useTime)
-                .ThenByDescending(s => s.issuanceTime)
+                .Where(s => s.CounterId == counterId && s.Status == StickerStatus.Processing)
+                .OrderByDescending(s => s.UseTime)
+                .ThenByDescending(s => s.IssuanceTime)
                 .Select(s => new CounterCalledTicketDto
                 {
-                    SttId = s.sttId,
-                    TicketNumber = TryExtractTicketNumber(s.sttId)
+                    SttId = s.TicketNumber ?? s.SttId,
+                    TicketNumber = TryExtractTicketNumber(s.TicketNumber ?? s.SttId)
                 })
                 .ToListAsync();
 
-            var waitingTickets = await _context.stickers
+            var waitingTickets = await _context.Tickets
                 .AsNoTracking()
-                .Where(s => s.counterId == counterId
-                            && s.status == StickerStatus.Waiting
-                            && s.stage != StickerStage.TransferPending)
-                .OrderByDescending(s => s.isPriority)
-                .ThenBy(s => s.issuanceTime)
+                .Where(s => s.CounterId == counterId
+                            && s.Status == StickerStatus.Waiting
+                            && s.Stage != StickerStage.TransferPending)
+                .OrderByDescending(s => s.IsPriority)
+                .ThenBy(s => s.IssuanceTime)
                 .Take(waitingLimit)
                 .Select(s => new CounterWaitingTicketDto
                 {
-                    SttId = s.sttId,
-                    TicketNumber = TryExtractTicketNumber(s.sttId)
+                    SttId = s.TicketNumber ?? s.SttId,
+                    TicketNumber = TryExtractTicketNumber(s.TicketNumber ?? s.SttId)
                 })
                 .ToListAsync();
 
             return new CounterMultiCallDisplayResponseDto
             {
                 CurrentTime = DateTime.Now,
-                CounterId = counter.id,
-                CounterName = counter.counterName ?? counter.counterId,
+                CounterId = counter.Id,
+                CounterName = counter.CounterName ?? counter.CounterId,
                 CallingTickets = callingTickets,
                 WaitingTickets = waitingTickets
             };
@@ -309,10 +402,10 @@ namespace SystemQMS.Services
 
         public async Task<DisplayMaintenanceResponseDto> ReportDisplayErrorAndSwitchMaintenanceAsync(string deviceId, DisplayErrorRequestDto error)
         {
-            var device = await _context.devices.FirstOrDefaultAsync(d => d.deviceId == deviceId);
+            var device = await _context.Devices.FirstOrDefaultAsync(d => d.DeviceId == deviceId);
             if (device != null)
             {
-                device.statusConnect = "MAINTENANCE";
+                device.StatusConnect = "MAINTENANCE";
                 await _context.SaveChangesAsync();
             }
 
@@ -325,40 +418,14 @@ namespace SystemQMS.Services
             };
         }
 
-        private static int? TryExtractTicketNumber(string? sttId)
+        private static int? TryExtractTicketNumber(string? ticketNumber)
         {
-            if (string.IsNullOrWhiteSpace(sttId)) return null;
+            if (string.IsNullOrWhiteSpace(ticketNumber)) return null;
 
-            var digits = new string(sttId.Where(char.IsDigit).ToArray());
+            var digits = new string(ticketNumber.Where(char.IsDigit).ToArray());
             if (string.IsNullOrWhiteSpace(digits)) return null;
 
             return int.TryParse(digits, out var number) ? number : null;
-        }
-
-        public async Task<AudioCallEventDto?> TriggerCallAudioAsync(int unitId, int counterId, string sttId, int repeatCount = 1)
-        {
-            var counter = await _context.counters
-                .AsNoTracking()
-                .FirstOrDefaultAsync(c => c.id == counterId && c.unitId == unitId);
-
-            if (counter == null) return null;
-
-            var counterCodeForAudio = !string.IsNullOrWhiteSpace(counter.counterId)
-                ? counter.counterId
-                : counter.id.ToString();
-
-            var audioEvent = await _audioMappingSvc.BuildAudioCallEventAsync(
-                unitId,
-                counter.id,
-                counterCodeForAudio,
-                sttId,
-                repeatCount);
-
-            audioEvent.CounterName = counter.counterName ?? counter.counterId;
-
-            await _hubContext.Clients.Group($"Unit_{unitId}").SendAsync("OnCallNumberAudio", audioEvent);
-
-            return audioEvent;
         }
     }
 }

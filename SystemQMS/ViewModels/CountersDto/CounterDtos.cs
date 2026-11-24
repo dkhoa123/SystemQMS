@@ -16,14 +16,11 @@ namespace SystemQMS.ViewModels.DspDto
     }
     public class CounterResponse
     {
-        public int id { get; set; }
-        public string counterId { get; set; } = "";
-        public int unitId { get; set; }
-        public string? counterName { get; set; }
-        public string? description { get; set; }
-        public bool isActive { get; set; }
-        public string Status { get; set; } = "";
-        public List<ServiceInCounterDto> services { get; set; } = new();
+        public string id { get; set; }
+        public string? name { get; set; }
+        public string? deviceCode { get; set; }
+        public List<string>? services { get; set; } = new();
+        public string? inUse { get; set; }
     }
     public class CreateCounterRequest
     {
@@ -45,24 +42,6 @@ namespace SystemQMS.ViewModels.DspDto
         public string? description { get; set; }
         public bool isActive { get; set; } = true;
         public List<int> serviceIds { get; set; } = new();
-    }
-
-    public class CounterDetailResponse : CounterResponse
-    {
-        public List<string> handlerNames { get; set; } = new();
-
-        public CounterDetailResponse() { }
-        public CounterDetailResponse(CounterResponse source)
-        {
-            id = source.id;
-            counterId = source.counterId;
-            unitId = source.unitId;
-            counterName = source.counterName;
-            description = source.description;
-            isActive = source.isActive;
-            Status = source.Status;
-            services = source.services;
-        }
     }
 
     public class CounterStickerResponse
