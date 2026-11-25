@@ -31,13 +31,6 @@ namespace SystemQMS.Controllers
             return true;
         }
 
-        private static string? ValidateFilter(DashboardFilterRequest f)
-        {
-            if (f.From.HasValue && f.To.HasValue && f.From > f.To)
-                return "Thời gian bắt đầu phải nhỏ hơn hoặc bằng thời gian kết thúc.";
-            return null;
-        }
-
         // ---------------- DSH-01 ----------------
         [HttpGet("tickets/issued")]
         public async Task<ActionResult<TicketSummaryDto>> TicketSummary(

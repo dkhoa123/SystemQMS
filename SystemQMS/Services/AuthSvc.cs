@@ -74,7 +74,8 @@ namespace SystemQMS.Services
             var signIn = new SigningCredentials(securityKey, SecurityAlgorithms.HmacSha256);
             var claims = new[]
             {
-                new Claim("Username", user.Username),
+                new Claim("UserId", user.UserId.ToString()),
+                new Claim("Username", user.Username ?? string.Empty),
                 new Claim("UnitId", user.UnitId.ToString()),
                 new Claim("RoleId", user.RoleId.ToString()),
             };
